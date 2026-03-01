@@ -20,9 +20,9 @@ const univers = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Daniel Derro — Photographer",
+  title: "DANIEL DERRO",
   description:
-    "Daniel Derro creates visual narratives for luxury fashion and cultural brands.",
+    "Daniel Derro creates visual narratives for luxury fashion and cultural brands, bringing authentic street perspective to premium campaigns.",
 };
 
 export default function RootLayout({
