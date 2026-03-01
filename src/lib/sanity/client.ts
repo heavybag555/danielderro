@@ -6,9 +6,7 @@ export function getClient(): SanityClient {
   if (!_client) {
     const projectId = process.env.SANITY_PROJECT_ID;
     if (!projectId) {
-      throw new Error(
-        "SANITY_PROJECT_ID is not set. Add it to .env.local.",
-      );
+      throw new Error("SANITY_PROJECT_ID is not set. Configure it in environment variables.");
     }
 
     _client = createClient({

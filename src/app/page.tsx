@@ -25,6 +25,10 @@ const COLLABORATOR_SEARCH: Record<string, string[]> = {
 };
 
 export default async function Home() {
+  if (!process.env.SANITY_PROJECT_ID) {
+    return <HomeClient collaboratorImages={{}} />;
+  }
+
   const projects = await sanityFetch<ProjectSummary[]>(projectListQuery);
 
   const collaboratorImages: Record<string, string> = {};
