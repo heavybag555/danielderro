@@ -19,6 +19,23 @@ const univers = localFont({
   display: "swap",
 });
 
+const wremena = localFont({
+  src: [
+    {
+      path: "../../fonts/WremenaRegular1.10.woff",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/WremenaBold1.10.woff",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-wremena",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "DANIEL DERRO",
   description:
@@ -32,7 +49,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${univers.variable} font-sans antialiased`}>
+      <body className={`${univers.variable} ${wremena.variable} font-sans antialiased`}>
         {children}
       </body>
     </html>

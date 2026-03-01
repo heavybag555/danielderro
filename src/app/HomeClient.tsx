@@ -60,33 +60,30 @@ export default function HomeClient({ collaboratorImages }: Props) {
     });
   }, [collaboratorImages]);
 
-  const showPreview = useCallback(
-    (imageUrl: string, e: React.MouseEvent) => {
-      const el = previewRef.current;
-      const img = imgRef.current;
-      if (!el || !img) return;
+  const showPreview = useCallback((imageUrl: string, e: React.MouseEvent) => {
+    const el = previewRef.current;
+    const img = imgRef.current;
+    if (!el || !img) return;
 
-      img.src = imageUrl;
-      el.style.left = `${e.clientX + 16}px`;
-      el.style.top = `${e.clientY - 16}px`;
+    img.src = imageUrl;
+    el.style.left = `${e.clientX + 16}px`;
+    el.style.top = `${e.clientY - 16}px`;
 
-      document.documentElement.style.cursor = "crosshair";
+    document.documentElement.style.cursor = "crosshair";
 
-      if (!visibleRef.current) {
-        visibleRef.current = true;
-        el.style.display = "block";
-        animate(el, {
-          opacity: [0, 1],
-          translateY: [8, 0],
-          duration: 280,
-          ease: "outQuad",
-        });
-      } else {
-        visibleRef.current = true;
-      }
-    },
-    [],
-  );
+    if (!visibleRef.current) {
+      visibleRef.current = true;
+      el.style.display = "block";
+      animate(el, {
+        opacity: [0, 1],
+        translateY: [8, 0],
+        duration: 280,
+        ease: "outQuad",
+      });
+    } else {
+      visibleRef.current = true;
+    }
+  }, []);
 
   const hidePreview = useCallback(() => {
     const el = previewRef.current;
@@ -120,7 +117,9 @@ export default function HomeClient({ collaboratorImages }: Props) {
       <span
         className="underline"
         onMouseEnter={
-          imageUrl ? (e: React.MouseEvent) => showPreview(imageUrl, e) : undefined
+          imageUrl
+            ? (e: React.MouseEvent) => showPreview(imageUrl, e)
+            : undefined
         }
         onMouseLeave={imageUrl ? hidePreview : undefined}
         onMouseMove={imageUrl ? movePreview : undefined}
@@ -146,10 +145,7 @@ export default function HomeClient({ collaboratorImages }: Props) {
             <Pill bg="bg-muted" color="text-primary">
               Daniel Derro
             </Pill>
-            <a
-              href="mailto:info@ns-sr.org"
-              className="inline-flex"
-            >
+            <a href="mailto:info@ns-sr.org" className="inline-flex">
               <Pill
                 bg="bg-white"
                 color="text-muted"
@@ -188,15 +184,16 @@ export default function HomeClient({ collaboratorImages }: Props) {
               <span className="text-label text-muted self-center">DD–01</span>
               <div className="text-body text-muted w-full max-w-[400px] text-justify [&>p:last-child]:text-left">
                 <p className="indent-16">
-                  Daniel Derro creates visual narratives for luxury fashion and
+                  <span className="text-wremena-bold">DANIEL DERRO</span>{" "}
+                  creates visual narratives for luxury fashion and
                   cultural brands, bringing authentic street perspective to
-                  premium campaigns. His work for {cl("Prada")},{" "}
-                  {cl("Nike")}, {cl("Givenchy")}, and {cl("Dior")} — alongside
-                  collaborations with {cl("Stüssy")}, {cl("Adidas")},{" "}
-                  {cl("pgLang")}, {cl("Burberry")}, {cl("Carhartt WIP")},{" "}
-                  {cl("Our Legacy")}, and {cl("New Balance")} — demonstrates his
-                  ability to translate genuine cultural moments into compelling
-                  luxury brand stories.
+                  premium campaigns. His work for {cl("Prada")}, {cl("Nike")},{" "}
+                  {cl("Givenchy")}, and {cl("Dior")} — alongside collaborations
+                  with {cl("Stüssy")}, {cl("Adidas")}, {cl("pgLang")},{" "}
+                  {cl("Burberry")}, {cl("Carhartt WIP")}, {cl("Our Legacy")},
+                  and {cl("New Balance")} — demonstrates his ability to
+                  translate genuine cultural moments into compelling luxury
+                  brand stories.
                 </p>
 
                 <AnimatePresence initial={false}>
@@ -210,35 +207,37 @@ export default function HomeClient({ collaboratorImages }: Props) {
                       className="overflow-hidden"
                     >
                       <p className="mt-[1.41em]">
-                        Recent campaigns span major fashion houses, leading sportswear
-                        innovators, and influential streetwear and cultural platforms.
-                        Daniel has directed album visuals for Grammy-nominated artist{" "}
-                        {cl("Giveon")} while maintaining ongoing relationships with{" "}
-                        {cl("Nike")}, {cl("Adidas")}, {cl("New Balance")},{" "}
-                        {cl("Stüssy")}, and {cl("pgLang")} for culturally-driven
-                        campaigns.
+                        Recent campaigns span major fashion houses, leading
+                        sportswear innovators, and influential streetwear and
+                        cultural platforms. Daniel has directed album visuals
+                        for Grammy-nominated artist {cl("Giveon")} while
+                        maintaining ongoing relationships with {cl("Nike")},{" "}
+                        {cl("Adidas")}, {cl("New Balance")}, {cl("Stüssy")}, and{" "}
+                        {cl("pgLang")} for culturally-driven campaigns.
                       </p>
                       <p className="mt-[1.41em]">
-                        Published extensively in leading international fashion and
-                        culture outlets, Daniel&apos;s editorial work has been
-                        exhibited internationally from{" "}
-                        {cl("Dover Street Market Paris")} to major contemporary art
-                        museums. His visual language combines documentary authenticity
-                        with luxury fashion aesthetics.
+                        Published extensively in leading international fashion
+                        and culture outlets, Daniel&apos;s editorial work has
+                        been exhibited internationally from{" "}
+                        {cl("Dover Street Market Paris")} to major contemporary
+                        art museums. His visual language combines documentary
+                        authenticity with luxury fashion aesthetics.
                       </p>
                       <p className="mt-[1.41em]">
-                        Daniel&apos;s comprehensive services include photography, film
-                        direction, creative direction, casting, location scouting, and
-                        brand consulting. Working primarily with medium format film and
-                        high-end digital capture, he delivers complete creative
-                        solutions from concept through final delivery.
+                        Daniel&apos;s comprehensive services include
+                        photography, film direction, creative direction,
+                        casting, location scouting, and brand consulting.
+                        Working primarily with medium format film and high-end
+                        digital capture, he delivers complete creative solutions
+                        from concept through final delivery.
                       </p>
                       <p className="mt-[1.41em]">
                         His artistic practice centers on social connection and
                         community engagement, including work within correctional
-                        facilities and youth mentorship programs. This depth of human
-                        experience brings genuine authenticity to commercial work,
-                        creating campaigns that resonate beyond surface aesthetics.
+                        facilities and youth mentorship programs. This depth of
+                        human experience brings genuine authenticity to
+                        commercial work, creating campaigns that resonate beyond
+                        surface aesthetics.
                       </p>
                     </motion.div>
                   )}
@@ -248,7 +247,6 @@ export default function HomeClient({ collaboratorImages }: Props) {
                   Based between New York and Los Angeles with international
                   project capabilities.
                 </p>
-
               </div>
               <button
                 type="button"
@@ -280,11 +278,7 @@ export default function HomeClient({ collaboratorImages }: Props) {
         style={{ display: "none", opacity: 0 }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          ref={imgRef}
-          alt=""
-          style={{ width: 200, display: "block" }}
-        />
+        <img ref={imgRef} alt="" style={{ width: 200, display: "block" }} />
       </div>
     </>
   );
