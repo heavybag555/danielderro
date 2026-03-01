@@ -146,18 +146,38 @@ export default function HomeClient({ collaboratorImages }: Props) {
             <Pill bg="bg-muted" color="text-primary">
               Daniel Derro
             </Pill>
-            <Pill bg="bg-white" color="text-muted">
-              danielderro@gmail.com
-            </Pill>
+            <a
+              href="mailto:info@ns-sr.org"
+              className="inline-flex"
+            >
+              <Pill
+                bg="bg-white"
+                color="text-muted"
+                className="hover:bg-muted hover:text-primary"
+              >
+                info@ns-sr.org
+              </Pill>
+            </a>
           </motion.div>
 
           <motion.div
             className="md:flex-1 self-start flex md:justify-end md:order-last"
             variants={item}
           >
-            <Pill bg="bg-white" color="text-muted">
-              @danielderro
-            </Pill>
+            <a
+              href="https://www.instagram.com/danielderro_/"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex"
+            >
+              <Pill
+                bg="bg-white"
+                color="text-muted"
+                className="hover:bg-muted hover:text-primary"
+              >
+                @danielderro_
+              </Pill>
+            </a>
           </motion.div>
 
           <motion.div
