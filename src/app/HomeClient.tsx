@@ -133,7 +133,7 @@ export default function HomeClient({ collaboratorImages }: Props) {
   return (
     <>
       <motion.main
-        className="min-h-svh flex flex-col p-4 sm:p-3 overflow-x-hidden"
+        className="min-h-svh flex flex-col p-5 sm:p-3 pb-28 sm:pb-24 overflow-x-hidden"
         variants={container}
         initial="initial"
         animate="animate"
@@ -262,7 +262,7 @@ export default function HomeClient({ collaboratorImages }: Props) {
         </div>
 
         <motion.footer
-          className="mt-auto flex flex-col items-center pt-6"
+          className="fixed bottom-4 left-1/2 z-40 flex -translate-x-1/2 flex-col items-center"
           variants={item}
         >
           <Pill bg="bg-white" color="text-muted">
