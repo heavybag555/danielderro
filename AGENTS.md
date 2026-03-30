@@ -8,6 +8,7 @@
 - For local checks, run the dev server on port 3000 (project scripts use Turbopack there).
 - Prefer a minimal active stack: Next.js with Tailwind only; avoid pulling CMS or animation libraries back into the main app unless asked.
 - On small screens, use generous uniform padding around the layout (user specified 20px on all sides).
+- The `InfoColumns` component powers both the sticky top panel and the bottom panel. Always keep all three inner text-grid slots (`repeat(3, 1fr)`) even when a column's content is hidden — render an empty `<div />` placeholder to hold the grid position. The six-column `page-grid` structure must never collapse.
 
 ## Learned Workspace Facts
 

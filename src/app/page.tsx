@@ -23,7 +23,7 @@ export default function Home() {
           parent and can pin flush to the viewport (top: 0) while the gallery scrolls.
         */}
         <section style={{ paddingTop: 120, paddingBottom: 0 }}>
-          <InfoColumns stickyTextBlock />
+          <InfoColumns stickyTextBlock hideContact />
           <div style={{ marginTop: 240 }}>
             <GallerySection />
           </div>
@@ -36,7 +36,7 @@ export default function Home() {
             paddingBottom: 120,
           }}
         >
-          <InfoColumns />
+          <InfoColumns hideAboutClients />
         </section>
       </div>
 
