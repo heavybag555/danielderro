@@ -1,0 +1,42 @@
+@import "tailwindcss";
+@source not "../../public/Images/**/*";
+
+@theme inline {
+  --color-primary: #ce0000;
+  --color-muted: #d7d7d7;
+  --color-subtle: #eeeeee;
+  --font-sans: var(--font-univers), system-ui, -apple-system, sans-serif;
+  --font-serif: var(--font-wremena), Georgia, serif;
+}
+
+body {
+  background: var(--color-primary);
+}
+
+/* Text styles: one for each of the 3 used on the site */
+
+.text-display {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 14px;
+  letter-spacing: -0.01em;
+}
+
+.text-label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  line-height: 12px;
+  letter-spacing: -0.01em;
+}
+
+.text-body {
+  font-family: var(--font-wremena), Georgia, serif;
+  font-size: 24px;
+  line-height: 28px;
+  letter-spacing: -0.01em;
+}
+
+.text-wremena-bold {
+  font-family: var(--font-wremena), Georgia, serif;
+  font-weight: 700;
+}

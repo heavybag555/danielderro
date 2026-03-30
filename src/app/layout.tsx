@@ -1,40 +1,5 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import "./globals.css";
-
-const univers = localFont({
-  src: [
-    {
-      path: "../../fonts/UniversNextProRegular.ttf",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../../fonts/Univers Next Pro Medium.ttf",
-      weight: "500",
-      style: "normal",
-    },
-  ],
-  variable: "--font-univers",
-  display: "swap",
-});
-
-const wremena = localFont({
-  src: [
-    {
-      path: "../../fonts/WremenaRegular1.10.woff",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../../fonts/WremenaBold1.10.woff",
-      weight: "700",
-      style: "normal",
-    },
-  ],
-  variable: "--font-wremena",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "DANIEL DERRO",
@@ -49,9 +14,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${univers.variable} ${wremena.variable} font-sans antialiased`}>
-        {children}
-      </body>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body>{children}</body>
     </html>
   );
 }

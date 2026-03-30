@@ -3,40 +3,84 @@
 
 @theme inline {
   --color-primary: #ce0000;
-  --color-muted: #d7d7d7;
-  --color-subtle: #eeeeee;
-  --font-sans: var(--font-univers), system-ui, -apple-system, sans-serif;
-  --font-serif: var(--font-wremena), Georgia, serif;
+  --color-black: #000000;
+  --color-white: #ffffff;
+  --color-gray-light: #e7e7e7;
+  --color-gray: #dadada;
+  --color-stroke: #373737;
+
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-serif: "Crimson Text", Georgia, serif;
+
+  --spacing-margin: 12px;
+  --spacing-gutter: 120px;
+  --spacing-section: 120px;
+  --spacing-stack: 20px;
+}
+
+/* Zero-motion global override; no box shadows */
+*,
+*::before,
+*::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+  box-shadow: none !important;
+}
+
+html {
+  background: var(--color-white);
 }
 
 body {
-  background: var(--color-primary);
-}
-
-/* Text styles: one for each of the 3 used on the site */
-
-.text-display {
+  background: var(--color-white);
   font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 14px;
-  letter-spacing: -0.01em;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.text-label {
+/* ── 6-Column Grid ────────────────────────────────────── */
+
+.page-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  column-gap: var(--spacing-gutter);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Typography tokens from Figma ─────────────────────── */
+
+.text-caption {
   font-family: var(--font-sans);
-  font-size: 10px;
-  line-height: 12px;
-  letter-spacing: -0.01em;
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1.3636;
+  letter-spacing: 0.02em;
 }
 
-.text-body {
-  font-family: var(--font-wremena), Georgia, serif;
-  font-size: 24px;
-  line-height: 28px;
-  letter-spacing: -0.01em;
+.text-meta {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 8px;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
 }
 
-.text-wremena-bold {
-  font-family: var(--font-wremena), Georgia, serif;
-  font-weight: 700;
+.text-meta-tight {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 8px;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+}
+
+.text-h3 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
 }
