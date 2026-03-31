@@ -1,5 +1,4 @@
 import Image from "next/image";
-import StickyHeroFadeImage from "@/components/StickyHeroFadeImage";
 
 type InfoColumnsProps = {
   /** When true, About / Clients / Contact stay pinned while the gallery scrolls. */
@@ -31,24 +30,18 @@ export default function InfoColumns({
     width: "100%",
   };
 
-  const rootShell = stickyTextBlock
-    ? {
-        position: "sticky" as const,
-        top: 0,
-        zIndex: 100,
-      }
+  const textStickyStyle = stickyTextBlock
+    ? { position: "sticky" as const, top: 0, zIndex: 100 }
     : {};
 
   return (
-    <div className="page-grid" style={rootShell}>
+    <div className="page-grid">
       <div style={{ gridColumn: "1 / 2" }} />
 
       <div style={{ gridColumn: "2 / 3" }} />
 
       <div style={{ gridColumn: "3 / 4" }}>
-        {stickyTextBlock ? (
-          <StickyHeroFadeImage />
-        ) : hideHeroImage ? null : (
+        {!hideHeroImage && (
           <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
             <Image
               src="/images/daniel-hero-new.jpg"
@@ -59,17 +52,17 @@ export default function InfoColumns({
               priority
             />
             <Image
-              src="/images/daniel-hero-bottom.jpeg"
+              src="/images/DEBT SS -105.jpg"
               alt="Daniel Derro"
-              width={1441}
-              height={1200}
+              width={4083}
+              height={3000}
               style={{ width: "100%", height: "auto", display: "block" }}
             />
           </div>
         )}
       </div>
 
-      <div style={{ gridColumn: "4 / 7" }}>
+      <div style={{ gridColumn: "4 / 7", ...textStickyStyle }}>
         <div style={textGridStyle}>
           {/* --- Slot 1 --- */}
           {shiftRight ? (
