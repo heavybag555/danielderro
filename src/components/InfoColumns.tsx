@@ -30,8 +30,14 @@ export default function InfoColumns({
     width: "100%",
   };
 
+  /** `alignSelf: start` keeps the cell content-height so sticky pins About/Clients while images scroll. */
   const textStickyStyle = stickyTextBlock
-    ? { position: "sticky" as const, top: 0, zIndex: 100 }
+    ? {
+        position: "sticky" as const,
+        top: 0,
+        zIndex: 100,
+        alignSelf: "start" as const,
+      }
     : {};
 
   return (
