@@ -69,7 +69,13 @@ async function getImageFiles(dirPath) {
     .sort();
 }
 
-async function processFolder(folderName, folderPath) {
+function parseClient(folderName) {
+  const match = folderName.match(/^(.+?)\s*x\s+(.+)$/i);
+  if (match) return match[1].trim();
+  return folderName;
+}
+
+async function processFolder(folderName, folderPath, order) {
   console.log(`\n📁 ${folderName}`);
 
   const imageFiles = await getImageFiles(folderPath);
@@ -79,7 +85,7 @@ async function processFolder(folderName, folderPath) {
   }
   console.log(`   ${imageFiles.length} images`);
 
-  const photoMutations = [];
+  const galleryItems = [];
   let coverAssetId = null;
 
   for (let i = 0; i < imageFiles.length; i++) {
@@ -94,52 +100,45 @@ async function processFolder(folderName, folderPath) {
 
       if (i === 0) coverAssetId = asset._id;
 
-      const titleBase = file.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim();
-      const photoId = `photo-${slugify(folderName)}-${i}`;
-
-      photoMutations.push({
-        create: {
-          _id: photoId,
-          _type: "photo",
-          title: titleBase,
-          image: { _type: "image", asset: { _type: "reference", _ref: asset._id } },
-          clientName: folderName,
-          tags: [folderName],
-        },
+      galleryItems.push({
+        _type: "imageAsset",
+        _key: `img-${i}`,
+        image: { _type: "image", asset: { _type: "reference", _ref: asset._id } },
+        caption: file.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim(),
+        alt: `${folderName} — image ${i + 1}`,
       });
     } catch (err) {
       console.log(` ✗ ${err.message}`);
     }
   }
 
-  if (photoMutations.length === 0) return;
-
-  console.log(`   Creating ${photoMutations.length} photo docs + 1 project doc...`);
+  if (galleryItems.length === 0) return;
 
   const slug = slugify(folderName);
   const projectId = `project-${slug}`;
+  const client = parseClient(folderName);
 
-  const projectMutation = {
-    create: {
+  console.log(`   Creating project "${folderName}" with ${galleryItems.length} gallery images...`);
+
+  const mutation = {
+    createOrReplace: {
       _id: projectId,
       _type: "project",
-      name: folderName,
+      title: folderName,
       slug: { _type: "slug", current: slug },
-      clientName: folderName,
+      client,
+      projectType: "photography",
+      tags: [],
       coverImage: coverAssetId
         ? { _type: "image", asset: { _type: "reference", _ref: coverAssetId } }
         : undefined,
-      photos: photoMutations.map((m, i) => ({
-        _type: "reference",
-        _ref: m.create._id,
-        _key: `ref-${i}`,
-      })),
+      gallery: galleryItems,
+      order,
     },
   };
 
-  const allMutations = [...photoMutations, projectMutation];
-  const result = await createDocuments(allMutations);
-  console.log(`   ✅ Done — ${result.results.length} documents created`);
+  const result = await createDocuments([mutation]);
+  console.log(`   ✅ Done — project created (${result.results.length} doc)`);
 }
 
 async function main() {
@@ -156,8 +155,8 @@ async function main() {
 
   console.log(`${folders.length} project folders to upload.`);
 
-  for (const folder of folders) {
-    await processFolder(folder.name, join(imagesDir, folder.name));
+  for (let i = 0; i < folders.length; i++) {
+    await processFolder(folders[i].name, join(imagesDir, folders[i].name), i);
   }
 
   console.log("\n🎉 All uploads complete!");

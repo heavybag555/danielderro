@@ -95,7 +95,7 @@ export default function InfoColumns({
 
           {hideContact ? (
             <div />
-          ) : (
+          ) : stickyTextBlock ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div style={{ paddingLeft: 20 }}>
                 <span className="text-caption" style={{ color: "var(--color-black)" }}>
@@ -110,13 +110,26 @@ export default function InfoColumns({
                   <span className="text-caption" style={{ color: "var(--color-primary)" }}>
                     daniel@no-schoolstudio.org
                   </span>
-                  <span className="text-caption" style={{ color: "var(--color-primary)" }}>
-                    @danielderro_
-                  </span>
                 </div>
                 <p className="text-meta-tight" style={{ color: "var(--color-primary)", margin: 0 }}>
                   Based between New York and Los Angeles with international project capabilities.
                 </p>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <div style={{ paddingLeft: 20 }}>
+                <span className="text-caption" style={{ color: "var(--color-black)" }}>
+                  Reach
+                </span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+                  @danielderro_
+                </span>
+                <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+                  @noschoolstudiorecords
+                </span>
               </div>
             </div>
           )}

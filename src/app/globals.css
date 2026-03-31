@@ -18,10 +18,10 @@
   --spacing-stack: 20px;
 }
 
-/* Zero-motion global override; no box shadows */
-*,
-*::before,
-*::after {
+/* Zero-motion global override; no box shadows (scoped off Sanity Studio) */
+*:not([data-ui] *),
+*:not([data-ui] *)::before,
+*:not([data-ui] *)::after {
   animation-duration: 0s !important;
   animation-delay: 0s !important;
   transition-duration: 0s !important;
