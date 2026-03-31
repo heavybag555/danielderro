@@ -98,7 +98,7 @@ export default function InfoPage() {
                   Tel. 00 32 15 75 59 43
                 </span>
                 <span className="text-caption" style={{ color: "var(--color-primary)" }}>
-                  daniel@no-schoolstudio.org
+                  info@ns-sr.org
                 </span>
               </div>
               <p className="text-meta-tight" style={{ color: "var(--color-primary)", margin: 0 }}>

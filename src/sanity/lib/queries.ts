@@ -76,6 +76,7 @@ export const workPageProjectsQuery = groq`
     _id,
     title,
     slug,
+    client,
     projectType,
     tags,
     coverImage,

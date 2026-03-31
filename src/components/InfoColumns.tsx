@@ -55,7 +55,7 @@ export default function InfoColumns({
               style={{
                 objectFit: "cover",
                 filter: "grayscale(1)",
-                opacity: 0.1,
+                opacity: 0.4,
               }}
               priority
             />
@@ -110,7 +110,7 @@ export default function InfoColumns({
                     Tel. 00 32 15 75 59 43
                   </span>
                   <span className="text-caption" style={{ color: "var(--color-primary)" }}>
-                    daniel@no-schoolstudio.org
+                    info@ns-sr.org
                   </span>
                 </div>
                 <p className="text-meta-tight" style={{ color: "var(--color-primary)", margin: 0 }}>
@@ -190,7 +190,7 @@ export default function InfoColumns({
                     Tel. 00 32 15 75 59 43
                   </span>
                   <span className="text-caption" style={{ color: "var(--color-primary)" }}>
-                    daniel@no-schoolstudio.org
+                    info@ns-sr.org
                   </span>
                 </div>
                 <p className="text-meta-tight" style={{ color: "var(--color-primary)", margin: 0 }}>

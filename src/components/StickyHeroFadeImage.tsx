@@ -4,26 +4,34 @@ import Image from "next/image";
 import { useEffect } from "react";
 import { motion, useMotionValue } from "framer-motion";
 
-const FADE_RANGE_PX = 360;
+/** Sentinel id on the home page: top edge of the gallery (see `page.tsx`). */
+export const HOME_GALLERY_FADE_ANCHOR_ID = "home-gallery-fade-anchor";
+
+/** When the gallery top is below this viewport Y, portrait stays fully visible. */
+const FADE_START_VIEWPORT_TOP_PX = 780;
+/** When the gallery top is above this viewport Y, portrait is fully faded (before overlap with sticky hero). */
+const FADE_END_VIEWPORT_TOP_PX = 260;
 
 export default function StickyHeroFadeImage() {
   const opacity = useMotionValue(1);
 
   useEffect(() => {
     const update = () => {
-      const doc = document.documentElement;
-      const scrollTop = doc.scrollTop;
-      const scrollHeight = doc.scrollHeight;
-      const clientHeight = window.innerHeight;
-      const maxScroll = Math.max(0, scrollHeight - clientHeight);
-
-      if (maxScroll <= 0) {
+      const anchor = document.getElementById(HOME_GALLERY_FADE_ANCHOR_ID);
+      if (!anchor) {
         opacity.set(1);
         return;
       }
 
-      const distFromBottom = maxScroll - scrollTop;
-      opacity.set(Math.min(1, Math.max(0, distFromBottom / FADE_RANGE_PX)));
+      const top = anchor.getBoundingClientRect().top;
+      const range = FADE_START_VIEWPORT_TOP_PX - FADE_END_VIEWPORT_TOP_PX;
+      if (range <= 0) {
+        opacity.set(1);
+        return;
+      }
+
+      const t = (top - FADE_END_VIEWPORT_TOP_PX) / range;
+      opacity.set(Math.min(1, Math.max(0, t)));
     };
 
     update();
@@ -31,6 +39,8 @@ export default function StickyHeroFadeImage() {
     window.addEventListener("resize", update);
     const resizeObserver = new ResizeObserver(update);
     resizeObserver.observe(document.documentElement);
+    const anchor = document.getElementById(HOME_GALLERY_FADE_ANCHOR_ID);
+    if (anchor) resizeObserver.observe(anchor);
     return () => {
       window.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
@@ -55,7 +65,7 @@ export default function StickyHeroFadeImage() {
         style={{
           objectFit: "cover",
           filter: "grayscale(1)",
-          opacity: 0.4,
+          opacity: 0.8,
         }}
         priority
       />

@@ -38,10 +38,10 @@ export const structure = (S: StructureBuilder) =>
       S.divider(),
 
       S.listItem()
-        .title("No School Studio")
+        .title("No-School Studio Records")
         .child(
           S.documentTypeList("project")
-            .title("No School Studio")
+            .title("No-School Studio Records")
             .filter(
               '_type == "project" && "no-school-studio" in tags'
             )

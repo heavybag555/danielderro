@@ -46,7 +46,7 @@ export const projectType = defineType({
       of: [{ type: "string" }],
       options: {
         list: [
-          { title: "No School Studio", value: "no-school-studio" },
+          { title: "No-School Studio Records", value: "no-school-studio" },
           { title: "Editorial", value: "editorial" },
           { title: "Campaign", value: "campaign" },
           { title: "Personal", value: "personal" },

@@ -31,14 +31,22 @@ export default function SiteFooter({ activePath, inverted = false }: SiteFooterP
   return (
     <footer className="page-grid" style={{ ...footerBar, alignItems: "center" }}>
       <div style={{ gridColumn: "1 / 3", display: "flex", alignItems: "flex-end", gap: 12 }}>
-        <Link href="/" className="text-h3 no-underline" style={{ color: fg }}>
+        <Link
+          href="/"
+          className="text-h3 no-underline opacity-100 transition-opacity duration-600 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-80"
+          style={{ color: fg }}
+        >
           Daniel Derro
         </Link>
       </div>
 
       <div style={{ gridColumn: "3 / 5", display: "flex", alignItems: "flex-end", gap: 12 }}>
-        <Link href="/" className="text-h3 no-underline" style={{ color: fg }}>
-          No School Studios
+        <Link
+          href="/"
+          className="text-h3 no-underline opacity-100 transition-opacity duration-600 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-80"
+          style={{ color: fg }}
+        >
+          No-School Studio Records
         </Link>
       </div>
 

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { urlFor } from "@/sanity/lib/image";
+import { formatSanityTag } from "@/lib/format-sanity-tag";
 import { MOTION } from "@/lib/motion";
 
 type SanityImageField = {
@@ -55,13 +56,6 @@ const NAV_ITEMS = [
   { label: "Exhibitions", href: "/exhibitions" },
   { label: "Radio", href: "/radio" },
 ];
-
-function formatTag(tag: string): string {
-  return tag
-    .split("-")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
-}
 
 function galleryToMedia(gallery: GalleryEntry[]): MediaItem[] {
   const items: MediaItem[] = [];
@@ -145,7 +139,7 @@ export default function ProjectPage({ project }: { project: Project }) {
           >
             <Link
               href="/"
-              className="text-h3 no-underline"
+              className="text-h3 no-underline opacity-100 transition-opacity duration-600 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-80"
               style={{ color: "var(--color-black)" }}
             >
               Daniel Derro
@@ -162,10 +156,10 @@ export default function ProjectPage({ project }: { project: Project }) {
           >
             <Link
               href="/"
-              className="text-h3 no-underline"
+              className="text-h3 no-underline opacity-100 transition-opacity duration-600 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-80"
               style={{ color: "var(--color-black)" }}
             >
-              No School Studios
+              No-School Studio Records
             </Link>
           </div>
 
@@ -223,7 +217,7 @@ export default function ProjectPage({ project }: { project: Project }) {
             className="text-caption"
             style={{ color: "var(--color-primary)", display: "block" }}
           >
-            {project.tags?.map(formatTag).join(", ")}
+            {project.tags?.map(formatSanityTag).join(", ")}
           </span>
         </div>
         {total > 0 && (

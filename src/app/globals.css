@@ -76,7 +76,7 @@ body {
   font-family: var(--font-sans);
   font-weight: 500;
   font-size: 11px;
-  line-height: 1.3636;
+  line-height: 15px;
   letter-spacing: 0.02em;
 }
 
@@ -85,7 +85,7 @@ body {
   font-weight: 500;
   font-size: 8px;
   line-height: 1.5;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
 }
 
 .text-meta-tight {
@@ -93,21 +93,21 @@ body {
   font-weight: 500;
   font-size: 8px;
   line-height: 1.25;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
 }
 
 .text-body {
   font-family: var(--font-sans);
   font-weight: 500;
-  font-size: 14px;
-  line-height: 1.25;
+  font-size: 13px;
+  line-height: 18px;
   letter-spacing: 0.01em;
 }
 
 .text-h3 {
   font-family: var(--font-serif);
   font-weight: 600;
-  font-size: 20px;
-  line-height: 1;
-  letter-spacing: -0.02em;
+  font-size: 17px;
+  line-height: .8;
+  letter-spacing: -0.03em;
 }
