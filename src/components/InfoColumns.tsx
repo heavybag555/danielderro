@@ -49,7 +49,7 @@ export default function InfoColumns({
         {stickyTextBlock ? (
           <StickyHeroFadeImage />
         ) : hideHeroImage ? null : (
-          <div style={{ width: "100%" }}>
+          <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
             <Image
               src="/images/daniel-hero-new.jpg"
               alt="Daniel Derro"
@@ -57,6 +57,13 @@ export default function InfoColumns({
               height={1470}
               style={{ width: "100%", height: "auto", display: "block" }}
               priority
+            />
+            <Image
+              src="/images/daniel-hero-bottom.jpeg"
+              alt="Daniel Derro"
+              width={1441}
+              height={1200}
+              style={{ width: "100%", height: "auto", display: "block" }}
             />
           </div>
         )}
