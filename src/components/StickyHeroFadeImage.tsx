@@ -1,13 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { motion, useMotionValue } from "framer-motion";
 
-/** Fade from full opacity to transparent over this many pixels before the document bottom. */
 const FADE_RANGE_PX = 360;
 
 export default function StickyHeroFadeImage() {
-  const [opacity, setOpacity] = useState(1);
+  const opacity = useMotionValue(1);
 
   useEffect(() => {
     const update = () => {
@@ -18,13 +18,12 @@ export default function StickyHeroFadeImage() {
       const maxScroll = Math.max(0, scrollHeight - clientHeight);
 
       if (maxScroll <= 0) {
-        setOpacity(1);
+        opacity.set(1);
         return;
       }
 
       const distFromBottom = maxScroll - scrollTop;
-      const next = Math.min(1, Math.max(0, distFromBottom / FADE_RANGE_PX));
-      setOpacity(next);
+      opacity.set(Math.min(1, Math.max(0, distFromBottom / FADE_RANGE_PX)));
     };
 
     update();
@@ -37,10 +36,10 @@ export default function StickyHeroFadeImage() {
       window.removeEventListener("resize", update);
       resizeObserver.disconnect();
     };
-  }, []);
+  }, [opacity]);
 
   return (
-    <div
+    <motion.div
       style={{
         width: "100%",
         height: 240,
@@ -60,6 +59,6 @@ export default function StickyHeroFadeImage() {
         }}
         priority
       />
-    </div>
+    </motion.div>
   );
 }

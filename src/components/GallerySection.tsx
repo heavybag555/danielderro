@@ -3,7 +3,9 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { urlFor } from "@/sanity/lib/image";
+import { MOTION } from "@/lib/motion";
 
 type SanityImageField = {
   asset: { _ref: string };
@@ -80,61 +82,53 @@ function galleryEntriesToPreviewStills(
 function ProjectImages({ items }: { items: PreviewStill[] }) {
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
 
-  const columns: PreviewStill[][] = [[], [], [], [], [], []];
-  items.forEach((img, i) => {
-    columns[i % 6].push(img);
-  });
-
   return (
-    <div className="page-grid" style={{ alignItems: "start" }}>
-      {columns.map((col, colIdx) => (
-        <div
-          key={colIdx}
-          style={{
-            gridColumn: `${colIdx + 1} / ${colIdx + 2}`,
-            display: "flex",
-            flexDirection: "column",
-            gap: 120,
-          }}
-        >
-          {col.map((item) => {
-            const dimmed = hoveredKey !== null && hoveredKey !== item._key;
-            return (
-              <Link
-                key={item._key}
-                href={`/work/${item.slug}`}
-                onMouseEnter={() => setHoveredKey(item._key)}
-                onMouseLeave={() => setHoveredKey(null)}
+    <div className="page-grid" style={{ alignItems: "start", rowGap: 120 }}>
+      {items.map((item) => {
+        const dimmed = hoveredKey !== null && hoveredKey !== item._key;
+        return (
+          <motion.div
+            key={item._key}
+            onMouseEnter={() => setHoveredKey(item._key)}
+            onMouseLeave={() => setHoveredKey(null)}
+            animate={{
+              opacity: dimmed ? 0.2 : 1,
+              filter: dimmed ? "grayscale(100%)" : "grayscale(0%)",
+            }}
+            transition={{
+              duration: MOTION.duration.hover,
+              ease: MOTION.ease.heavy,
+            }}
+            style={{
+              width: "100%",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <Link
+              href={`/work/${item.slug}`}
+              style={{ display: "block" }}
+            >
+              <Image
+                src={urlFor(item.image)
+                  .width(600)
+                  .quality(85)
+                  .auto("format")
+                  .url()}
+                alt={item.alt}
+                width={600}
+                height={750}
+                sizes="(max-width: 768px) 50vw, 16vw"
                 style={{
                   width: "100%",
-                  position: "relative",
-                  overflow: "hidden",
+                  height: "auto",
                   display: "block",
-                  opacity: dimmed ? 0.2 : 1,
-                  filter: dimmed ? "grayscale(100%)" : "none",
                 }}
-              >
-                <Image
-                  src={urlFor(item.image)
-                    .width(600)
-                    .quality(85)
-                    .auto("format")
-                    .url()}
-                  alt={item.alt}
-                  width={600}
-                  height={750}
-                  sizes="(max-width: 768px) 50vw, 16vw"
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    display: "block",
-                  }}
-                />
-              </Link>
-            );
-          })}
-        </div>
-      ))}
+              />
+            </Link>
+          </motion.div>
+        );
+      })}
     </div>
   );
 }

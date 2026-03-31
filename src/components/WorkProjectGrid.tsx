@@ -3,7 +3,9 @@
 import { useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { urlFor } from "@/sanity/lib/image";
+import { MOTION } from "@/lib/motion";
 
 type SanityImageField = {
   asset: { _ref: string };
@@ -74,8 +76,8 @@ export default function WorkProjectGrid({
   const bgImage = activeProject ? getProjectImage(activeProject) : null;
 
   const rows: WorkProject[][] = [];
-  for (let i = 0; i < filtered.length; i += 4) {
-    rows.push(filtered.slice(i, i + 4));
+  for (let i = 0; i < filtered.length; i += 3) {
+    rows.push(filtered.slice(i, i + 3));
   }
 
   const toggleFilter = useCallback((key: FilterKey) => {
@@ -92,17 +94,31 @@ export default function WorkProjectGrid({
         background: "#292929",
       }}
     >
-      {/* Background image — swaps on hover */}
-      {bgImage && (
-        <Image
-          src={urlFor(bgImage).width(1920).quality(80).auto("format").url()}
-          alt=""
-          fill
-          sizes="100vw"
-          style={{ objectFit: "cover" }}
-          priority
-        />
-      )}
+      {/* Background image — crossfades on hover */}
+      <AnimatePresence>
+        {bgImage && (
+          <motion.div
+            key={urlFor(bgImage).width(1920).quality(80).auto("format").url()}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: MOTION.duration.hover,
+              ease: MOTION.ease.heavy,
+            }}
+            style={{ position: "absolute", inset: 0 }}
+          >
+            <Image
+              src={urlFor(bgImage).width(1920).quality(80).auto("format").url()}
+              alt=""
+              fill
+              sizes="100vw"
+              style={{ objectFit: "cover" }}
+              priority
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Content layer */}
       <div
@@ -172,7 +188,7 @@ export default function WorkProjectGrid({
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`text-caption box-border flex min-w-0 flex-1 items-center justify-start border-[0.5px] px-1 py-0.5 no-underline ${
+                  className={`hover-smooth text-caption box-border flex min-w-0 flex-1 items-center justify-start border-[0.5px] px-1 py-0.5 no-underline ${
                     isActive
                       ? "border-transparent bg-(--color-white) text-(--color-black)"
                       : "border-(--color-white) text-(--color-white) hover:border-transparent hover:bg-(--color-white) hover:text-(--color-black)"
@@ -196,53 +212,79 @@ export default function WorkProjectGrid({
             overflow: "hidden",
           }}
         >
-          {rows.map((row, rowIdx) => (
-            <div
-              key={rowIdx}
-              className="page-grid"
-              style={{ alignItems: "start" }}
-            >
-              <div style={{ gridColumn: "1 / 2" }} />
+          {rows.map((row, rowIdx) => {
+            const isEvenRow = rowIdx % 2 === 0;
+            return (
+              <div
+                key={rowIdx}
+                className="page-grid"
+                style={{ alignItems: "start" }}
+              >
+                {Array.from({ length: 6 }, (_, i) => {
+                  const col = i + 1;
+                  const isEmptyCell = isEvenRow
+                    ? col % 2 === 0
+                    : col % 2 === 1;
 
-              {row.map((project, colIdx) => {
-                const globalIdx = rowIdx * 4 + colIdx;
-                return (
-                  <Link
-                    key={project._id}
-                    href={`/work/${project.slug.current}`}
-                    className="no-underline"
-                    style={{
-                      gridColumn: `${colIdx + 2} / ${colIdx + 3}`,
-                      outline: "none",
-                    }}
-                    onMouseEnter={() => setHoveredIndex(globalIdx)}
-                    onFocus={() => setHoveredIndex(globalIdx)}
-                  >
-                    <span
-                      className="text-body"
-                      style={{
-                        color: "var(--color-white)",
-                        display: "block",
-                      }}
-                    >
-                      {project.title}
-                    </span>
-                    <span
-                      className="text-caption"
-                      style={{
-                        color: "var(--color-white)",
-                        display: "block",
-                      }}
-                    >
-                      {project.tags?.map(formatTag).join(", ") || "\u00A0"}
-                    </span>
-                  </Link>
-                );
-              })}
+                  if (isEmptyCell) {
+                    return (
+                      <div
+                        key={`empty-${col}`}
+                        style={{ gridColumn: `${col} / ${col + 1}` }}
+                      />
+                    );
+                  }
 
-              <div style={{ gridColumn: "6 / 7" }} />
-            </div>
-          ))}
+                  const slotInRow = isEvenRow
+                    ? Math.floor(col / 2)
+                    : Math.floor((col - 1) / 2);
+                  const project = row[slotInRow];
+                  if (!project) {
+                    return (
+                      <div
+                        key={`pad-${col}`}
+                        style={{ gridColumn: `${col} / ${col + 1}` }}
+                      />
+                    );
+                  }
+
+                  const globalIdx = rowIdx * 3 + slotInRow;
+                  return (
+                    <Link
+                      key={project._id}
+                      href={`/work/${project.slug.current}`}
+                      className="no-underline"
+                      style={{
+                        gridColumn: `${col} / ${col + 1}`,
+                        outline: "none",
+                      }}
+                      onMouseEnter={() => setHoveredIndex(globalIdx)}
+                      onFocus={() => setHoveredIndex(globalIdx)}
+                    >
+                      <span
+                        className="text-body"
+                        style={{
+                          color: "var(--color-white)",
+                          display: "block",
+                        }}
+                      >
+                        {project.title}
+                      </span>
+                      <span
+                        className="text-caption"
+                        style={{
+                          color: "var(--color-white)",
+                          display: "block",
+                        }}
+                      >
+                        {project.tags?.map(formatTag).join(", ") || "\u00A0"}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
 
         {/* ── Work footer (filters + close) ──────────────── */}
@@ -259,24 +301,30 @@ export default function WorkProjectGrid({
           >
             <div style={{ display: "flex", flexDirection: "column" }}>
               {FILTERS.map((f) => (
-                <button
+                <motion.button
                   key={f.key}
                   onClick={() => toggleFilter(f.key)}
                   className="text-body"
+                  animate={{
+                    color:
+                      activeFilter === null || activeFilter === f.key
+                        ? "rgba(255, 255, 255, 1)"
+                        : "rgba(255, 255, 255, 0.5)",
+                  }}
+                  transition={{
+                    duration: MOTION.duration.hover,
+                    ease: MOTION.ease.heavy,
+                  }}
                   style={{
                     background: "none",
                     border: "none",
                     padding: 0,
                     cursor: "pointer",
                     textAlign: "left",
-                    color:
-                      activeFilter === null || activeFilter === f.key
-                        ? "var(--color-white)"
-                        : "rgba(255, 255, 255, 0.5)",
                   }}
                 >
                   {f.label}
-                </button>
+                </motion.button>
               ))}
             </div>
             <span

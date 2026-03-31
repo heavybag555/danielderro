@@ -3,7 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { urlFor } from "@/sanity/lib/image";
+import { MOTION } from "@/lib/motion";
 
 type SanityImageField = {
   asset: { _ref: string };
@@ -183,7 +185,7 @@ export default function ProjectPage({ project }: { project: Project }) {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`text-caption box-border flex min-w-0 flex-1 items-center justify-start border-[0.5px] px-1 py-0.5 no-underline ${
+                  className={`hover-smooth text-caption box-border flex min-w-0 flex-1 items-center justify-start border-[0.5px] px-1 py-0.5 no-underline ${
                     isActive
                       ? "border-transparent bg-(--color-black) text-(--color-white)"
                       : "border-(--color-stroke) text-(--color-black) hover:border-transparent hover:bg-(--color-black) hover:text-(--color-white)"
@@ -225,10 +227,22 @@ export default function ProjectPage({ project }: { project: Project }) {
           </span>
         </div>
         {total > 0 && (
-          <span className="text-body">
-            <span style={{ color: "rgba(0, 0, 0, 0.5)" }}>
-              {pad(activeIndex + 1)}
-            </span>{" "}
+          <span className="text-body" style={{ display: "flex", gap: 4 }}>
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={activeIndex}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{
+                  duration: MOTION.duration.fade,
+                  ease: MOTION.ease.heavy,
+                }}
+                style={{ color: "rgba(0, 0, 0, 0.5)" }}
+              >
+                {pad(activeIndex + 1)}
+              </motion.span>
+            </AnimatePresence>
             <span style={{ color: "var(--color-black)" }}>{pad(total)}</span>
           </span>
         )}

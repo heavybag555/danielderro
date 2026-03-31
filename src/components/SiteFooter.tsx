@@ -58,7 +58,7 @@ export default function SiteFooter({ activePath, inverted = false }: SiteFooterP
             <Link
               key={item.label}
               href={item.href}
-              className={`text-caption box-border flex min-w-0 flex-1 items-center justify-start border-[0.5px] px-1 py-0.5 no-underline ${
+              className={`hover-smooth text-caption box-border flex min-w-0 flex-1 items-center justify-start border-[0.5px] px-1 py-0.5 no-underline ${
                 isActive
                   ? inverted
                     ? "border-transparent bg-(--color-white) text-(--color-primary)"
