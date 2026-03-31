@@ -59,7 +59,7 @@ export default function StickyHeroFadeImage() {
       }}
     >
       <Image
-        src="/images/hero.png"
+        src="/images/daniel-hero.png"
         alt="Daniel Derro"
         fill
         style={{

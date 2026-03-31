@@ -49,7 +49,7 @@ export default function InfoColumns({
         ) : (
           <div style={{ width: "100%", height: 240, position: "relative", overflow: "hidden" }}>
             <Image
-              src="/images/hero.png"
+              src="/images/daniel-hero.png"
               alt="Daniel Derro"
               fill
               style={{
