@@ -49,24 +49,13 @@ export default function StickyHeroFadeImage() {
   }, [opacity]);
 
   return (
-    <motion.div
-      style={{
-        width: "100%",
-        height: 240,
-        position: "relative",
-        overflow: "hidden",
-        opacity,
-      }}
-    >
+    <motion.div style={{ width: "100%", opacity }}>
       <Image
         src="/images/daniel-hero.png"
         alt="Daniel Derro"
-        fill
-        style={{
-          objectFit: "cover",
-          filter: "grayscale(1)",
-          opacity: 0.8,
-        }}
+        width={2908}
+        height={1942}
+        style={{ width: "100%", height: "auto", display: "block" }}
         priority
       />
     </motion.div>

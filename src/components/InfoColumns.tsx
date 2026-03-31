@@ -47,16 +47,13 @@ export default function InfoColumns({
         ) : hideHeroImage ? (
           <div />
         ) : (
-          <div style={{ width: "100%", height: 240, position: "relative", overflow: "hidden" }}>
+          <div style={{ width: "100%" }}>
             <Image
               src="/images/daniel-hero.png"
               alt="Daniel Derro"
-              fill
-              style={{
-                objectFit: "cover",
-                filter: "grayscale(1)",
-                opacity: 0.4,
-              }}
+              width={2908}
+              height={1942}
+              style={{ width: "100%", height: "auto", display: "block" }}
               priority
             />
           </div>
