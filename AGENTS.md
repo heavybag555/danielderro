@@ -3,13 +3,15 @@
 - Keep the interface free of shadows and time-based motion; state changes should read instantly (matches global CSS that zeroes animations and transitions).
 - Treat the site background as solid white only; avoid extra fill colors on panels or cells unless placeholder media explicitly keeps its fill.
 - The top band or header should stay sticky to the top edge, stay visually transparent (no background fill), and sit above scrolling content.
-- Footer navigation should read as equal-width items within their grid span, with labels left-aligned inside each cell; hover should invert to black background with white text and border.
+- Footer navigation should read as equal-width items within their grid span, with labels left-aligned inside each cell; hover should invert to black background with white text and no visible border (use `border-transparent` on hover).
 - Pin the site footer to the bottom of the viewport and give the main page enough bottom padding so content can scroll above it (including safe-area where relevant); keep the footer visually transparent with no opaque background fill (consistent with the header band).
-- For local checks, run the dev server on port 3000 (project scripts use Turbopack there).
+- For local checks, run the dev server on port 3000 via `npm run dev` (routes through `scripts/dev.sh` which kills stale listeners before launching Turbopack). Use `npm run dev:clean` to wipe `.next` first when manifest/cache errors appear.
 - Prefer a minimal UI stack (Next.js with Tailwind); Sanity CMS at `/studio` is used for client-managed portfolio content—avoid adding extra CMSes or animation libraries unless asked.
 - On small screens, use generous uniform padding around the layout (user specified 20px on all sides).
 - The `InfoColumns` component powers both the sticky top panel and the bottom panel. Always keep all three inner text-grid slots (`repeat(3, 1fr)`) even when a column's content is hidden — render an empty `<div />` placeholder to hold the grid position. The six-column `page-grid` structure must never collapse.
 - On the home page, present the Sanity-fed gallery as a continuous image grid without per-project title rows.
+- Footer brand labels ("Daniel Derro", "No School Studios") should always link to home (`/`).
+- Do not apply opacity overlays or filters on background images; on the work page, show background images only when a project is hovered (no default pre-loaded image).
 
 ## Learned Workspace Facts
 
@@ -19,5 +21,10 @@
 - Global styles intentionally strip box shadows and force zero-duration transitions/animations site-wide.
 - `npm run build` can still fail if archived files import packages that are no longer dependencies (for example Framer Motion under `src/archive/`).
 - `tsconfig.json` excludes `src/archive` so archived code is not type-checked and does not break production builds.
-- Stale or mixed `.next` output (for example after `next build` then `next dev`) can cause local Internal Server Errors or missing chunk errors; deleting `.next` and restarting the dev server usually fixes it.
+- Stale or mixed `.next` output (for example after `next build` then `next dev`) can cause local Internal Server Errors or missing chunk errors; `npm run dev:clean` handles this automatically.
+- Never leave large directories (e.g. `node_modules_old`) in the project root — they cause webpack/Turbopack file-watcher exhaustion and hang page compilation indefinitely. `.gitignore` now blocks `node_modules_old`.
 - Embedded Sanity CMS powers portfolio projects and media; Studio is at `/studio`. Use versions aligned with Next.js 15 (for example `sanity@4` with `next-sanity@11`). Until video playback exists, gallery `videoAsset` entries should use thumbnails only as on-page stills.
+- The site has three page routes beyond home: `/info` (red background, inverted white text), `/work` (dark 100vh project matrix with hover-swapped background images), and `/work/[slug]` (project detail with fixed side info and scrollable media column).
+- `SiteFooter` accepts `activePath` (highlights the matching nav item) and `inverted` (swaps to white foreground for dark/red backgrounds) props.
+- `text-body` CSS token is 14px Helvetica Neue Medium with 1.25 line-height and 1% letter-spacing, defined in `globals.css`.
+- `StickyHeroFadeImage` is a client component that fades the home-page sticky hero image to transparent as the user scrolls near the document bottom.

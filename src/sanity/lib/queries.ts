@@ -71,6 +71,18 @@ export const videoProjectsQuery = groq`
   }
 `;
 
+export const workPageProjectsQuery = groq`
+  *[_type == "project"] | order(order asc, date desc) {
+    _id,
+    title,
+    slug,
+    projectType,
+    tags,
+    coverImage,
+    "fallbackImage": coalesce(gallery[0].image, gallery[0].thumbnail),
+  }
+`;
+
 export const noSchoolStudioQuery = groq`
   *[_type == "project" && "no-school-studio" in tags] | order(order asc, date desc) {
     _id,

@@ -53,7 +53,11 @@ export default function StickyHeroFadeImage() {
         src="/images/hero.png"
         alt="Daniel Derro"
         fill
-        style={{ objectFit: "cover" }}
+        style={{
+          objectFit: "cover",
+          filter: "grayscale(1)",
+          opacity: 0.4,
+        }}
         priority
       />
     </div>

@@ -41,7 +41,11 @@ export default function InfoColumns({
               src="/images/hero.png"
               alt="Daniel Derro"
               fill
-              style={{ objectFit: "cover" }}
+              style={{
+                objectFit: "cover",
+                filter: "grayscale(1)",
+                opacity: 0.1,
+              }}
               priority
             />
           </div>
