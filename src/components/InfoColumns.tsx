@@ -41,18 +41,20 @@ export default function InfoColumns({
 
   return (
     <div className="page-grid" style={rootShell}>
-      <div style={{ gridColumn: "1 / 2" }}>
+      <div style={{ gridColumn: "1 / 2" }} />
+
+      <div style={{ gridColumn: "2 / 3" }} />
+
+      <div style={{ gridColumn: "3 / 4" }}>
         {stickyTextBlock ? (
           <StickyHeroFadeImage />
-        ) : hideHeroImage ? (
-          <div />
-        ) : (
+        ) : hideHeroImage ? null : (
           <div style={{ width: "100%" }}>
             <Image
-              src="/images/daniel-hero.png"
+              src="/images/daniel-hero-new.jpg"
               alt="Daniel Derro"
-              width={2908}
-              height={1942}
+              width={2000}
+              height={1470}
               style={{ width: "100%", height: "auto", display: "block" }}
               priority
             />
@@ -60,9 +62,7 @@ export default function InfoColumns({
         )}
       </div>
 
-      <div style={{ gridColumn: "2 / 3" }} />
-
-      <div style={{ gridColumn: "3 / 6" }}>
+      <div style={{ gridColumn: "4 / 7" }}>
         <div style={textGridStyle}>
           {/* --- Slot 1 --- */}
           {shiftRight || hideAboutClients ? (
@@ -215,7 +215,6 @@ export default function InfoColumns({
         </div>
       </div>
 
-      <div style={{ gridColumn: "6 / 7" }} />
     </div>
   );
 }
