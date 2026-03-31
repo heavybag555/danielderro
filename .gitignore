@@ -25,9 +25,6 @@
 .DS_Store
 *.pem
 
-# large image assets (serve from CDN/cloud storage instead)
-/public/Images/
-
 # debug
 npm-debug.log*
 yarn-debug.log*
