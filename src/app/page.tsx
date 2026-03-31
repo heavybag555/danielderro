@@ -68,7 +68,7 @@ export default async function Home() {
       style={{
         display: "flex",
         flexDirection: "column",
-        paddingTop: 400,
+        paddingTop: 220,
         paddingLeft: 12,
         paddingRight: 12,
         paddingBottom: "calc(80px + env(safe-area-inset-bottom, 0px))",

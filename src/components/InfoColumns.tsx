@@ -1,4 +1,5 @@
 import Image from "next/image";
+import StickyHeroFadeImage from "@/components/StickyHeroFadeImage";
 
 type InfoColumnsProps = {
   /** When true, About / Clients / Contact stay pinned while the gallery scrolls. */
@@ -32,15 +33,19 @@ export default function InfoColumns({
   return (
     <div className="page-grid" style={rootShell}>
       <div style={{ gridColumn: "1 / 2" }}>
-        <div style={{ width: "100%", height: 240, position: "relative", overflow: "hidden" }}>
-          <Image
-            src="/images/hero.png"
-            alt="Daniel Derro"
-            fill
-            style={{ objectFit: "cover" }}
-            priority
-          />
-        </div>
+        {stickyTextBlock ? (
+          <StickyHeroFadeImage />
+        ) : (
+          <div style={{ width: "100%", height: 240, position: "relative", overflow: "hidden" }}>
+            <Image
+              src="/images/hero.png"
+              alt="Daniel Derro"
+              fill
+              style={{ objectFit: "cover" }}
+              priority
+            />
+          </div>
+        )}
       </div>
 
       <div style={{ gridColumn: "2 / 3" }} />
@@ -120,7 +125,7 @@ export default function InfoColumns({
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div style={{ paddingLeft: 20 }}>
                 <span className="text-caption" style={{ color: "var(--color-black)" }}>
-                  Reach
+                  Follow
                 </span>
               </div>
               <div style={{ display: "flex", flexDirection: "column" }}>
