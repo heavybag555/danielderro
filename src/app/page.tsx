@@ -77,7 +77,7 @@ export default async function Home() {
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 120 }}>
         <section style={{ paddingTop: 120, paddingBottom: 0 }}>
-          <InfoColumns stickyTextBlock hideContact />
+          <InfoColumns hideContact />
           <div id="home-gallery-fade-anchor" style={{ marginTop: 240 }}>
             <GallerySection projects={projects} />
           </div>

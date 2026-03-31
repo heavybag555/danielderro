@@ -1,9 +1,7 @@
 import Image from "next/image";
 
 type InfoColumnsProps = {
-  /** When true, About / Clients / Contact stay pinned while the gallery scrolls. */
-  stickyTextBlock?: boolean;
-  /** Omit the Contact column (sticky header only: contact lives in the lower section). */
+  /** Omit the Contact column (header: contact lives in the lower section). */
   hideContact?: boolean;
   /** Remove the About and Clients columns entirely (empty placeholders keep the grid). */
   hideAboutClients?: boolean;
@@ -16,7 +14,6 @@ type InfoColumnsProps = {
 };
 
 export default function InfoColumns({
-  stickyTextBlock = false,
   hideContact = false,
   hideAboutClients = false,
   shiftRight = false,
@@ -29,10 +26,6 @@ export default function InfoColumns({
     columnGap: "var(--spacing-gutter)",
     width: "100%",
   };
-
-  const textStickyStyle = stickyTextBlock
-    ? { position: "sticky" as const, top: 0, zIndex: 100, alignSelf: "start" as const }
-    : {};
 
   return (
     <div className="page-grid">
@@ -62,7 +55,7 @@ export default function InfoColumns({
         )}
       </div>
 
-      <div style={{ gridColumn: "4 / 7", ...textStickyStyle }}>
+      <div style={{ gridColumn: "4 / 7" }}>
         <div style={textGridStyle}>
           {/* --- Slot 1 --- */}
           {shiftRight ? (
@@ -215,27 +208,6 @@ export default function InfoColumns({
             </div>
           ) : hideContact ? (
             <div />
-          ) : stickyTextBlock ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              <div style={{ paddingLeft: 20 }}>
-                <span className="text-caption" style={{ color: "var(--color-black)" }}>
-                  Contact
-                </span>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span className="text-caption" style={{ color: "var(--color-primary)" }}>
-                    Tel. 00 32 15 75 59 43
-                  </span>
-                  <span className="text-caption" style={{ color: "var(--color-primary)" }}>
-                    info@ns-sr.org
-                  </span>
-                </div>
-                <p className="text-meta-tight" style={{ color: "var(--color-primary)", margin: 0 }}>
-                  Based between New York and Los Angeles with international project capabilities.
-                </p>
-              </div>
-            </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div style={{ paddingLeft: 20 }}>
