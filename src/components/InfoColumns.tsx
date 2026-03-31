@@ -65,7 +65,30 @@ export default function InfoColumns({
       <div style={{ gridColumn: "4 / 7" }}>
         <div style={textGridStyle}>
           {/* --- Slot 1 --- */}
-          {shiftRight || hideAboutClients ? (
+          {shiftRight ? (
+            <div />
+          ) : hideAboutClients && contactMiddle ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <div style={{ paddingLeft: 20 }}>
+                <span className="text-caption" style={{ color: "var(--color-black)" }}>
+                  Contact
+                </span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+                    Tel. 00 32 15 75 59 43
+                  </span>
+                  <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+                    info@ns-sr.org
+                  </span>
+                </div>
+                <p className="text-meta-tight" style={{ color: "var(--color-primary)", margin: 0 }}>
+                  Based between New York and Los Angeles with international project capabilities.
+                </p>
+              </div>
+            </div>
+          ) : hideAboutClients ? (
             <div />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -94,7 +117,23 @@ export default function InfoColumns({
           )}
 
           {/* --- Slot 2 --- */}
-          {contactMiddle ? (
+          {contactMiddle && hideAboutClients ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <div style={{ paddingLeft: 20 }}>
+                <span className="text-caption" style={{ color: "var(--color-black)" }}>
+                  Follow
+                </span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+                  @danielderro_
+                </span>
+                <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+                  @noschoolstudiorecords
+                </span>
+              </div>
+            </div>
+          ) : contactMiddle ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div style={{ paddingLeft: 20 }}>
                 <span className="text-caption" style={{ color: "var(--color-black)" }}>
@@ -158,7 +197,9 @@ export default function InfoColumns({
           )}
 
           {/* --- Slot 3 --- */}
-          {shiftRight ? (
+          {contactMiddle && hideAboutClients ? (
+            <div />
+          ) : shiftRight ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div style={{ paddingLeft: 20 }}>
                 <span className="text-caption" style={{ color: "var(--color-black)" }}>
