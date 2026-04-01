@@ -26,7 +26,7 @@ export default function InfoPage() {
               </span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              <p className="text-caption" style={{ color: "var(--color-primary)", margin: 0 }}>
+              <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
                 Daniel Derro creates visual narratives for luxury fashion and cultural brands,
                 bringing authentic street perspective to premium campaigns. His work for Prada,
                 Dior, and Givenchy demonstrates his ability to translate genuine cultural moments
@@ -45,7 +45,7 @@ export default function InfoPage() {
 
           <div style={{ gridColumn: "3 / 4" }}>
             <p
-              className="text-caption"
+              className="text-body"
               style={{ color: "var(--color-primary)", margin: 0, whiteSpace: "pre-line" }}
             >
               {"Recent campaigns span major fashion houses, international sportswear brands, and music industry collaborations. Daniel has directed album visuals for Grammy-nominated artist Giveon while maintaining ongoing relationships with Nike and Adidas for culturally-driven campaigns.\n\nPublished extensively in The New York Times, Vogue Italia, i-D, and Kaleidoscope Magazine, Daniel\u2019s editorial work has been exhibited internationally from Dover Street Market Paris to MOMA and MOCA museums. His visual language combines documentary authenticity with luxury fashion aesthetics."}
@@ -54,7 +54,7 @@ export default function InfoPage() {
 
           <div style={{ gridColumn: "4 / 5" }}>
             <p
-              className="text-caption"
+              className="text-body"
               style={{ color: "var(--color-primary)", margin: 0, whiteSpace: "pre-line" }}
             >
               {"Daniel\u2019s comprehensive services include photography, film direction, creative direction, casting, location scouting, and brand consulting. Working primarily with medium format film and high-end digital capture, he delivers complete creative solutions from concept through final delivery.\n\nHis artistic practice centers on social connection and community engagement, including work within correctional facilities and youth mentorship programs. This depth of human experience brings genuine authenticity to commercial work, creating campaigns that resonate beyond surface aesthetics."}
@@ -67,7 +67,7 @@ export default function InfoPage() {
                 Clients
               </span>
             </div>
-            <p className="text-caption" style={{ color: "var(--color-primary)", margin: 0 }}>
+            <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
               Prada, Nike, Givenchy, Dior, Stüssy, Adidas, pgLang, Burberry, Carhartt WIP, Our
               Legacy, New Balance, Fake Mink, ASICS, Moncler, T Magazine, Giveon, Popeye, Stormzy,
               Yeezy, Slam Jam, Converse, Alo, Nike Golf, Crash, Jordan, Union, Dazed, Babylon,
@@ -94,10 +94,10 @@ export default function InfoPage() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div style={{ display: "flex", flexDirection: "column" }}>
-                <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+                <span className="text-body" style={{ color: "var(--color-primary)" }}>
                   Tel. 00 32 15 75 59 43
                 </span>
-                <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+                <span className="text-body" style={{ color: "var(--color-primary)" }}>
                   info@ns-sr.org
                 </span>
               </div>
@@ -114,10 +114,10 @@ export default function InfoPage() {
               </span>
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+              <span className="text-body" style={{ color: "var(--color-primary)" }}>
                 @danielderro_
               </span>
-              <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+              <span className="text-body" style={{ color: "var(--color-primary)" }}>
                 @noschoolstudiorecords
               </span>
             </div>

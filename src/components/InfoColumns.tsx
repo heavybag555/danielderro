@@ -69,10 +69,10 @@ export default function InfoColumns({
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+                  <span className="text-body" style={{ color: "var(--color-primary)" }}>
                     Tel. 00 32 15 75 59 43
                   </span>
-                  <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+                  <span className="text-body" style={{ color: "var(--color-primary)" }}>
                     info@ns-sr.org
                   </span>
                 </div>
@@ -91,7 +91,7 @@ export default function InfoColumns({
                 </span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                <p className="text-caption" style={{ color: "var(--color-primary)", margin: 0 }}>
+                <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
                   Daniel Derro creates visual narratives for luxury fashion and cultural brands,
                   bringing authentic street perspective to premium campaigns. His work for Prada,
                   Dior, and Givenchy demonstrates his ability to translate genuine cultural moments
@@ -118,10 +118,10 @@ export default function InfoColumns({
                 </span>
               </div>
               <div style={{ display: "flex", flexDirection: "column" }}>
-                <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+                <span className="text-body" style={{ color: "var(--color-primary)" }}>
                   @danielderro_
                 </span>
-                <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+                <span className="text-body" style={{ color: "var(--color-primary)" }}>
                   @noschoolstudiorecords
                 </span>
               </div>
@@ -135,10 +135,10 @@ export default function InfoColumns({
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+                  <span className="text-body" style={{ color: "var(--color-primary)" }}>
                     Tel. 00 32 15 75 59 43
                   </span>
-                  <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+                  <span className="text-body" style={{ color: "var(--color-primary)" }}>
                     info@ns-sr.org
                   </span>
                 </div>
@@ -155,7 +155,7 @@ export default function InfoColumns({
                 </span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                <p className="text-caption" style={{ color: "var(--color-primary)", margin: 0 }}>
+                <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
                   Daniel Derro creates visual narratives for luxury fashion and cultural brands,
                   bringing authentic street perspective to premium campaigns. His work for Prada,
                   Dior, and Givenchy demonstrates his ability to translate genuine cultural moments
@@ -180,7 +180,7 @@ export default function InfoColumns({
                   Clients
                 </span>
               </div>
-              <p className="text-caption" style={{ color: "var(--color-primary)", margin: 0 }}>
+              <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
                 Prada, Nike, Givenchy, Dior, Stüssy, Adidas, pgLang, Burberry, Carhartt WIP, Our
                 Legacy, New Balance, Fake Mink, ASICS, Moncler, T Magazine, Giveon, Popeye, Stormzy,
                 Yeezy, Slam Jam, Converse, Alo, Nike Golf, Crash, Jordan, Union, Dazed, Babylon,
@@ -199,7 +199,7 @@ export default function InfoColumns({
                   Clients
                 </span>
               </div>
-              <p className="text-caption" style={{ color: "var(--color-primary)", margin: 0 }}>
+              <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
                 Prada, Nike, Givenchy, Dior, Stüssy, Adidas, pgLang, Burberry, Carhartt WIP, Our
                 Legacy, New Balance, Fake Mink, ASICS, Moncler, T Magazine, Giveon, Popeye, Stormzy,
                 Yeezy, Slam Jam, Converse, Alo, Nike Golf, Crash, Jordan, Union, Dazed, Babylon,
@@ -216,10 +216,10 @@ export default function InfoColumns({
                 </span>
               </div>
               <div style={{ display: "flex", flexDirection: "column" }}>
-                <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+                <span className="text-body" style={{ color: "var(--color-primary)" }}>
                   @danielderro_
                 </span>
-                <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+                <span className="text-body" style={{ color: "var(--color-primary)" }}>
                   @noschoolstudiorecords
                 </span>
               </div>
