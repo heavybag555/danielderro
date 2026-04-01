@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { urlFor } from "@/sanity/lib/image";
+import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
 import { formatSanityTag } from "@/lib/format-sanity-tag";
 import { MOTION } from "@/lib/motion";
 
@@ -165,6 +165,7 @@ function ProjectImages({ items }: { items: PreviewStill[] }) {
         {hoveredItem && (
           <motion.div
             key={hoveredItem._key}
+            className="blend-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -202,15 +203,13 @@ function ProjectImages({ items }: { items: PreviewStill[] }) {
             >
               <Link href={`/work/${item.slug}`} style={{ display: "block" }}>
                 <Image
-                  src={urlFor(item.image)
-                    .width(600)
-                    .quality(85)
-                    .auto("format")
-                    .url()}
+                  loader={sanityLoader}
+                  src={sanityImageUrl(item.image)}
                   alt={item.alt}
                   width={600}
                   height={750}
-                  sizes="(max-width: 768px) 50vw, 16vw"
+                  sizes="(max-width: 768px) 50vw, 20vw"
+                  quality={90}
                   style={{
                     width: "100%",
                     height: "auto",

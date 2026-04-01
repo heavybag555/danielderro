@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { urlFor } from "@/sanity/lib/image";
+import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
 import { formatSanityTag } from "@/lib/format-sanity-tag";
 import { MOTION } from "@/lib/motion";
 
@@ -95,7 +95,7 @@ export default function WorkProjectGrid({
       <AnimatePresence>
         {bgImage && (
           <motion.div
-            key={urlFor(bgImage).width(1920).quality(80).auto("format").url()}
+            key={sanityImageUrl(bgImage)}
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.2 }}
             exit={{ opacity: 0 }}
@@ -105,7 +105,7 @@ export default function WorkProjectGrid({
             }}
             style={{
               position: "absolute",
-              inset: 0,
+              inset: 12,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -114,11 +114,13 @@ export default function WorkProjectGrid({
             }}
           >
             <Image
-              src={urlFor(bgImage).width(1920).quality(80).auto("format").url()}
+              loader={sanityLoader}
+              src={sanityImageUrl(bgImage)}
               alt=""
               width={1920}
               height={1080}
               sizes="100vw"
+              quality={85}
               style={{
                 width: "auto",
                 height: "100%",

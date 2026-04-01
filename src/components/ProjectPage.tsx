@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { urlFor } from "@/sanity/lib/image";
+import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
 import { formatSanityTag } from "@/lib/format-sanity-tag";
 import { MOTION } from "@/lib/motion";
+import SiteFooter from "@/components/SiteFooter";
 
 type SanityImageField = {
   asset: { _ref: string };
@@ -81,43 +82,152 @@ function pad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
+function NavCursorGlyph({ direction }: { direction: "prev" | "next" }) {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+      {direction === "prev" ? (
+        <path
+          d="M15 18l-6-6 6-6"
+          stroke="white"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ) : (
+        <path
+          d="M9 18l6-6-6-6"
+          stroke="white"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+    </svg>
+  );
+}
+
+const slideTransition = {
+  duration: MOTION.duration.gallerySlide,
+  ease: MOTION.ease.heavy,
+} as const;
+
+const slideFrameStyle = {
+  position: "absolute" as const,
+  inset: 12,
+};
+
 export default function ProjectPage({ project }: { project: Project }) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const mediaRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [prevIndex, setPrevIndex] = useState<number | null>(null);
+  const [navCursor, setNavCursor] = useState<{
+    direction: "prev" | "next";
+    x: number;
+    y: number;
+  } | null>(null);
   const mediaItems = galleryToMedia(project.gallery ?? []);
   const total = mediaItems.length;
 
-  useEffect(() => {
-    const refs = mediaRefs.current;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const idx = Number(entry.target.getAttribute("data-idx"));
-            if (!isNaN(idx)) setActiveIndex(idx);
-          }
-        }
-      },
-      { threshold: 0.5 },
-    );
+  const endSlideTransition = useCallback(() => {
+    setPrevIndex(null);
+  }, []);
 
-    for (const ref of refs) {
-      if (ref) observer.observe(ref);
-    }
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (total === 0) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const isRight = x > rect.width / 2;
 
-    return () => observer.disconnect();
-  }, [total]);
+      setActiveIndex((prev) => {
+        const next = isRight ? (prev + 1) % total : (prev - 1 + total) % total;
+        if (next === prev) return prev;
+        setPrevIndex(prev);
+        return next;
+      });
+    },
+    [total],
+  );
+
+  const updateNavCursor = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (total === 0) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      setNavCursor({
+        direction: x > rect.width / 2 ? "next" : "prev",
+        x: e.clientX,
+        y: e.clientY,
+      });
+    },
+    [total],
+  );
+
+  const currentItem = mediaItems[activeIndex];
+
+  const titleContent = (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "baseline",
+        columnGap: 8,
+        rowGap: 4,
+      }}
+    >
+      <span className="text-body" style={{ color: "var(--color-black)" }}>
+        {project.title}
+      </span>
+      {project.client ? (
+        <span className="text-body" style={{ color: "var(--color-black)", opacity: 0.5 }}>
+          {project.client}
+        </span>
+      ) : null}
+    </div>
+  );
+
+  const tagsContent =
+    project.tags && project.tags.length > 0 ? (
+      <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+        {project.tags.map(formatSanityTag).join(", ")}
+      </span>
+    ) : null;
+
+  const slideCounter = total > 0 ? (
+    <span className="text-caption" style={{ display: "flex", gap: 4 }}>
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={activeIndex}
+          className="text-caption"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.5 }}
+          exit={{ opacity: 0 }}
+          transition={{
+            duration: MOTION.duration.gallerySlide,
+            ease: MOTION.ease.heavy,
+          }}
+          style={{ color: "var(--color-black)" }}
+        >
+          {pad(activeIndex + 1)}
+        </motion.span>
+      </AnimatePresence>
+      <span className="text-caption" style={{ color: "var(--color-black)" }}>
+        {pad(total)}
+      </span>
+    </span>
+  ) : null;
 
   return (
     <div
       style={{
-        position: "relative",
-        minHeight: "100vh",
+        position: "fixed",
+        inset: 0,
         background: "var(--color-white)",
+        overflow: "hidden",
       }}
     >
       {/* ── Fixed header ──────────────────────────────────── */}
       <div
+        className="blend-overlay"
         style={{
           position: "fixed",
           top: 0,
@@ -193,121 +303,98 @@ export default function ProjectPage({ project }: { project: Project }) {
         </header>
       </div>
 
-      {/* ── Fixed project info (left, vertically centered) ── */}
+      {/* ── Full-height slideshow ─────────────────────────── */}
       <div
+        onClick={handleClick}
+        onMouseEnter={updateNavCursor}
+        onMouseMove={updateNavCursor}
+        onMouseLeave={() => setNavCursor(null)}
         style={{
-          position: "fixed",
-          top: "50%",
-          left: 12,
-          transform: "translateY(-50%)",
-          zIndex: 100,
-          display: "flex",
-          flexDirection: "column",
-          gap: 20,
+          position: "absolute",
+          inset: 0,
+          cursor: total === 0 || !navCursor ? "default" : "none",
+          zIndex: 1,
         }}
       >
-        <div>
-          <span
-            className="text-body"
-            style={{ color: "var(--color-black)", display: "block" }}
-          >
-            {project.title}
-          </span>
-          <span
-            className="text-caption"
-            style={{ color: "var(--color-primary)", display: "block" }}
-          >
-            {project.tags?.map(formatSanityTag).join(", ")}
-          </span>
-        </div>
-        {total > 0 && (
-          <span className="text-body" style={{ display: "flex", gap: 4 }}>
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={activeIndex}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{
-                  duration: MOTION.duration.fade,
-                  ease: MOTION.ease.heavy,
-                }}
-                style={{ color: "rgba(0, 0, 0, 0.5)" }}
-              >
-                {pad(activeIndex + 1)}
-              </motion.span>
-            </AnimatePresence>
-            <span style={{ color: "var(--color-black)" }}>{pad(total)}</span>
-          </span>
-        )}
-      </div>
-
-      {/* ── Fixed close (right, vertically centered) ──────── */}
-      <div
-        style={{
-          position: "fixed",
-          top: "50%",
-          right: 12,
-          transform: "translateY(-50%)",
-          zIndex: 100,
-        }}
-      >
-        <Link
-          href="/work"
-          className="text-body no-underline"
-          style={{ color: "var(--color-black)" }}
-        >
-          Close
-        </Link>
-      </div>
-
-      {/* ── Scrollable media column ──────────────────────── */}
-      <main
-        style={{
-          paddingTop: 120,
-          paddingBottom: 120,
-          paddingLeft: 12,
-          paddingRight: 12,
-        }}
-      >
-        <div className="page-grid">
-          <div style={{ gridColumn: "1 / 2" }} />
-          <div
-            style={{
-              gridColumn: "2 / 6",
-              display: "flex",
-              flexDirection: "column",
-              gap: 12,
-            }}
-          >
-            {mediaItems.map((item, idx) => (
-              <div
-                key={item._key}
-                ref={(el) => {
-                  mediaRefs.current[idx] = el;
-                }}
-                data-idx={idx}
-                style={{ width: "100%", position: "relative" }}
-              >
-                <Image
-                  src={urlFor(item.image)
-                    .width(1200)
-                    .quality(85)
-                    .auto("format")
-                    .url()}
-                  alt={item.alt}
-                  width={1200}
-                  height={750}
-                  sizes="(max-width: 768px) 100vw, 65vw"
-                  style={{ width: "100%", height: "auto", display: "block" }}
-                  priority={idx === 0}
-                />
-              </div>
-            ))}
+        {prevIndex !== null && prevIndex !== activeIndex ? (
+          <>
+            <motion.div
+              key={`out-${prevIndex}-${activeIndex}`}
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 0 }}
+              transition={slideTransition}
+              style={{ ...slideFrameStyle, zIndex: 1 }}
+            >
+              <Image
+                loader={sanityLoader}
+                src={sanityImageUrl(mediaItems[prevIndex].image)}
+                alt={mediaItems[prevIndex].alt}
+                fill
+                sizes="100vw"
+                quality={90}
+                style={{ objectFit: "contain" }}
+              />
+            </motion.div>
+            <motion.div
+              key={`in-${activeIndex}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={slideTransition}
+              style={{ ...slideFrameStyle, zIndex: 2 }}
+              onAnimationComplete={endSlideTransition}
+            >
+              <Image
+                loader={sanityLoader}
+                src={sanityImageUrl(mediaItems[activeIndex].image)}
+                alt={mediaItems[activeIndex].alt}
+                fill
+                sizes="100vw"
+                quality={90}
+                style={{ objectFit: "contain" }}
+                priority
+              />
+            </motion.div>
+          </>
+        ) : currentItem ? (
+          <div style={slideFrameStyle}>
+            <Image
+              loader={sanityLoader}
+              src={sanityImageUrl(currentItem.image)}
+              alt={currentItem.alt}
+              fill
+              sizes="100vw"
+              quality={90}
+              style={{ objectFit: "contain" }}
+              priority
+            />
           </div>
-          <div style={{ gridColumn: "6 / 7" }} />
+        ) : null}
+      </div>
+
+      {navCursor && total > 0 ? (
+        <div
+          aria-hidden
+          style={{
+            position: "fixed",
+            left: navCursor.x,
+            top: navCursor.y,
+            transform: "translate(-50%, -50%)",
+            pointerEvents: "none",
+            zIndex: 99,
+            mixBlendMode: "exclusion",
+          }}
+        >
+          <NavCursorGlyph direction={navCursor.direction} />
         </div>
-      </main>
+      ) : null}
+
+      {/* ── Footer with project info ─────────────────────── */}
+      <SiteFooter
+        activePath="/work"
+        leftContent={titleContent}
+        middleContent={tagsContent}
+        rightContent={slideCounter}
+      />
     </div>
   );
 }

@@ -3,6 +3,8 @@ export const MOTION = {
     page: 0.8,
     hover: 0.6,
     fade: 0.5,
+    /** Project gallery image crossfade (fast advance). */
+    gallerySlide: 0.12,
     slow: 1.2,
   },
   ease: {

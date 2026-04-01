@@ -98,10 +98,10 @@ body {
 
 .text-body {
   font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: 13px;
+  font-weight: 600;
+  font-size: 14px;
   line-height: 18px;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.02em;
 }
 
 .text-h3 {
@@ -110,4 +110,14 @@ body {
   font-size: 17px;
   line-height: .8;
   letter-spacing: -0.03em;
+}
+
+/* Container-level exclusion blend for overlays on imagery (softer than difference).
+   Overrides the palette so child elements using CSS vars read correctly after blend. */
+.blend-overlay {
+  mix-blend-mode: exclusion;
+  --color-black: #ffffff;
+  --color-white: #000000;
+  --color-stroke: #c8c8c8;
+  --color-primary: #31ffff;
 }
