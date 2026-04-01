@@ -161,24 +161,6 @@ function ProjectImages({ items }: { items: PreviewStill[] }) {
 
   return (
     <>
-      <AnimatePresence>
-        {hoveredItem && (
-          <motion.div
-            key={hoveredItem._key}
-            className="blend-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{
-              duration: MOTION.duration.hover,
-              ease: MOTION.ease.heavy,
-            }}
-          >
-            <HoverLabel item={hoveredItem} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <div className="page-grid" style={{ alignItems: "start", rowGap: 120 }}>
         {items.map((item) => {
           const dimmed = hoveredKey !== null && hoveredKey !== item._key;
@@ -221,6 +203,30 @@ function ProjectImages({ items }: { items: PreviewStill[] }) {
           );
         })}
       </div>
+
+      <AnimatePresence>
+        {hoveredItem && (
+          <motion.div
+            key={hoveredItem._key}
+            className="blend-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: MOTION.duration.hover,
+              ease: MOTION.ease.heavy,
+            }}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 100,
+              pointerEvents: "none",
+            }}
+          >
+            <HoverLabel item={hoveredItem} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

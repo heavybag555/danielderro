@@ -249,7 +249,7 @@ export default function ProjectPage({ project }: { project: Project }) {
           >
             <Link
               href="/"
-              className="text-h3 no-underline opacity-100 transition-opacity duration-600 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-80"
+              className="text-body no-underline opacity-100 transition-opacity duration-600 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-80"
               style={{ color: "var(--color-black)" }}
             >
               Daniel Derro
@@ -266,7 +266,7 @@ export default function ProjectPage({ project }: { project: Project }) {
           >
             <Link
               href="/"
-              className="text-h3 no-underline opacity-100 transition-opacity duration-600 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-80"
+              className="text-body no-underline opacity-100 transition-opacity duration-600 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-80"
               style={{ color: "var(--color-black)" }}
             >
               No-School Studio Records

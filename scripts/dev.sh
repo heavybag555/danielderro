@@ -20,4 +20,4 @@ for pid in $(lsof -tiTCP:${PORT} -sTCP:LISTEN 2>/dev/null); do
   kill "$pid" 2>/dev/null || true
 done
 
-exec next dev -p ${PORT}
+exec next dev --turbopack -p ${PORT}
