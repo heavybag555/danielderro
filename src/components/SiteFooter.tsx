@@ -42,7 +42,7 @@ function footerNavLinkClasses(
   const base =
     "hover-smooth text-caption box-border flex min-w-0 flex-1 items-center justify-start border-[0.5px] px-1 py-0.5 no-underline";
   if (comingSoon) {
-    const group = `${base} group`;
+    const group = `${base} group w-full cursor-default bg-transparent text-left font-inherit`;
     if (active) {
       return `${group} border-transparent ${
         inverted
@@ -113,21 +113,23 @@ export default function SiteFooter({
           <nav className="col-span-2 flex min-w-0 items-stretch gap-1 max-lg:mt-[4px] lg:col-span-2">
             {NAV_ITEMS.map((item) => {
               const isActive = activePath === item.href;
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={footerNavLinkClasses(
-                    isActive,
-                    inverted,
-                    item.comingSoon,
-                  )}
-                >
-                  {item.comingSoon ? (
-                    <SiteNavComingSoonLabel label={item.label} />
-                  ) : (
-                    item.label
-                  )}
+              const className = footerNavLinkClasses(
+                isActive,
+                inverted,
+                item.comingSoon,
+              );
+              const inner = item.comingSoon ? (
+                <SiteNavComingSoonLabel label={item.label} />
+              ) : (
+                item.label
+              );
+              return item.comingSoon ? (
+                <button key={item.label} type="button" className={className}>
+                  {inner}
+                </button>
+              ) : (
+                <Link key={item.label} href={item.href} className={className}>
+                  {inner}
                 </Link>
               );
             })}

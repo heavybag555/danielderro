@@ -61,6 +61,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Work routes (/work, /work/[slug]): root canvas must match the black surface so
+   overscroll / rubber-band on mobile does not flash the default white html/body. */
+html:has([data-work-surface]),
+html:has([data-work-surface]) body {
+  background-color: var(--color-black);
+}
+
 /* ── Responsive column grid (2 / 4 / 6) ───────────────── */
 
 .page-grid {

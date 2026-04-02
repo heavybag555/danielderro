@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useLayoutEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -41,6 +41,9 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "motion", label: "Motion" },
   { key: "nss", label: "No-School Studio Records" },
 ];
+
+/** Vertical inset for project text inside the scroll region (below header / above footer). */
+const WORK_PROJECT_TEXT_PAD_Y = 120;
 
 function getProjectImage(
   project: WorkProject,
@@ -90,6 +93,19 @@ export default function WorkProjectGrid({
   const toggleFilter = useCallback((key: FilterKey) => {
     setActiveFilter((prev) => (prev === key ? null : key));
     setHoveredIndex(0);
+  }, []);
+
+  const workHeaderRef = useRef<HTMLDivElement>(null);
+  const [workHeaderBlockHeight, setWorkHeaderBlockHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    const el = workHeaderRef.current;
+    if (!el) return;
+    const measure = () => setWorkHeaderBlockHeight(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   const workFooterFilters = (
@@ -165,7 +181,7 @@ export default function WorkProjectGrid({
         background: "#000000",
       }}
     >
-      {/* Background image — crossfades on hover */}
+      {/* Background image — viewport-fixed; crossfades on hover; does not scroll with project list */}
       <AnimatePresence>
         {bgImage && (
           <motion.div
@@ -178,8 +194,10 @@ export default function WorkProjectGrid({
               ease: MOTION.ease.heavy,
             }}
             style={{
-              position: "absolute",
-              inset: isMobile ? 0 : "var(--spacing-margin)",
+              position: "fixed",
+              inset: 0,
+              zIndex: 0,
+              pointerEvents: "none",
               display: isMobile ? "block" : "flex",
               alignItems: isMobile ? undefined : "center",
               justifyContent: isMobile ? undefined : "center",
@@ -224,6 +242,28 @@ export default function WorkProjectGrid({
         )}
       </AnimatePresence>
 
+      {/* Fixed header — matches ProjectPage; stays pinned during overscroll */}
+      <div
+        ref={workHeaderRef}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 100,
+          paddingTop: "calc(var(--spacing-margin) + env(safe-area-inset-top, 0px))",
+          paddingLeft: "var(--spacing-margin)",
+          paddingRight: "var(--spacing-margin)",
+          boxSizing: "border-box",
+        }}
+      >
+        <SiteHeaderBand
+          navItems={NAV_ITEMS}
+          variant="dark"
+          isActive={(item) => item.href === "/work"}
+        />
+      </div>
+
       {/* Content layer */}
       <div
         style={{
@@ -233,18 +273,12 @@ export default function WorkProjectGrid({
           flexDirection: "column",
           height: "100%",
           padding: isMobile
-            ? "var(--spacing-margin) var(--spacing-margin) 0"
-            : "var(--spacing-margin)",
+            ? "0 var(--spacing-margin) 0"
+            : "0 var(--spacing-margin) var(--spacing-margin)",
           boxSizing: "border-box",
           gap: 10,
         }}
       >
-        <SiteHeaderBand
-          navItems={NAV_ITEMS}
-          variant="dark"
-          isActive={(item) => item.href === "/work"}
-        />
-
         {/* ── Project rows (vertically centered in scroll area) ── */}
         <div
           data-lenis-prevent
@@ -258,9 +292,12 @@ export default function WorkProjectGrid({
             overflowY: "auto",
             overflowX: "hidden",
             WebkitOverflowScrolling: "touch",
+            paddingTop:
+              (workHeaderBlockHeight > 0 ? workHeaderBlockHeight + 10 : 10) +
+              WORK_PROJECT_TEXT_PAD_Y,
             paddingBottom: isMobile
-              ? "calc(168px + env(safe-area-inset-bottom, 0px))"
-              : undefined,
+              ? `calc(${WORK_PROJECT_TEXT_PAD_Y}px + 168px + env(safe-area-inset-bottom, 0px))`
+              : WORK_PROJECT_TEXT_PAD_Y,
           }}
         >
           {rows.map((row, rowIdx) => (
