@@ -60,12 +60,15 @@ function galleryEntriesToPreviewStills(
   entries: GalleryEntry[],
   project: Project
 ): PreviewStill[] {
+  const slug = project.slug?.current;
+  if (!slug) return [];
+
   const out: PreviewStill[] = [];
   for (const entry of entries) {
     if (entry._type === "imageAsset" && entry.image?.asset?._ref) {
       out.push({
         _key: `${project._id}__${entry._key}`,
-        slug: project.slug.current,
+        slug,
         title: project.title,
         client: project.client,
         tags: project.tags ?? [],
@@ -77,7 +80,7 @@ function galleryEntriesToPreviewStills(
     if (entry._type === "videoAsset" && entry.thumbnail?.asset?._ref) {
       out.push({
         _key: `${project._id}__${entry._key}`,
-        slug: project.slug.current,
+        slug,
         title: project.title,
         client: project.client,
         tags: project.tags ?? [],
@@ -92,26 +95,18 @@ function galleryEntriesToPreviewStills(
 function HoverLabel({ item }: { item: PreviewStill }) {
   return (
     <div
-      className="page-grid"
+      className="page-grid items-start"
       style={{
         position: "fixed",
         top: "50%",
-        left: 12,
-        right: 12,
+        left: "var(--spacing-margin)",
+        right: "var(--spacing-margin)",
         transform: "translateY(-50%)",
         zIndex: 50,
         pointerEvents: "none",
-        alignItems: "start",
       }}
     >
-      <div
-        style={{
-          gridColumn: "3 / 4",
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-        }}
-      >
+      <div className="col-span-2 flex flex-col gap-0.5 md:col-span-2 md:col-start-2 lg:col-span-1 lg:col-start-3">
         <div
           style={{
             display: "flex",
@@ -161,7 +156,10 @@ function ProjectImages({ items }: { items: PreviewStill[] }) {
 
   return (
     <>
-      <div className="page-grid" style={{ alignItems: "start", rowGap: 120 }}>
+      <div
+        className="page-grid items-start"
+        style={{ rowGap: "var(--spacing-gutter)" }}
+      >
         {items.map((item) => {
           const dimmed = hoveredKey !== null && hoveredKey !== item._key;
           return (
@@ -190,7 +188,7 @@ function ProjectImages({ items }: { items: PreviewStill[] }) {
                   alt={item.alt}
                   width={600}
                   height={750}
-                  sizes="(max-width: 768px) 50vw, 20vw"
+                  sizes="(max-width: 767px) 50vw, (max-width: 1023px) 25vw, 17vw"
                   quality={90}
                   style={{
                     width: "100%",

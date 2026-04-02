@@ -7,13 +7,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
 import { formatSanityTag } from "@/lib/format-sanity-tag";
 import { MOTION } from "@/lib/motion";
+import SiteHeaderBand from "@/components/SiteHeaderBand";
+import { useMediaQuery } from "@/lib/use-media-query";
+import type { SiteNavItem } from "@/lib/site-nav";
 
 type SanityImageField = {
   asset: { _ref: string };
   hotspot?: { x: number; y: number };
 };
 
-type WorkProject = {
+export type WorkProject = {
   _id: string;
   title: string;
   slug: { current: string };
@@ -26,11 +29,11 @@ type WorkProject = {
 
 type FilterKey = "photo" | "motion" | "nss";
 
-const NAV_ITEMS = [
+const NAV_ITEMS: SiteNavItem[] = [
   { label: "Info", href: "/info" },
   { label: "Work", href: "/work" },
-  { label: "Exhibitions", href: "/exhibitions" },
-  { label: "Radio", href: "/radio" },
+  { label: "Exhibitions", href: "/exhibitions", comingSoon: true },
+  { label: "Radio", href: "/radio", comingSoon: true },
 ];
 
 const FILTERS: { key: FilterKey; label: string }[] = [
@@ -72,9 +75,16 @@ export default function WorkProjectGrid({
     hoveredIndex !== null ? (filtered[hoveredIndex] ?? null) : null;
   const bgImage = activeProject ? getProjectImage(activeProject) : null;
 
+  const isLg = useMediaQuery("(min-width: 1024px)");
+  const isMd = useMediaQuery("(min-width: 768px)");
+  const isMobile = !isMd;
+  /** Tablet: 4-col grid, first column empty, three projects per row; desktop: 6-col checkerboard */
+  const isTablet = isMd && !isLg;
+  const chunkSize = isLg ? 4 : isTablet ? 3 : 2;
+
   const rows: WorkProject[][] = [];
-  for (let i = 0; i < filtered.length; i += 4) {
-    rows.push(filtered.slice(i, i + 4));
+  for (let i = 0; i < filtered.length; i += chunkSize) {
+    rows.push(filtered.slice(i, i + chunkSize));
   }
 
   const toggleFilter = useCallback((key: FilterKey) => {
@@ -82,11 +92,75 @@ export default function WorkProjectGrid({
     setHoveredIndex(0);
   }, []);
 
+  const workFooterFilters = (
+    <>
+      <div
+        style={{ display: "flex", flexDirection: "column" }}
+        onMouseEnter={() => setTagBarHovered(true)}
+        onMouseLeave={() => {
+          setTagBarHovered(false);
+          setFilterHoverKey(null);
+        }}
+      >
+        {FILTERS.map((f) => {
+          const selectionActive =
+            activeFilter === null || activeFilter === f.key;
+          const inHoverEmphasis =
+            tagBarHovered &&
+            filterHoverKey !== null &&
+            f.key === filterHoverKey;
+          const inHoverDim =
+            tagBarHovered &&
+            filterHoverKey !== null &&
+            f.key !== filterHoverKey;
+          const color = inHoverEmphasis
+            ? "rgba(255, 255, 255, 1)"
+            : inHoverDim
+              ? "rgba(255, 255, 255, 0.5)"
+              : selectionActive
+                ? "rgba(255, 255, 255, 1)"
+                : "rgba(255, 255, 255, 0.5)";
+
+          return (
+            <motion.button
+              key={f.key}
+              type="button"
+              onClick={() => toggleFilter(f.key)}
+              onMouseEnter={() => setFilterHoverKey(f.key)}
+              className="text-body"
+              animate={{ color }}
+              transition={{
+                duration: MOTION.duration.hover,
+                ease: MOTION.ease.heavy,
+              }}
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              {f.label}
+            </motion.button>
+          );
+        })}
+      </div>
+      <span
+        className="text-caption"
+        style={{ color: "var(--color-primary)" }}
+      >
+        Venice, California
+      </span>
+    </>
+  );
+
   return (
     <div
       style={{
         position: "relative",
-        height: "100vh",
+        height: "100dvh",
+        minHeight: "100dvh",
         overflow: "hidden",
         background: "#000000",
       }}
@@ -105,29 +179,47 @@ export default function WorkProjectGrid({
             }}
             style={{
               position: "absolute",
-              inset: 12,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              inset: isMobile ? 0 : "var(--spacing-margin)",
+              display: isMobile ? "block" : "flex",
+              alignItems: isMobile ? undefined : "center",
+              justifyContent: isMobile ? undefined : "center",
               overflow: "hidden",
               filter: "grayscale(1)",
             }}
           >
-            <Image
-              loader={sanityLoader}
-              src={sanityImageUrl(bgImage)}
-              alt=""
-              width={1920}
-              height={1080}
-              sizes="100vw"
-              quality={85}
-              style={{
-                width: "auto",
-                height: "100%",
-                maxWidth: "none",
-              }}
-              priority
-            />
+            {isMobile ? (
+              <div
+                className="relative h-full w-full"
+                style={{ minHeight: "100%" }}
+              >
+                <Image
+                  loader={sanityLoader}
+                  src={sanityImageUrl(bgImage)}
+                  alt=""
+                  fill
+                  sizes="100vw"
+                  quality={85}
+                  style={{ objectFit: "cover" }}
+                  priority
+                />
+              </div>
+            ) : (
+              <Image
+                loader={sanityLoader}
+                src={sanityImageUrl(bgImage)}
+                alt=""
+                width={1920}
+                height={1080}
+                sizes="100vw"
+                quality={85}
+                style={{
+                  width: "auto",
+                  height: "100%",
+                  maxWidth: "none",
+                }}
+                priority
+              />
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -140,107 +232,62 @@ export default function WorkProjectGrid({
           display: "flex",
           flexDirection: "column",
           height: "100%",
-          padding: 12,
+          padding: isMobile
+            ? "var(--spacing-margin) var(--spacing-margin) 0"
+            : "var(--spacing-margin)",
           boxSizing: "border-box",
           gap: 10,
         }}
       >
-        {/* ── Header ─────────────────────────────────────── */}
-        <header
-          className="page-grid"
-          style={{ alignItems: "center", flexShrink: 0 }}
-        >
-          <div
-            style={{
-              gridColumn: "1 / 3",
-              display: "flex",
-              alignItems: "flex-end",
-              gap: 12,
-            }}
-          >
-            <Link
-              href="/"
-              className="text-body no-underline opacity-100 transition-opacity duration-600 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-80"
-              style={{ color: "var(--color-white)" }}
-            >
-              Daniel Derro
-            </Link>
-          </div>
+        <SiteHeaderBand
+          navItems={NAV_ITEMS}
+          variant="dark"
+          isActive={(item) => item.href === "/work"}
+        />
 
-          <div
-            style={{
-              gridColumn: "3 / 5",
-              display: "flex",
-              alignItems: "flex-end",
-              gap: 12,
-            }}
-          >
-            <Link
-              href="/"
-              className="text-body no-underline opacity-100 transition-opacity duration-600 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-80"
-              style={{ color: "var(--color-white)" }}
-            >
-              No-School Studio Records
-            </Link>
-          </div>
-
-          <nav
-            style={{
-              gridColumn: "5 / 7",
-              display: "flex",
-              width: "100%",
-              minWidth: 0,
-              alignItems: "stretch",
-              gap: 4,
-            }}
-          >
-            {NAV_ITEMS.map((item) => {
-              const isActive = item.href === "/work";
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={`hover-smooth text-caption box-border flex min-w-0 flex-1 items-center justify-start border-[0.5px] px-1 py-0.5 no-underline ${
-                    isActive
-                      ? "border-transparent bg-(--color-white) text-(--color-black)"
-                      : "border-(--color-white) text-(--color-white) hover:border-transparent hover:bg-(--color-white) hover:text-(--color-black)"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </header>
-
-        {/* ── Project rows (centered) ────────────────────── */}
+        {/* ── Project rows (vertically centered in scroll area) ── */}
         <div
+          data-lenis-prevent
           style={{
             flex: 1,
+            minHeight: 0,
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
-            gap: 120,
-            overflow: "hidden",
+            gap: isMobile ? 48 : 120,
+            overflowY: "auto",
+            overflowX: "hidden",
+            WebkitOverflowScrolling: "touch",
+            paddingBottom: isMobile
+              ? "calc(168px + env(safe-area-inset-bottom, 0px))"
+              : undefined,
           }}
         >
           {rows.map((row, rowIdx) => (
-            <div
-              key={rowIdx}
-              className="page-grid"
-              style={{ alignItems: "start" }}
-            >
-              <div style={{ gridColumn: "1 / 3" }} aria-hidden />
+            <div key={rowIdx} className="page-grid items-start">
+              {isLg && chunkSize > 1 ? (
+                <div style={{ gridColumn: "1 / 3" }} aria-hidden />
+              ) : null}
+              {isTablet ? (
+                <div style={{ gridColumn: "1 / 2" }} aria-hidden />
+              ) : null}
               {row.map((project, slotIdx) => {
                 const col = 3 + slotIdx;
-                const globalIdx = rowIdx * 4 + slotIdx;
+                const globalIdx = rowIdx * chunkSize + slotIdx;
+                const gridColumn = isTablet
+                  ? `${2 + slotIdx} / ${3 + slotIdx}`
+                  : isMobile
+                    ? slotIdx === 0
+                      ? "1 / 2"
+                      : "2 / 3"
+                    : `${col} / ${col + 1}`;
                 return (
                   <Link
                     key={project._id}
                     href={`/work/${project.slug.current}`}
                     className="no-underline"
                     style={{
-                      gridColumn: `${col} / ${col + 1}`,
+                      gridColumn,
                       outline: "none",
                     }}
                     onMouseEnter={() => setHoveredIndex(globalIdx)}
@@ -298,72 +345,47 @@ export default function WorkProjectGrid({
           ))}
         </div>
 
-        {/* ── Work footer (filters) ───────────────────────── */}
-        <footer style={{ flexShrink: 0 }}>
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: 20 }}
-          >
+        {/* ── Work footer (filters): in-flow with page padding on md+ ── */}
+        {!isMobile ? (
+          <footer style={{ flexShrink: 0 }}>
             <div
-              style={{ display: "flex", flexDirection: "column" }}
-              onMouseEnter={() => setTagBarHovered(true)}
-              onMouseLeave={() => {
-                setTagBarHovered(false);
-                setFilterHoverKey(null);
-              }}
+              style={{ display: "flex", flexDirection: "column", gap: 20 }}
             >
-              {FILTERS.map((f) => {
-                const selectionActive =
-                  activeFilter === null || activeFilter === f.key;
-                const inHoverEmphasis =
-                  tagBarHovered &&
-                  filterHoverKey !== null &&
-                  f.key === filterHoverKey;
-                const inHoverDim =
-                  tagBarHovered &&
-                  filterHoverKey !== null &&
-                  f.key !== filterHoverKey;
-                const color = inHoverEmphasis
-                  ? "rgba(255, 255, 255, 1)"
-                  : inHoverDim
-                    ? "rgba(255, 255, 255, 0.5)"
-                    : selectionActive
-                      ? "rgba(255, 255, 255, 1)"
-                      : "rgba(255, 255, 255, 0.5)";
-
-                return (
-                  <motion.button
-                    key={f.key}
-                    type="button"
-                    onClick={() => toggleFilter(f.key)}
-                    onMouseEnter={() => setFilterHoverKey(f.key)}
-                    className="text-body"
-                    animate={{ color }}
-                    transition={{
-                      duration: MOTION.duration.hover,
-                      ease: MOTION.ease.heavy,
-                    }}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      padding: 0,
-                      cursor: "pointer",
-                      textAlign: "left",
-                    }}
-                  >
-                    {f.label}
-                  </motion.button>
-                );
-              })}
+              {workFooterFilters}
             </div>
-            <span
-              className="text-caption"
-              style={{ color: "var(--color-primary)" }}
-            >
-              Venice, California
-            </span>
+          </footer>
+        ) : null}
+      </div>
+
+      {/* Mobile: fixed full-bleed footer (outside padded content layer) ── */}
+      {isMobile ? (
+        <footer
+          style={{
+            position: "fixed",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 50,
+            width: "100%",
+            boxSizing: "border-box",
+            backgroundColor: "rgba(255, 255, 255, 0.01)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(10px)",
+            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          }}
+        >
+          <div
+            style={{
+              padding: 12,
+              display: "flex",
+              flexDirection: "column",
+              gap: 20,
+            }}
+          >
+            {workFooterFilters}
           </div>
         </footer>
-      </div>
+      ) : null}
     </div>
   );
 }

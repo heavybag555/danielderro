@@ -12,6 +12,7 @@
   --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-serif: "Crimson Text", Georgia, serif;
 
+  /* Base tokens; responsive overrides at end of file */
   --spacing-margin: 12px;
   --spacing-gutter: 120px;
   --spacing-section: 120px;
@@ -60,14 +61,47 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── 6-Column Grid ────────────────────────────────────── */
+/* ── Responsive column grid (2 / 4 / 6) ───────────────── */
 
 .page-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   column-gap: var(--spacing-gutter);
   width: 100%;
   box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .page-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* Site header/footer: same 2-column nav layout and gutter as phone until lg (avoids 4-col tablet) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .page-grid-nav-mobile {
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 16px;
+  }
+}
+
+/* Layout tokens: tighter gutters on small screens; --spacing-margin stays 12px at all breakpoints */
+@media (max-width: 1023px) {
+  :root {
+    --spacing-gutter: 56px;
+  }
+}
+
+@media (max-width: 767px) {
+  :root {
+    --spacing-gutter: 16px;
+  }
 }
 
 /* ── Typography tokens from Figma ─────────────────────── */

@@ -2,12 +2,13 @@
 
 import { useState, useCallback } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
 import { formatSanityTag } from "@/lib/format-sanity-tag";
 import { MOTION } from "@/lib/motion";
 import SiteFooter from "@/components/SiteFooter";
+import SiteHeaderBand from "@/components/SiteHeaderBand";
+import type { SiteNavItem } from "@/lib/site-nav";
 
 type SanityImageField = {
   asset: { _ref: string };
@@ -32,7 +33,7 @@ type GalleryVideo = {
 
 type GalleryEntry = GalleryImage | GalleryVideo;
 
-type Project = {
+export type Project = {
   _id: string;
   title: string;
   slug: { current: string };
@@ -51,11 +52,11 @@ type MediaItem = {
   alt: string;
 };
 
-const NAV_ITEMS = [
+const NAV_ITEMS: SiteNavItem[] = [
   { label: "Info", href: "/info" },
   { label: "Return", href: "/work" },
-  { label: "Exhibitions", href: "/exhibitions" },
-  { label: "Radio", href: "/radio" },
+  { label: "Exhibitions", href: "/exhibitions", comingSoon: true },
+  { label: "Radio", href: "/radio", comingSoon: true },
 ];
 
 function galleryToMedia(gallery: GalleryEntry[]): MediaItem[] {
@@ -113,7 +114,7 @@ const slideTransition = {
 
 const slideFrameStyle = {
   position: "absolute" as const,
-  inset: 12,
+  inset: "var(--spacing-margin)",
 };
 
 export default function ProjectPage({ project }: { project: Project }) {
@@ -171,7 +172,7 @@ export default function ProjectPage({ project }: { project: Project }) {
         flexWrap: "wrap",
         alignItems: "baseline",
         columnGap: 8,
-        rowGap: 4,
+        rowGap: 0,
       }}
     >
       <span className="text-body" style={{ color: "var(--color-black)" }}>
@@ -191,6 +192,20 @@ export default function ProjectPage({ project }: { project: Project }) {
         {project.tags.map(formatSanityTag).join(", ")}
       </span>
     ) : null;
+
+  const projectFooterLeft = (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        rowGap: 4,
+        minWidth: 0,
+      }}
+    >
+      {titleContent}
+    </div>
+  );
 
   const slideCounter = total > 0 ? (
     <span className="text-caption" style={{ display: "flex", gap: 4 }}>
@@ -234,73 +249,15 @@ export default function ProjectPage({ project }: { project: Project }) {
           left: 0,
           right: 0,
           zIndex: 100,
-          padding: 12,
+          padding: "var(--spacing-margin)",
           boxSizing: "border-box",
         }}
       >
-        <header className="page-grid" style={{ alignItems: "center" }}>
-          <div
-            style={{
-              gridColumn: "1 / 3",
-              display: "flex",
-              alignItems: "flex-end",
-              gap: 12,
-            }}
-          >
-            <Link
-              href="/"
-              className="text-body no-underline opacity-100 transition-opacity duration-600 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-80"
-              style={{ color: "var(--color-black)" }}
-            >
-              Daniel Derro
-            </Link>
-          </div>
-
-          <div
-            style={{
-              gridColumn: "3 / 5",
-              display: "flex",
-              alignItems: "flex-end",
-              gap: 12,
-            }}
-          >
-            <Link
-              href="/"
-              className="text-body no-underline opacity-100 transition-opacity duration-600 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-80"
-              style={{ color: "var(--color-black)" }}
-            >
-              No-School Studio Records
-            </Link>
-          </div>
-
-          <nav
-            style={{
-              gridColumn: "5 / 7",
-              display: "flex",
-              width: "100%",
-              minWidth: 0,
-              alignItems: "stretch",
-              gap: 4,
-            }}
-          >
-            {NAV_ITEMS.map((item) => {
-              const isActive = item.label === "Return";
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={`hover-smooth text-caption box-border flex min-w-0 flex-1 items-center justify-start border-[0.5px] px-1 py-0.5 no-underline ${
-                    isActive
-                      ? "border-transparent bg-(--color-black) text-(--color-white)"
-                      : "border-(--color-stroke) text-(--color-black) hover:border-transparent hover:bg-(--color-black) hover:text-(--color-white)"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </header>
+        <SiteHeaderBand
+          navItems={NAV_ITEMS}
+          variant="light"
+          isActive={(item) => item.label === "Return"}
+        />
       </div>
 
       {/* ── Full-height slideshow ─────────────────────────── */}
@@ -391,7 +348,7 @@ export default function ProjectPage({ project }: { project: Project }) {
       {/* ── Footer with project info ─────────────────────── */}
       <SiteFooter
         activePath="/work"
-        leftContent={titleContent}
+        leftContent={projectFooterLeft}
         middleContent={tagsContent}
         rightContent={slideCounter}
       />

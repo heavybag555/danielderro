@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { client } from "@/sanity/lib/client";
+import { sanityFetchOrDefault } from "@/sanity/lib/fetch-safe";
 import { projectBySlugQuery } from "@/sanity/lib/queries";
-import ProjectPage from "@/components/ProjectPage";
+import ProjectPage, { type Project } from "@/components/ProjectPage";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,11 @@ type Props = {
 
 export default async function WorkProjectPage({ params }: Props) {
   const { slug } = await params;
-  const project = await client.fetch(projectBySlugQuery, { slug });
+  const project = await sanityFetchOrDefault<Project | null>(
+    projectBySlugQuery,
+    null,
+    { slug },
+  );
 
   if (!project) {
     notFound();

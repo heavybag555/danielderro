@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import type { SiteNavItem } from "@/lib/site-nav";
+import SiteNavComingSoonLabel from "@/components/SiteNavComingSoonLabel";
 
 type SiteFooterProps = {
   activePath?: string;
@@ -9,12 +11,12 @@ type SiteFooterProps = {
   rightContent?: ReactNode;
 };
 
-const NAV_ITEMS = [
+const NAV_ITEMS: SiteNavItem[] = [
   { label: "Info", href: "/info" },
   { label: "Work", href: "/work" },
-  { label: "Exhibitions", href: "/exhibitions" },
-  { label: "Radio", href: "/radio" },
-] as const;
+  { label: "Exhibitions", href: "/exhibitions", comingSoon: true },
+  { label: "Radio", href: "/radio", comingSoon: true },
+];
 
 const footerBar = {
   position: "fixed" as const,
@@ -22,18 +24,48 @@ const footerBar = {
   right: 0,
   bottom: 0,
   zIndex: 200,
-  paddingLeft: 12,
-  paddingRight: 12,
-  paddingTop: 12,
-  paddingBottom: 12,
+  paddingLeft: "var(--spacing-margin)",
+  paddingRight: "var(--spacing-margin)",
+  paddingTop: "var(--spacing-margin)",
+  paddingBottom: "var(--spacing-margin)",
   boxSizing: "border-box" as const,
 };
 
-const cellBase = {
-  display: "flex" as const,
-  alignItems: "flex-end" as const,
-  minWidth: 0,
-};
+const brandLink =
+  "text-body no-underline opacity-100 transition-opacity duration-600 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-80";
+
+function footerNavLinkClasses(
+  active: boolean,
+  inverted: boolean,
+  comingSoon: boolean | undefined,
+): string {
+  const base =
+    "hover-smooth text-caption box-border flex min-w-0 flex-1 items-center justify-start border-[0.5px] px-1 py-0.5 no-underline";
+  if (comingSoon) {
+    const group = `${base} group`;
+    if (active) {
+      return `${group} border-transparent ${
+        inverted
+          ? "bg-(--color-white) text-(--color-primary) hover:bg-(--color-primary) hover:text-(--color-white)"
+          : "bg-(--color-black) text-(--color-white) hover:bg-(--color-primary) hover:text-(--color-white)"
+      }`;
+    }
+    return `${group} ${
+      inverted
+        ? "border-(--color-white) text-(--color-white) hover:border-transparent hover:bg-(--color-primary) hover:text-(--color-white)"
+        : "border-(--color-stroke) text-(--color-black) hover:border-transparent hover:bg-(--color-primary) hover:text-(--color-white)"
+    }`;
+  }
+  return `${base} ${
+    active
+      ? inverted
+        ? "border-transparent bg-(--color-white) text-(--color-primary)"
+        : "border-transparent bg-(--color-black) text-(--color-white)"
+      : inverted
+        ? "border-(--color-white) text-(--color-white) hover:border-transparent hover:bg-(--color-white) hover:text-(--color-primary)"
+        : "border-(--color-stroke) text-(--color-black) hover:border-transparent hover:bg-(--color-black) hover:text-(--color-white)"
+  }`;
+}
 
 export default function SiteFooter({
   activePath,
@@ -47,78 +79,55 @@ export default function SiteFooter({
 
   return (
     <footer
-      className={`page-grid ${inverted ? "" : "blend-overlay"}`}
-      style={{ ...footerBar, alignItems: "center" }}
+      className={`page-grid ${!isProjectFooter ? "page-grid-nav-mobile" : ""} ${inverted ? "" : "blend-overlay"}`}
+      style={{ ...footerBar, alignItems: "start" }}
     >
       {isProjectFooter ? (
         <>
-          <div style={{ gridColumn: "1 / 2", ...cellBase }}>{leftContent}</div>
-          <div
-            style={{
-              gridColumn: "2 / 3",
-              ...cellBase,
-              justifyContent: "flex-start",
-              textAlign: "left",
-            }}
-          >
+          <div className="col-span-2 flex min-w-0 items-start justify-start md:col-span-1 lg:col-span-1">
+            {leftContent}
+          </div>
+          <div className="col-span-1 flex min-w-0 items-start justify-start md:col-span-1 lg:col-span-1">
             {middleContent}
           </div>
-          <div style={{ gridColumn: "3 / 4", ...cellBase, justifyContent: "flex-start" }}>
+          <div className="col-span-1 flex min-w-0 items-start justify-start md:col-span-1 lg:col-span-1">
             {rightContent}
           </div>
-          <div style={{ gridColumn: "4 / 5" }} aria-hidden />
-          <div style={{ gridColumn: "5 / 6" }} aria-hidden />
-          <div style={{ gridColumn: "6 / 7" }} aria-hidden />
+          <div className="hidden md:col-span-1 md:block lg:col-span-3" aria-hidden />
         </>
       ) : (
         <>
-          <div style={{ gridColumn: "1 / 3", display: "flex", alignItems: "flex-end", gap: 12 }}>
-            <Link
-              href="/"
-              className="text-body no-underline opacity-100 transition-opacity duration-600 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-80"
-              style={{ color: fg }}
-            >
-              Daniel Derro
-            </Link>
+          <div className="col-span-2 flex gap-1 lg:contents">
+            <div className="flex min-w-0 flex-1 items-start lg:col-span-2">
+              <Link href="/" className={brandLink} style={{ color: fg }}>
+                Daniel Derro
+              </Link>
+            </div>
+            <div className="flex min-w-0 flex-1 items-start lg:col-span-2">
+              <Link href="/" className={brandLink} style={{ color: fg }}>
+                No-School Studio Records
+              </Link>
+            </div>
           </div>
 
-          <div style={{ gridColumn: "3 / 5", display: "flex", alignItems: "flex-end", gap: 12 }}>
-            <Link
-              href="/"
-              className="text-body no-underline opacity-100 transition-opacity duration-600 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-80"
-              style={{ color: fg }}
-            >
-              No-School Studio Records
-            </Link>
-          </div>
-
-          <nav
-            style={{
-              gridColumn: "5 / 7",
-              display: "flex",
-              width: "100%",
-              minWidth: 0,
-              alignItems: "stretch",
-              gap: 4,
-            }}
-          >
+          <nav className="col-span-2 flex min-w-0 items-stretch gap-1 max-lg:mt-[4px] lg:col-span-2">
             {NAV_ITEMS.map((item) => {
               const isActive = activePath === item.href;
               return (
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`hover-smooth text-caption box-border flex min-w-0 flex-1 items-center justify-start border-[0.5px] px-1 py-0.5 no-underline ${
-                    isActive
-                      ? inverted
-                        ? "border-transparent bg-(--color-white) text-(--color-primary)"
-                        : "border-transparent bg-(--color-black) text-(--color-white)"
-                      : inverted
-                        ? "border-(--color-white) text-(--color-white) hover:border-transparent hover:bg-(--color-white) hover:text-(--color-primary)"
-                        : "border-(--color-stroke) text-(--color-black) hover:border-transparent hover:bg-(--color-black) hover:text-(--color-white)"
-                  }`}
+                  className={footerNavLinkClasses(
+                    isActive,
+                    inverted,
+                    item.comingSoon,
+                  )}
                 >
-                  {item.label}
+                  {item.comingSoon ? (
+                    <SiteNavComingSoonLabel label={item.label} />
+                  ) : (
+                    item.label
+                  )}
                 </Link>
               );
             })}

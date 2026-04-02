@@ -7,32 +7,32 @@ export default function InfoPage() {
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
-        height: "100vh",
-        paddingLeft: 12,
-        paddingRight: 12,
+        minHeight: "100vh",
+        paddingLeft: "var(--spacing-margin)",
+        paddingRight: "var(--spacing-margin)",
         gap: 10,
         background: "var(--color-white)",
       }}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: 120 }}>
-        {/* About, body copy, Clients */}
-        <div className="page-grid">
-          <div style={{ gridColumn: "1 / 2" }} />
+      <div className="flex flex-col gap-[120px] py-10 max-md:py-[120px] lg:justify-center lg:py-0">
+        {/* About, body copy, Clients — desktop: 6-col grid; narrow: single column */}
+        <div className="flex flex-col gap-20 lg:grid lg:grid-cols-6 lg:gap-x-(--spacing-gutter) lg:gap-y-0">
+          <div className="hidden lg:col-span-1 lg:block" aria-hidden />
 
-          <div style={{ gridColumn: "2 / 3", display: "flex", flexDirection: "column", gap: 20 }}>
+          <div className="flex flex-col gap-5 lg:col-span-1">
             <div style={{ paddingLeft: 20 }}>
               <span className="text-caption" style={{ color: "var(--color-black)" }}>
                 About
               </span>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div className="flex flex-col gap-5">
               <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
                 Daniel Derro creates visual narratives for luxury fashion and cultural brands,
                 bringing authentic street perspective to premium campaigns. His work for Prada,
                 Dior, and Givenchy demonstrates his ability to translate genuine cultural moments
                 into compelling luxury brand stories.
               </p>
-              <div style={{ display: "flex", flexDirection: "column" }}>
+              <div className="flex flex-col">
                 <span className="text-meta" style={{ color: "var(--color-primary)" }}>
                   Venice, California, USA
                 </span>
@@ -43,7 +43,7 @@ export default function InfoPage() {
             </div>
           </div>
 
-          <div style={{ gridColumn: "3 / 4" }}>
+          <div className="lg:col-span-1">
             <p
               className="text-body"
               style={{ color: "var(--color-primary)", margin: 0, whiteSpace: "pre-line" }}
@@ -52,7 +52,7 @@ export default function InfoPage() {
             </p>
           </div>
 
-          <div style={{ gridColumn: "4 / 5" }}>
+          <div className="lg:col-span-1">
             <p
               className="text-body"
               style={{ color: "var(--color-primary)", margin: 0, whiteSpace: "pre-line" }}
@@ -61,7 +61,7 @@ export default function InfoPage() {
             </p>
           </div>
 
-          <div style={{ gridColumn: "5 / 6", display: "flex", flexDirection: "column", gap: 20 }}>
+          <div className="flex flex-col gap-5 lg:col-span-1">
             <div style={{ paddingLeft: 20 }}>
               <span className="text-caption" style={{ color: "var(--color-black)" }}>
                 Clients
@@ -75,25 +75,21 @@ export default function InfoPage() {
             </p>
           </div>
 
-          <div style={{ gridColumn: "6 / 7" }} />
+          <div className="hidden lg:col-span-1 lg:block" aria-hidden />
         </div>
 
-        {/* Contact / Follow */}
+        {/* Contact / Follow — desktop aligns to grid columns 4–5 */}
         <div className="page-grid">
-          <div style={{ gridColumn: "1 / 2" }} />
+          <div className="hidden lg:col-span-3 lg:block" aria-hidden />
 
-          <div style={{ gridColumn: "2 / 3" }} />
-
-          <div style={{ gridColumn: "3 / 4" }} />
-
-          <div style={{ gridColumn: "4 / 5", display: "flex", flexDirection: "column", gap: 20 }}>
+          <div className="col-span-1 flex flex-col gap-5 md:col-span-2 lg:col-span-1 lg:col-start-4">
             <div style={{ paddingLeft: 20 }}>
               <span className="text-caption" style={{ color: "var(--color-black)" }}>
                 Contact
               </span>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              <div style={{ display: "flex", flexDirection: "column" }}>
+            <div className="flex flex-col gap-5">
+              <div className="flex flex-col">
                 <span className="text-body" style={{ color: "var(--color-primary)" }}>
                   Tel. 00 32 15 75 59 43
                 </span>
@@ -107,13 +103,13 @@ export default function InfoPage() {
             </div>
           </div>
 
-          <div style={{ gridColumn: "5 / 6", display: "flex", flexDirection: "column", gap: 20 }}>
+          <div className="col-span-1 flex flex-col gap-5 md:col-span-2 lg:col-span-1 lg:col-start-5">
             <div style={{ paddingLeft: 20 }}>
               <span className="text-caption" style={{ color: "var(--color-black)" }}>
                 Follow
               </span>
             </div>
-            <div style={{ display: "flex", flexDirection: "column" }}>
+            <div className="flex flex-col">
               <span className="text-body" style={{ color: "var(--color-primary)" }}>
                 @danielderro_
               </span>
@@ -123,7 +119,7 @@ export default function InfoPage() {
             </div>
           </div>
 
-          <div style={{ gridColumn: "6 / 7" }} />
+          <div className="hidden lg:col-span-1 lg:block" aria-hidden />
         </div>
       </div>
 
