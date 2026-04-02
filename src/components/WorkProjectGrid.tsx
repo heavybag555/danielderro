@@ -280,7 +280,7 @@ export default function WorkProjectGrid({
           gap: 10,
         }}
       >
-        {/* ── Project rows (vertically centered in scroll area) ── */}
+        {/* ── Project rows: centered on md+; top-aligned on mobile so initial scroll isn’t mid-list ── */}
         <div
           data-lenis-prevent
           style={{
@@ -288,7 +288,7 @@ export default function WorkProjectGrid({
             minHeight: 0,
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center",
+            justifyContent: isMobile ? "flex-start" : "center",
             gap: isMobile ? 48 : 120,
             overflowY: "auto",
             overflowX: "hidden",
@@ -399,6 +399,7 @@ export default function WorkProjectGrid({
       {/* Mobile: fixed full-bleed footer (outside padded content layer) ── */}
       {isMobile ? (
         <footer
+          className="bg-black/5 backdrop-blur-md"
           style={{
             position: "fixed",
             left: 0,
@@ -407,7 +408,6 @@ export default function WorkProjectGrid({
             zIndex: 50,
             width: "100%",
             boxSizing: "border-box",
-            backgroundColor: "transparent",
             paddingBottom: "env(safe-area-inset-bottom, 0px)",
           }}
         >
