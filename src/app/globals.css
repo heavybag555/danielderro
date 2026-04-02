@@ -111,8 +111,15 @@ html:has([data-work-surface]) body {
   min-width: 0;
   align-items: flex-start;
   justify-content: flex-start;
-  align-self: start;
-  grid-column: span 2 / span 2;
+  align-self: end;
+  /* Mobile / tablet: share one row with tags + counter (column 1 = title + client only). */
+  grid-column: span 1 / span 1;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .project-footer-title {
+    grid-column: span 2 / span 2;
+  }
 }
 
 @media (min-width: 1024px) and (pointer: fine) {
@@ -125,11 +132,18 @@ html:has([data-work-surface]) body {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: flex-start;
-  align-self: start;
+  justify-self: end;
+  align-self: end;
   gap: 4px;
-  grid-column: span 2 / span 2;
+  grid-column: span 1 / span 1;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .project-footer-stack {
+    grid-column: span 2 / span 2;
+  }
 }
 
 @media (min-width: 1024px) and (pointer: fine) {
@@ -144,7 +158,7 @@ html:has([data-work-surface]) body {
   min-width: 0;
   align-items: flex-start;
   justify-content: flex-start;
-  align-self: start;
+  align-self: end;
 }
 
 @media (min-width: 1024px) and (pointer: fine) {

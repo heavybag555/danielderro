@@ -79,8 +79,11 @@ export default function SiteFooter({
 
   return (
     <footer
-      className={`page-grid items-start ${!isProjectFooter ? "page-grid-nav-mobile" : "project-footer-grid"} ${inverted ? "" : "blend-overlay"}`}
-      style={{ ...footerBar, alignItems: "start" }}
+      className={`page-grid ${!isProjectFooter ? "page-grid-nav-mobile items-start" : "project-footer-grid items-end"} ${inverted ? "" : "blend-overlay"}`}
+      style={{
+        ...footerBar,
+        alignItems: isProjectFooter ? "end" : "start",
+      }}
     >
       {isProjectFooter ? (
         <>
