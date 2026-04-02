@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
@@ -8,6 +8,7 @@ import { formatSanityTag } from "@/lib/format-sanity-tag";
 import { MOTION } from "@/lib/motion";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeaderBand from "@/components/SiteHeaderBand";
+import { useMediaQuery } from "@/lib/use-media-query";
 import type { SiteNavItem } from "@/lib/site-nav";
 
 type SanityImageField = {
@@ -125,8 +126,13 @@ export default function ProjectPage({ project }: { project: Project }) {
     x: number;
     y: number;
   } | null>(null);
+  const showSlideshowCursorArrows = useMediaQuery("(min-width: 1024px)");
   const mediaItems = galleryToMedia(project.gallery ?? []);
   const total = mediaItems.length;
+
+  useEffect(() => {
+    if (!showSlideshowCursorArrows) setNavCursor(null);
+  }, [showSlideshowCursorArrows]);
 
   const endSlideTransition = useCallback(() => {
     setPrevIndex(null);
@@ -151,7 +157,7 @@ export default function ProjectPage({ project }: { project: Project }) {
 
   const updateNavCursor = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      if (total === 0) return;
+      if (total === 0 || !showSlideshowCursorArrows) return;
       const rect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rect.left;
       setNavCursor({
@@ -160,7 +166,7 @@ export default function ProjectPage({ project }: { project: Project }) {
         y: e.clientY,
       });
     },
-    [total],
+    [total, showSlideshowCursorArrows],
   );
 
   const currentItem = mediaItems[activeIndex];
@@ -269,7 +275,10 @@ export default function ProjectPage({ project }: { project: Project }) {
         style={{
           position: "absolute",
           inset: 0,
-          cursor: total === 0 || !navCursor ? "default" : "none",
+          cursor:
+            total === 0 || !navCursor || !showSlideshowCursorArrows
+              ? "default"
+              : "none",
           zIndex: 1,
         }}
       >
@@ -328,7 +337,7 @@ export default function ProjectPage({ project }: { project: Project }) {
         ) : null}
       </div>
 
-      {navCursor && total > 0 ? (
+      {showSlideshowCursorArrows && navCursor && total > 0 ? (
         <div
           aria-hidden
           style={{

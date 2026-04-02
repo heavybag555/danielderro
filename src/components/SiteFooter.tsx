@@ -79,21 +79,25 @@ export default function SiteFooter({
 
   return (
     <footer
-      className={`page-grid ${!isProjectFooter ? "page-grid-nav-mobile" : ""} ${inverted ? "" : "blend-overlay"}`}
+      className={`page-grid items-start ${!isProjectFooter ? "page-grid-nav-mobile" : ""} ${inverted ? "" : "blend-overlay"}`}
       style={{ ...footerBar, alignItems: "start" }}
     >
       {isProjectFooter ? (
         <>
-          <div className="col-span-2 flex min-w-0 items-start justify-start md:col-span-1 lg:col-span-1">
+          <div className="col-span-2 flex min-w-0 items-start justify-start self-start md:col-span-2 lg:col-span-1">
             {leftContent}
           </div>
-          <div className="col-span-1 flex min-w-0 items-start justify-start md:col-span-1 lg:col-span-1">
+          <div className="col-span-2 flex min-w-0 flex-col items-start justify-start gap-1 self-start md:col-span-2 lg:hidden">
             {middleContent}
-          </div>
-          <div className="col-span-1 flex min-w-0 items-start justify-start md:col-span-1 lg:col-span-1">
             {rightContent}
           </div>
-          <div className="hidden md:col-span-1 md:block lg:col-span-3" aria-hidden />
+          <div className="hidden min-w-0 items-start justify-start self-start lg:col-span-1 lg:flex">
+            {middleContent}
+          </div>
+          <div className="hidden min-w-0 items-start justify-start self-start lg:col-span-1 lg:flex">
+            {rightContent}
+          </div>
+          <div className="hidden lg:col-span-3 lg:block" aria-hidden />
         </>
       ) : (
         <>
