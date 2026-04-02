@@ -108,67 +108,68 @@ export default function WorkProjectGrid({
     return () => ro.disconnect();
   }, []);
 
-  const workFooterFilters = (
-    <>
-      <div
-        style={{ display: "flex", flexDirection: "column" }}
-        onMouseEnter={() => setTagBarHovered(true)}
-        onMouseLeave={() => {
-          setTagBarHovered(false);
-          setFilterHoverKey(null);
-        }}
-      >
-        {FILTERS.map((f) => {
-          const selectionActive =
-            activeFilter === null || activeFilter === f.key;
-          const inHoverEmphasis =
-            tagBarHovered &&
-            filterHoverKey !== null &&
-            f.key === filterHoverKey;
-          const inHoverDim =
-            tagBarHovered &&
-            filterHoverKey !== null &&
-            f.key !== filterHoverKey;
-          const color = inHoverEmphasis
-            ? "rgba(255, 255, 255, 1)"
-            : inHoverDim
-              ? "rgba(255, 255, 255, 0.5)"
-              : selectionActive
-                ? "rgba(255, 255, 255, 1)"
-                : "rgba(255, 255, 255, 0.5)";
+  const workFooterFilterColumn = (
+    <div
+      style={{ display: "flex", flexDirection: "column" }}
+      onMouseEnter={() => setTagBarHovered(true)}
+      onMouseLeave={() => {
+        setTagBarHovered(false);
+        setFilterHoverKey(null);
+      }}
+    >
+      {FILTERS.map((f) => {
+        const selectionActive =
+          activeFilter === null || activeFilter === f.key;
+        const inHoverEmphasis =
+          tagBarHovered &&
+          filterHoverKey !== null &&
+          f.key === filterHoverKey;
+        const inHoverDim =
+          tagBarHovered &&
+          filterHoverKey !== null &&
+          f.key !== filterHoverKey;
+        const color = inHoverEmphasis
+          ? "rgba(255, 255, 255, 1)"
+          : inHoverDim
+            ? "rgba(255, 255, 255, 0.5)"
+            : selectionActive
+              ? "rgba(255, 255, 255, 1)"
+              : "rgba(255, 255, 255, 0.5)";
 
-          return (
-            <motion.button
-              key={f.key}
-              type="button"
-              onClick={() => toggleFilter(f.key)}
-              onMouseEnter={() => setFilterHoverKey(f.key)}
-              className="text-body"
-              animate={{ color }}
-              transition={{
-                duration: MOTION.duration.hover,
-                ease: MOTION.ease.heavy,
-              }}
-              style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                textAlign: "left",
-              }}
-            >
-              {f.label}
-            </motion.button>
-          );
-        })}
-      </div>
-      <span
-        className="text-caption"
-        style={{ color: "var(--color-primary)" }}
-      >
-        Venice, California
-      </span>
-    </>
+        return (
+          <motion.button
+            key={f.key}
+            type="button"
+            onClick={() => toggleFilter(f.key)}
+            onMouseEnter={() => setFilterHoverKey(f.key)}
+            className="text-body"
+            animate={{ color }}
+            transition={{
+              duration: MOTION.duration.hover,
+              ease: MOTION.ease.heavy,
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
+              textAlign: "left",
+            }}
+          >
+            {f.label}
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+
+  const workFooterVenice = (
+    <span
+      className="text-caption"
+      style={{ color: "var(--color-primary)" }}
+    >
+      Venice, California
+    </span>
   );
 
   return (
@@ -183,7 +184,7 @@ export default function WorkProjectGrid({
     >
       {/* Background image — viewport-fixed; crossfades on hover; does not scroll with project list */}
       <AnimatePresence>
-        {bgImage && (
+        {bgImage && !isMobile && (
           <motion.div
             key={sanityImageUrl(bgImage)}
             initial={{ opacity: 0 }}
@@ -388,7 +389,8 @@ export default function WorkProjectGrid({
             <div
               style={{ display: "flex", flexDirection: "column", gap: 20 }}
             >
-              {workFooterFilters}
+              {workFooterFilterColumn}
+              {workFooterVenice}
             </div>
           </footer>
         ) : null}
@@ -405,21 +407,32 @@ export default function WorkProjectGrid({
             zIndex: 50,
             width: "100%",
             boxSizing: "border-box",
-            backgroundColor: "rgba(255, 255, 255, 0.01)",
-            backdropFilter: "blur(16px)",
-            WebkitBackdropFilter: "blur(10px)",
+            backgroundColor: "transparent",
             paddingBottom: "env(safe-area-inset-bottom, 0px)",
           }}
         >
           <div
+            className="page-grid items-end"
             style={{
-              padding: 12,
-              display: "flex",
-              flexDirection: "column",
-              gap: 20,
+              paddingLeft: "var(--spacing-margin)",
+              paddingRight: "var(--spacing-margin)",
+              paddingTop: "var(--spacing-margin)",
+              paddingBottom: "var(--spacing-margin)",
             }}
           >
-            {workFooterFilters}
+            <div style={{ gridColumn: "1 / 2", minWidth: 0 }}>
+              {workFooterFilterColumn}
+            </div>
+            <div
+              style={{
+                gridColumn: "2 / 3",
+                justifySelf: "end",
+                textAlign: "right",
+                alignSelf: "end",
+              }}
+            >
+              {workFooterVenice}
+            </div>
           </div>
         </footer>
       ) : null}

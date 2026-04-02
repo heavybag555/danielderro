@@ -59,7 +59,7 @@ export default function SiteHeaderBand({
             Daniel Derro
           </Link>
         </div>
-        <div className="flex min-w-0 flex-1 items-end lg:col-span-2">
+        <div className="flex min-w-0 flex-1 items-end justify-end lg:col-span-2 lg:justify-start">
           <Link href="/" className={brandLink} style={{ color: fg }}>
             No-School Studio Records
           </Link>
