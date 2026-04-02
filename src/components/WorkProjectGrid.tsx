@@ -187,7 +187,7 @@ export default function WorkProjectGrid({
           <motion.div
             key={sanityImageUrl(bgImage)}
             initial={{ opacity: 0 }}
-            animate={{ opacity: isMobile ? 0.05 : 0.2 }}
+            animate={{ opacity: isMobile ? 0.1 : 0.2 }}
             exit={{ opacity: 0 }}
             transition={{
               duration: MOTION.duration.hover,

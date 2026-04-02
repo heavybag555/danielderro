@@ -79,25 +79,19 @@ export default function SiteFooter({
 
   return (
     <footer
-      className={`page-grid items-start ${!isProjectFooter ? "page-grid-nav-mobile" : ""} ${inverted ? "" : "blend-overlay"}`}
+      className={`page-grid items-start ${!isProjectFooter ? "page-grid-nav-mobile" : "project-footer-grid"} ${inverted ? "" : "blend-overlay"}`}
       style={{ ...footerBar, alignItems: "start" }}
     >
       {isProjectFooter ? (
         <>
-          <div className="col-span-2 flex min-w-0 items-start justify-start self-start md:col-span-2 lg:col-span-1">
-            {leftContent}
-          </div>
-          <div className="col-span-2 flex min-w-0 flex-col items-start justify-start gap-1 self-start md:col-span-2 lg:hidden">
+          <div className="project-footer-title">{leftContent}</div>
+          <div className="project-footer-stack">
             {middleContent}
             {rightContent}
           </div>
-          <div className="hidden min-w-0 items-start justify-start self-start lg:col-span-1 lg:flex">
-            {middleContent}
-          </div>
-          <div className="hidden min-w-0 items-start justify-start self-start lg:col-span-1 lg:flex">
-            {rightContent}
-          </div>
-          <div className="hidden lg:col-span-3 lg:block" aria-hidden />
+          <div className="project-footer-split-tags">{middleContent}</div>
+          <div className="project-footer-split-counter">{rightContent}</div>
+          <div className="project-footer-spacer" aria-hidden />
         </>
       ) : (
         <>

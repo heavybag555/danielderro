@@ -8,6 +8,7 @@ import { formatSanityTag } from "@/lib/format-sanity-tag";
 import { MOTION } from "@/lib/motion";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeaderBand from "@/components/SiteHeaderBand";
+import { MEDIA_DESKTOP_FINE_POINTER } from "@/lib/media-queries";
 import { useMediaQuery } from "@/lib/use-media-query";
 import type { SiteNavItem } from "@/lib/site-nav";
 
@@ -126,7 +127,7 @@ export default function ProjectPage({ project }: { project: Project }) {
     x: number;
     y: number;
   } | null>(null);
-  const showSlideshowCursorArrows = useMediaQuery("(min-width: 1024px)");
+  const showSlideshowCursorArrows = useMediaQuery(MEDIA_DESKTOP_FINE_POINTER);
   const mediaItems = galleryToMedia(project.gallery ?? []);
   const total = mediaItems.length;
 

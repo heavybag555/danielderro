@@ -98,6 +98,73 @@ html:has([data-work-surface]) body {
   }
 }
 
+/* Project detail footer (/work/[slug]): Tailwind `lg:` matches wide viewports on iPhone
+   “Request Desktop Website”; use pointer: fine so touch keeps the stacked layout. */
+@media (min-width: 1024px) and (pointer: coarse) {
+  footer.page-grid.project-footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.project-footer-title {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: flex-start;
+  align-self: start;
+  grid-column: span 2 / span 2;
+}
+
+@media (min-width: 1024px) and (pointer: fine) {
+  .project-footer-title {
+    grid-column: span 1 / span 1;
+  }
+}
+
+.project-footer-stack {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  align-self: start;
+  gap: 4px;
+  grid-column: span 2 / span 2;
+}
+
+@media (min-width: 1024px) and (pointer: fine) {
+  .project-footer-stack {
+    display: none;
+  }
+}
+
+.project-footer-split-tags,
+.project-footer-split-counter {
+  display: none;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: flex-start;
+  align-self: start;
+}
+
+@media (min-width: 1024px) and (pointer: fine) {
+  .project-footer-split-tags,
+  .project-footer-split-counter {
+    display: flex;
+  }
+}
+
+.project-footer-spacer {
+  display: none;
+}
+
+@media (min-width: 1024px) and (pointer: fine) {
+  .project-footer-spacer {
+    display: block;
+    grid-column: span 3 / span 3;
+  }
+}
+
 /* Layout tokens: tighter gutters on small screens; --spacing-margin stays 12px at all breakpoints */
 @media (max-width: 1023px) {
   :root {
