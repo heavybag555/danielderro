@@ -303,7 +303,10 @@ export default function WorkProjectGrid({
           }}
         >
           {rows.map((row, rowIdx) => (
-            <div key={rowIdx} className="page-grid items-start">
+            <div
+              key={rowIdx}
+              className="page-grid work-project-grid-row items-start"
+            >
               {isLg && chunkSize > 1 ? (
                 <div style={{ gridColumn: "1 / 3" }} aria-hidden />
               ) : null}
@@ -311,6 +314,7 @@ export default function WorkProjectGrid({
                 <div style={{ gridColumn: "1 / 2" }} aria-hidden />
               ) : null}
               {row.map((project, slotIdx) => {
+                const previewImage = getProjectImage(project);
                 const col = 3 + slotIdx;
                 const globalIdx = rowIdx * chunkSize + slotIdx;
                 const gridColumn = isTablet
@@ -334,7 +338,9 @@ export default function WorkProjectGrid({
                       <div
                         style={{
                           display: "grid",
-                          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+                          gridTemplateColumns: previewImage
+                            ? "minmax(0, 1fr) 40px"
+                            : "minmax(0, 1fr)",
                           columnGap: "var(--spacing-gutter)",
                           alignItems: "start",
                           width: "100%",
@@ -344,43 +350,81 @@ export default function WorkProjectGrid({
                           style={{
                             display: "flex",
                             flexDirection: "column",
-                            gap: 2,
+                            gap: 0,
                             minWidth: 0,
                           }}
                         >
-                          <span
-                            className="text-body"
-                            style={{ color: "var(--color-white)" }}
-                          >
-                            {project.title}
-                          </span>
-                          {project.client?.trim() && (
-                            <span
-                              className="text-body"
-                              style={{
-                                color: "rgba(255, 255, 255, 0.5)",
-                              }}
-                            >
-                              {project.client.trim()}
-                            </span>
-                          )}
-                        </div>
-                        {project.tags && project.tags.length > 0 ? (
                           <div
                             style={{
+                              display: "flex",
+                              flexDirection: "row",
+                              flexWrap: "nowrap",
+                              alignItems: "baseline",
+                              gap: 4,
                               minWidth: 0,
-                              textAlign: "right",
                             }}
                           >
                             <span
                               className="text-caption"
                               style={{
-                                display: "block",
-                                color: "var(--color-primary)",
+                                color: "var(--color-white)",
+                                minWidth: 0,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
                               }}
                             >
-                              {project.tags.map(formatSanityTag).join(", ")}
+                              {project.title}
                             </span>
+                            {project.client?.trim() && (
+                              <span
+                                className="text-caption"
+                                style={{
+                                  color: "rgba(255, 255, 255, 0.5)",
+                                  flexShrink: 0,
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {project.client.trim()}
+                              </span>
+                            )}
+                          </div>
+                          {project.tags && project.tags.length > 0 ? (
+                            <div style={{ minWidth: 0 }}>
+                              <span
+                                className="text-caption"
+                                style={{
+                                  display: "block",
+                                  color: "var(--color-primary)",
+                                }}
+                              >
+                                {project.tags.map(formatSanityTag).join(", ")}
+                              </span>
+                            </div>
+                          ) : null}
+                        </div>
+                        {previewImage ? (
+                          <div
+                            style={{
+                              width: 40,
+                              justifySelf: "end",
+                            }}
+                          >
+                            <Image
+                              loader={sanityLoader}
+                              src={sanityImageUrl(previewImage)}
+                              alt=""
+                              width={40}
+                              height={53}
+                              sizes="40px"
+                              quality={85}
+                              style={{
+                                width: 40,
+                                height: "auto",
+                                maxWidth: "100%",
+                                display: "block",
+                              }}
+                            />
                           </div>
                         ) : null}
                       </div>

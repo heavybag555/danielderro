@@ -95,6 +95,12 @@ html:has([data-work-surface]) body {
   .page-grid {
     grid-template-columns: repeat(6, 1fr);
   }
+
+  /* Work page: keep the same column gutter rhythm as tablet (56px) so project
+     title / client / tag blocks read with the same horizontal spacing. */
+  .page-grid.work-project-grid-row {
+    column-gap: 56px;
+  }
 }
 
 /* Site header/footer: same 2-column nav layout and gutter as phone until lg (avoids 4-col tablet) */
