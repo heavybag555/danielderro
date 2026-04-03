@@ -262,6 +262,7 @@ export default function WorkProjectGrid({
           navItems={NAV_ITEMS}
           variant="dark"
           isActive={(item) => item.href === "/work"}
+          hideBrandBelowLg
         />
       </div>
 

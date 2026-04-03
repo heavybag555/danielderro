@@ -1,8 +1,8 @@
 import Image from "next/image";
 
-function AboutBlock() {
+function AboutBlock({ className }: { className?: string }) {
   return (
-    <div className="flex flex-col gap-5">
+    <div className={["flex flex-col gap-5", className].filter(Boolean).join(" ")}>
       <div className="pl-5">
         <span className="text-caption" style={{ color: "var(--color-black)" }}>
           About
@@ -57,6 +57,9 @@ export default function InfoColumns({
   const showAboutMobileFirst =
     homeMobileAboutAboveHero && !shiftRight && !hideAboutClients;
 
+  const homeHeroStackedAboutClients =
+    hideContact && homeMobileAboutAboveHero && !hideAboutClients;
+
   return (
     <>
       {showAboutMobileFirst ? (
@@ -66,34 +69,71 @@ export default function InfoColumns({
       ) : null}
 
       <div className="page-grid">
-      <div className="hidden lg:col-span-1 lg:block" aria-hidden />
+      {!homeHeroStackedAboutClients ? (
+        <>
+          <div className="hidden lg:col-span-1 lg:block" aria-hidden />
+          <div className="hidden lg:col-span-1 lg:block" aria-hidden />
+        </>
+      ) : (
+        <>
+          <div className="hidden lg:col-span-1 lg:block" aria-hidden />
+        </>
+      )}
 
-      <div className="hidden lg:col-span-1 lg:block" aria-hidden />
-
-      <div className="col-span-2 w-full min-w-0 md:col-span-2 lg:col-span-1 lg:col-start-3">
-        {!hideHeroImage && (
-          <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
-            <Image
-              src="/images/daniel-hero-new.jpg"
-              alt="Daniel Derro"
-              width={2000}
-              height={1470}
-              style={{ width: "100%", height: "auto", display: "block" }}
-              priority
-            />
-            <Image
-              src="/images/DEBT SS -105.jpg"
-              alt="Daniel Derro"
-              width={4083}
-              height={3000}
-              style={{ width: "100%", height: "auto", display: "block" }}
-            />
-          </div>
-        )}
+      <div
+        className={
+          homeHeroStackedAboutClients
+            ? "col-span-2 w-full min-w-0 md:col-span-2 md:col-start-1 lg:col-span-2 lg:col-start-2"
+            : "col-span-2 w-full min-w-0 md:col-span-2 lg:col-span-1 lg:col-start-3"
+        }
+      >
+        {!hideHeroImage &&
+          (homeHeroStackedAboutClients ? (
+            <div className="grid w-full min-w-0 grid-cols-1 gap-0">
+              <Image
+                src="/images/daniel-hero-new.jpg"
+                alt="Daniel Derro"
+                width={2000}
+                height={1470}
+                className="block h-auto w-full max-w-full"
+                priority
+              />
+              <Image
+                src="/images/DEBT SS -105.jpg"
+                alt="Daniel Derro"
+                width={4083}
+                height={3000}
+                className="block h-auto w-full max-w-full"
+              />
+            </div>
+          ) : (
+            <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
+              <Image
+                src="/images/daniel-hero-new.jpg"
+                alt="Daniel Derro"
+                width={2000}
+                height={1470}
+                style={{ width: "100%", height: "auto", display: "block" }}
+                priority
+              />
+              <Image
+                src="/images/DEBT SS -105.jpg"
+                alt="Daniel Derro"
+                width={4083}
+                height={3000}
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
+            </div>
+          ))}
       </div>
 
-      <div className="col-span-2 w-full min-w-0 md:col-span-2 lg:col-span-3 lg:col-start-4">
-        <div className="grid w-full grid-cols-1 gap-x-(--spacing-gutter) gap-y-5 md:grid-cols-2 lg:grid-cols-3">
+      <div
+        className={
+          homeHeroStackedAboutClients
+            ? "col-span-2 grid w-full min-w-0 grid-cols-1 gap-x-(--spacing-gutter) gap-y-0 md:col-span-2 md:col-start-3 md:grid-cols-subgrid lg:col-span-2 lg:col-start-4 lg:grid-cols-1 lg:gap-x-0"
+            : "col-span-2 grid w-full min-w-0 grid-cols-1 gap-x-(--spacing-gutter) gap-y-5 md:col-span-2 md:col-start-3 md:grid-cols-subgrid lg:col-span-3 lg:col-start-4 lg:grid-cols-subgrid"
+        }
+      >
           {/* --- Slot 1 --- */}
           {shiftRight ? (
             <div />
@@ -120,8 +160,33 @@ export default function InfoColumns({
             </div>
           ) : hideAboutClients ? (
             <div />
+          ) : homeHeroStackedAboutClients ? (
+            <div className="min-w-0 md:col-span-2">
+              <div className="flex flex-col gap-5">
+                {showAboutMobileFirst ? (
+                  <div className="hidden md:block">
+                    <AboutBlock />
+                  </div>
+                ) : (
+                  <AboutBlock />
+                )}
+                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                  <div style={{ paddingLeft: 20 }}>
+                    <span className="text-caption" style={{ color: "var(--color-black)" }}>
+                      Clients
+                    </span>
+                  </div>
+                  <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
+                    Prada, Nike, Givenchy, Dior, Stüssy, Adidas, pgLang, Burberry, Carhartt WIP, Our
+                    Legacy, New Balance, Fake Mink, ASICS, Moncler, T Magazine, Giveon, Popeye,
+                    Stormzy, Yeezy, Slam Jam, Converse, Alo, Nike Golf, Crash, Jordan, Union, Dazed,
+                    Babylon, Neighborhood, Saint Laurent, Kaleidoscope, i-D, Interview Magazine
+                  </p>
+                </div>
+              </div>
+            </div>
           ) : showAboutMobileFirst ? (
-            <div className="hidden md:block">
+            <div className="hidden min-w-0 md:block">
               <AboutBlock />
             </div>
           ) : (
@@ -129,7 +194,9 @@ export default function InfoColumns({
           )}
 
           {/* --- Slot 2 --- */}
-          {contactMiddle && hideAboutClients ? (
+          {homeHeroStackedAboutClients ? (
+            <div />
+          ) : contactMiddle && hideAboutClients ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div style={{ paddingLeft: 20 }}>
                 <span className="text-caption" style={{ color: "var(--color-black)" }}>
@@ -208,11 +275,14 @@ export default function InfoColumns({
             </div>
           )}
 
-          {/* --- Slot 3 --- */}
+          {/* --- Slot 3 (spans both sub-tracks on tablet so the row reads full-width) --- */}
           {contactMiddle && hideAboutClients ? (
-            <div />
+            <div className="md:col-span-2 lg:col-span-1" aria-hidden />
           ) : shiftRight ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div
+              className="md:col-span-2 lg:col-span-1"
+              style={{ display: "flex", flexDirection: "column", gap: 20 }}
+            >
               <div style={{ paddingLeft: 20 }}>
                 <span className="text-caption" style={{ color: "var(--color-black)" }}>
                   Clients
@@ -226,9 +296,14 @@ export default function InfoColumns({
               </p>
             </div>
           ) : hideContact ? (
-            <div />
+            homeHeroStackedAboutClients ? null : (
+              <div className="md:col-span-2 lg:col-span-1" aria-hidden />
+            )
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div
+              className="md:col-span-2 lg:col-span-1"
+              style={{ display: "flex", flexDirection: "column", gap: 20 }}
+            >
               <div style={{ paddingLeft: 20 }}>
                 <span className="text-caption" style={{ color: "var(--color-black)" }}>
                   Follow
@@ -244,8 +319,11 @@ export default function InfoColumns({
               </div>
             </div>
           )}
-        </div>
       </div>
+
+      {homeHeroStackedAboutClients ? (
+        <div className="hidden lg:col-span-1 lg:block lg:col-start-6" aria-hidden />
+      ) : null}
 
     </div>
     </>

@@ -6,6 +6,8 @@ type SiteHeaderBandProps = {
   navItems: SiteNavItem[];
   isActive: (item: SiteNavItem) => boolean;
   variant: "dark" | "light";
+  /** Below `lg`, hide Daniel Derro / No-School (work / project surfaces). */
+  hideBrandBelowLg?: boolean;
 };
 
 const brandLink =
@@ -48,12 +50,15 @@ export default function SiteHeaderBand({
   navItems,
   isActive,
   variant,
+  hideBrandBelowLg = false,
 }: SiteHeaderBandProps) {
   const fg = variant === "dark" ? "var(--color-white)" : "var(--color-black)";
 
   return (
     <header className="page-grid page-grid-nav-mobile shrink-0 items-center">
-      <div className="col-span-2 flex gap-1 lg:contents">
+      <div
+        className={`col-span-2 flex gap-1 lg:contents ${hideBrandBelowLg ? "max-lg:hidden" : ""}`}
+      >
         <div className="flex min-w-0 flex-1 items-end lg:col-span-2">
           <Link href="/" className={brandLink} style={{ color: fg }}>
             Daniel Derro
@@ -66,7 +71,9 @@ export default function SiteHeaderBand({
         </div>
       </div>
 
-      <nav className="col-span-2 flex min-w-0 items-stretch gap-1 max-lg:mt-[4px] lg:col-span-2">
+      <nav
+        className={`col-span-2 flex min-w-0 items-stretch gap-1 lg:col-span-2 ${hideBrandBelowLg ? "max-lg:mt-0" : "max-lg:mt-[4px]"}`}
+      >
         {navItems.map((item) => {
           const active = isActive(item);
           const className = headerNavLinkClasses(

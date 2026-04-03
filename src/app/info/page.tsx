@@ -1,8 +1,10 @@
+import SiteBrandStrip from "@/components/SiteBrandStrip";
 import SiteFooter from "@/components/SiteFooter";
 
 export default function InfoPage() {
   return (
     <div
+      className="max-lg:pt-[var(--site-fixed-brand-strip-height)]"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -14,12 +16,13 @@ export default function InfoPage() {
         background: "var(--color-white)",
       }}
     >
+      <SiteBrandStrip />
       <div className="flex flex-col gap-[120px] py-10 max-md:py-[120px] lg:justify-center lg:py-0">
-        {/* About, body copy, Clients — desktop: 6-col grid; narrow: single column */}
-        <div className="flex flex-col gap-20 lg:grid lg:grid-cols-6 lg:gap-x-(--spacing-gutter) lg:gap-y-0">
+        {/* About + body + Clients — same 2 / 4 / 6 column system as the rest of the site */}
+        <div className="page-grid gap-y-20 md:gap-y-20 lg:gap-y-0">
           <div className="hidden lg:col-span-1 lg:block" aria-hidden />
 
-          <div className="flex flex-col gap-5 lg:col-span-1">
+          <div className="col-span-2 flex flex-col gap-5 md:col-span-2 md:col-start-1 lg:col-span-1 lg:col-start-2">
             <div style={{ paddingLeft: 20 }}>
               <span className="text-caption" style={{ color: "var(--color-black)" }}>
                 About
@@ -43,7 +46,7 @@ export default function InfoPage() {
             </div>
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="col-span-2 md:col-span-2 md:col-start-3 lg:col-span-1 lg:col-start-3">
             <p
               className="text-body"
               style={{ color: "var(--color-primary)", margin: 0, whiteSpace: "pre-line" }}
@@ -52,7 +55,7 @@ export default function InfoPage() {
             </p>
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="col-span-2 md:col-span-2 md:col-start-1 lg:col-span-1 lg:col-start-4">
             <p
               className="text-body"
               style={{ color: "var(--color-primary)", margin: 0, whiteSpace: "pre-line" }}
@@ -61,7 +64,7 @@ export default function InfoPage() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-5 lg:col-span-1">
+          <div className="col-span-2 flex flex-col gap-5 md:col-span-2 md:col-start-3 lg:col-span-1 lg:col-start-5">
             <div style={{ paddingLeft: 20 }}>
               <span className="text-caption" style={{ color: "var(--color-black)" }}>
                 Clients
@@ -123,7 +126,7 @@ export default function InfoPage() {
         </div>
       </div>
 
-      <SiteFooter activePath="/info" />
+      <SiteFooter activePath="/info" hideBrandBelowLg />
     </div>
   );
 }

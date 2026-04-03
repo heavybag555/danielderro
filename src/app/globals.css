@@ -74,8 +74,15 @@ html:has([data-work-surface]) body {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   column-gap: var(--spacing-gutter);
+  row-gap: 0;
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
+}
+
+/* Keep text/media from forcing overflow; column alignment stays on the grid tracks */
+.page-grid > * {
+  min-width: 0;
 }
 
 @media (min-width: 768px) {
@@ -177,6 +184,13 @@ html:has([data-work-surface]) body {
     display: block;
     grid-column: span 3 / span 3;
   }
+}
+
+/* Fixed brand strip (home / info, below lg): reserve space so content clears the band */
+:root {
+  --site-fixed-brand-strip-height: calc(
+    env(safe-area-inset-top, 0px) + var(--spacing-margin) * 2 + 17px
+  );
 }
 
 /* Layout tokens: tighter gutters on small screens; --spacing-margin stays 12px at all breakpoints */

@@ -165,6 +165,7 @@ function ProjectImages({ items }: { items: PreviewStill[] }) {
           return (
             <motion.div
               key={item._key}
+              className="col-span-1"
               onMouseEnter={() => setHoveredKey(item._key)}
               onMouseLeave={() => setHoveredKey(null)}
               animate={{

@@ -264,6 +264,7 @@ export default function ProjectPage({ project }: { project: Project }) {
           navItems={NAV_ITEMS}
           variant="light"
           isActive={(item) => item.label === "Return"}
+          hideBrandBelowLg
         />
       </div>
 

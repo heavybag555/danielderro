@@ -6,6 +6,8 @@ import SiteNavComingSoonLabel from "@/components/SiteNavComingSoonLabel";
 type SiteFooterProps = {
   activePath?: string;
   inverted?: boolean;
+  /** Below `lg`, hide Daniel Derro / No-School (e.g. when shown in `SiteBrandStrip`). */
+  hideBrandBelowLg?: boolean;
   leftContent?: ReactNode;
   middleContent?: ReactNode;
   rightContent?: ReactNode;
@@ -70,6 +72,7 @@ function footerNavLinkClasses(
 export default function SiteFooter({
   activePath,
   inverted = false,
+  hideBrandBelowLg = false,
   leftContent,
   middleContent,
   rightContent,
@@ -98,7 +101,9 @@ export default function SiteFooter({
         </>
       ) : (
         <>
-          <div className="col-span-2 flex gap-1 lg:contents">
+          <div
+            className={`col-span-2 flex gap-1 lg:contents ${hideBrandBelowLg ? "max-lg:hidden" : ""}`}
+          >
             <div className="flex min-w-0 flex-1 items-start lg:col-span-2">
               <Link href="/" className={brandLink} style={{ color: fg }}>
                 Daniel Derro
@@ -111,7 +116,9 @@ export default function SiteFooter({
             </div>
           </div>
 
-          <nav className="col-span-2 flex min-w-0 items-stretch gap-1 max-lg:mt-[4px] lg:col-span-2">
+          <nav
+            className={`col-span-2 flex min-w-0 items-stretch gap-1 lg:col-span-2 ${hideBrandBelowLg ? "max-lg:mt-0" : "max-lg:mt-[4px]"}`}
+          >
             {NAV_ITEMS.map((item) => {
               const isActive = activePath === item.href;
               const className = footerNavLinkClasses(
