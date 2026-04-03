@@ -81,9 +81,9 @@ export default function WorkProjectGrid({
   const isLg = useMediaQuery("(min-width: 1024px)");
   const isMd = useMediaQuery("(min-width: 768px)");
   const isMobile = !isMd;
-  /** Tablet: 4-col grid, first column empty, three projects per row; desktop: 6-col checkerboard */
+  /** Tablet: 4-col grid, first column empty, three projects per row; desktop: 6-col checkerboard; mobile: one column only */
   const isTablet = isMd && !isLg;
-  const chunkSize = isLg ? 4 : isTablet ? 3 : 2;
+  const chunkSize = isLg ? 4 : isTablet ? 3 : 1;
 
   const rows: WorkProject[][] = [];
   for (let i = 0; i < filtered.length; i += chunkSize) {
@@ -315,9 +315,7 @@ export default function WorkProjectGrid({
                 const gridColumn = isTablet
                   ? `${2 + slotIdx} / ${3 + slotIdx}`
                   : isMobile
-                    ? slotIdx === 0
-                      ? "1 / 2"
-                      : "2 / 3"
+                    ? "1 / 3"
                     : `${col} / ${col + 1}`;
                 return (
                   <Link
@@ -331,51 +329,107 @@ export default function WorkProjectGrid({
                     onMouseEnter={() => setHoveredIndex(globalIdx)}
                     onFocus={() => setHoveredIndex(globalIdx)}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 2,
-                      }}
-                    >
+                    {isMobile ? (
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+                          columnGap: "var(--spacing-gutter)",
+                          alignItems: "start",
+                          width: "100%",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 2,
+                            minWidth: 0,
+                          }}
+                        >
+                          <span
+                            className="text-body"
+                            style={{ color: "var(--color-white)" }}
+                          >
+                            {project.title}
+                          </span>
+                          {project.client?.trim() && (
+                            <span
+                              className="text-body"
+                              style={{
+                                color: "rgba(255, 255, 255, 0.5)",
+                              }}
+                            >
+                              {project.client.trim()}
+                            </span>
+                          )}
+                        </div>
+                        {project.tags && project.tags.length > 0 ? (
+                          <div
+                            style={{
+                              minWidth: 0,
+                              textAlign: "right",
+                            }}
+                          >
+                            <span
+                              className="text-caption"
+                              style={{
+                                display: "block",
+                                color: "var(--color-primary)",
+                              }}
+                            >
+                              {project.tags.map(formatSanityTag).join(", ")}
+                            </span>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : (
                       <div
                         style={{
                           display: "flex",
-                          flexDirection: "row",
-                          flexWrap: "wrap",
-                          alignItems: "baseline",
-                          gap: 8,
+                          flexDirection: "column",
+                          gap: 0,
                         }}
                       >
-                        <span
-                          className="text-caption"
-                          style={{ color: "var(--color-white)" }}
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            flexWrap: "wrap",
+                            alignItems: "baseline",
+                            gap: 8,
+                          }}
                         >
-                          {project.title}
-                        </span>
-                        {project.client?.trim() && (
+                          <span
+                            className="text-caption"
+                            style={{ color: "var(--color-white)" }}
+                          >
+                            {project.title}
+                          </span>
+                          {project.client?.trim() && (
+                            <span
+                              className="text-caption"
+                              style={{
+                                color: "rgba(255, 255, 255, 0.5)",
+                              }}
+                            >
+                              {project.client.trim()}
+                            </span>
+                          )}
+                        </div>
+                        {project.tags && project.tags.length > 0 && (
                           <span
                             className="text-caption"
                             style={{
-                              color: "rgba(255, 255, 255, 0.5)",
+                              display: "block",
+                              color: "var(--color-primary)",
                             }}
                           >
-                            {project.client.trim()}
+                            {project.tags.map(formatSanityTag).join(", ")}
                           </span>
                         )}
                       </div>
-                      {project.tags && project.tags.length > 0 && (
-                        <span
-                          className="text-meta-tight"
-                          style={{
-                            display: "block",
-                            color: "var(--color-primary)",
-                          }}
-                        >
-                          {project.tags.map(formatSanityTag).join(", ")}
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </Link>
                 );
               })}
