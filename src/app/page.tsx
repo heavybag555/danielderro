@@ -1,4 +1,3 @@
-import SiteBrandStrip from "@/components/SiteBrandStrip";
 import SiteFooter from "@/components/SiteFooter";
 import InfoColumns from "@/components/InfoColumns";
 import GallerySection from "@/components/GallerySection";
@@ -68,8 +67,7 @@ export default async function Home() {
   );
 
   return (
-    <div className="flex flex-col gap-2.5 px-[var(--spacing-margin)] pb-[calc(80px+env(safe-area-inset-bottom,0px))] pt-[calc(8rem+var(--site-fixed-brand-strip-height))] md:pt-[calc(12rem+var(--site-fixed-brand-strip-height))] lg:pt-[120px]">
-      <SiteBrandStrip />
+    <div className="flex flex-col gap-2.5 px-[var(--spacing-margin)] pb-[calc(80px+env(safe-area-inset-bottom,0px))] pt-32 md:pt-48 lg:pt-[120px]">
       <div className="flex flex-col gap-16 md:gap-24 lg:gap-[120px]">
         <section className="pt-16 pb-0 md:pt-24 lg:pt-[120px]">
           <InfoColumns hideContact homeMobileAboutAboveHero />
@@ -83,7 +81,7 @@ export default async function Home() {
         </section>
       </div>
 
-      <SiteFooter hideBrandBelowLg />
+      <SiteFooter />
     </div>
   );
 }

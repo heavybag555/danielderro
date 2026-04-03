@@ -162,7 +162,7 @@ export default function InfoColumns({
             <div />
           ) : homeHeroStackedAboutClients ? (
             <div className="min-w-0 md:col-span-2">
-              <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-5 lg:gap-[40px]">
                 {showAboutMobileFirst ? (
                   <div className="hidden md:block">
                     <AboutBlock />
