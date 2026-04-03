@@ -1,5 +1,11 @@
 import SiteBrandStrip from "@/components/SiteBrandStrip";
 import SiteFooter from "@/components/SiteFooter";
+import {
+  SITE_CONTACT_EMAIL,
+  SITE_CONTACT_MAILTO,
+  SITE_INSTAGRAM_DANIEL_DERRO,
+  SITE_INSTAGRAM_NO_SCHOOL_STUDIO_RECORDS,
+} from "@/lib/site-contact";
 
 export default function InfoPage() {
   return (
@@ -54,7 +60,7 @@ export default function InfoPage() {
             </div>
 
             <div className="col-span-2 md:col-span-2 md:col-start-3 lg:col-span-2 lg:col-start-5">
-              <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-5 max-md:pt-5 md:pt-[calc(15px+1.25rem)]">
                 <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
                   Published extensively in The New York Times, Vogue Italia, i-D, and Kaleidoscope
                   Magazine, Daniel&apos;s editorial work has been exhibited internationally from Dover
@@ -114,9 +120,13 @@ export default function InfoPage() {
                 <span className="text-body wrap-break-word" style={{ color: "var(--color-primary)" }}>
                   Tel. 00 32 15 75 59 43
                 </span>
-                <span className="text-body wrap-break-word" style={{ color: "var(--color-primary)" }}>
-                  info@ns-sr.org
-                </span>
+                <a
+                  href={SITE_CONTACT_MAILTO}
+                  className="text-body hover-smooth no-underline hover:underline underline-offset-2 wrap-break-word"
+                  style={{ color: "var(--color-primary)" }}
+                >
+                  {SITE_CONTACT_EMAIL}
+                </a>
               </div>
               <p className="text-meta-tight wrap-break-word" style={{ color: "var(--color-primary)", margin: 0 }}>
                 Based between New York and Los Angeles with international project capabilities.
@@ -131,12 +141,24 @@ export default function InfoPage() {
               </span>
             </div>
             <div className="flex min-w-0 w-full flex-col">
-              <span className="text-body block wrap-break-word" style={{ color: "var(--color-primary)" }}>
+              <a
+                href={SITE_INSTAGRAM_DANIEL_DERRO}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-body hover-smooth no-underline hover:underline underline-offset-2 block wrap-break-word"
+                style={{ color: "var(--color-primary)" }}
+              >
                 @danielderro_
-              </span>
-              <span className="text-body block wrap-break-word" style={{ color: "var(--color-primary)" }}>
+              </a>
+              <a
+                href={SITE_INSTAGRAM_NO_SCHOOL_STUDIO_RECORDS}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-body hover-smooth no-underline hover:underline underline-offset-2 block wrap-break-word"
+                style={{ color: "var(--color-primary)" }}
+              >
                 @noschoolstudiorecords
-              </span>
+              </a>
             </div>
           </div>
 

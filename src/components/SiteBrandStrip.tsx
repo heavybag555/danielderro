@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const brandLink =
-  "text-body no-underline opacity-100 transition-opacity duration-600 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-80";
+  "text-body no-underline opacity-100 transition-opacity duration-600 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-40";
 
 /**
  * Fixed top band for Daniel Derro / No-School on light pages (home, info).

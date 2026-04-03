@@ -1,5 +1,12 @@
 import Image from "next/image";
 
+import {
+  SITE_CONTACT_EMAIL,
+  SITE_CONTACT_MAILTO,
+  SITE_INSTAGRAM_DANIEL_DERRO,
+  SITE_INSTAGRAM_NO_SCHOOL_STUDIO_RECORDS,
+} from "@/lib/site-contact";
+
 function AboutBlock({ className }: { className?: string }) {
   return (
     <div className={["flex flex-col gap-5", className].filter(Boolean).join(" ")}>
@@ -60,6 +67,10 @@ export default function InfoColumns({
   const homeHeroStackedAboutClients =
     hideContact && homeMobileAboutAboveHero && !hideAboutClients;
 
+  /** Home lower band: mobile uses two columns; Contact + Follow stack in column one. */
+  const contactFollowMobileTwoCol =
+    contactMiddle && hideAboutClients && !homeHeroStackedAboutClients;
+
   return (
     <>
       {showAboutMobileFirst ? (
@@ -74,16 +85,12 @@ export default function InfoColumns({
           <div className="hidden lg:col-span-1 lg:block" aria-hidden />
           <div className="hidden lg:col-span-1 lg:block" aria-hidden />
         </>
-      ) : (
-        <>
-          <div className="hidden lg:col-span-1 lg:block" aria-hidden />
-        </>
-      )}
+      ) : null}
 
       <div
         className={
           homeHeroStackedAboutClients
-            ? "col-span-2 w-full min-w-0 md:col-span-2 md:col-start-1 lg:col-span-2 lg:col-start-2"
+            ? "col-span-2 w-full min-w-0 md:col-span-2 md:col-start-1 lg:col-span-2 lg:col-start-1"
             : "col-span-2 w-full min-w-0 md:col-span-2 lg:col-span-1 lg:col-start-3"
         }
       >
@@ -130,32 +137,67 @@ export default function InfoColumns({
       <div
         className={
           homeHeroStackedAboutClients
-            ? "col-span-2 grid w-full min-w-0 grid-cols-1 gap-x-(--spacing-gutter) gap-y-0 md:col-span-2 md:col-start-3 md:grid-cols-subgrid lg:col-span-2 lg:col-start-4 lg:grid-cols-1 lg:gap-x-0"
-            : "col-span-2 grid w-full min-w-0 grid-cols-1 gap-x-(--spacing-gutter) gap-y-5 md:col-span-2 md:col-start-3 md:grid-cols-subgrid lg:col-span-3 lg:col-start-4 lg:grid-cols-subgrid"
+            ? "col-span-2 grid w-full min-w-0 grid-cols-1 gap-x-(--spacing-gutter) gap-y-0 md:col-span-2 md:col-start-3 md:grid-cols-subgrid lg:col-span-2 lg:col-start-3 lg:grid-cols-1 lg:gap-x-0"
+            : contactFollowMobileTwoCol
+              ? "col-span-2 grid w-full min-w-0 grid-cols-2 gap-x-(--spacing-gutter) gap-y-0 md:col-span-2 md:col-start-3 md:grid-cols-subgrid lg:col-span-3 lg:col-start-4 lg:grid-cols-subgrid"
+              : "col-span-2 grid w-full min-w-0 grid-cols-1 gap-x-(--spacing-gutter) gap-y-5 md:col-span-2 md:col-start-3 md:grid-cols-subgrid lg:col-span-3 lg:col-start-4 lg:grid-cols-subgrid"
         }
       >
           {/* --- Slot 1 --- */}
           {shiftRight ? (
             <div />
           ) : hideAboutClients && contactMiddle ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              <div style={{ paddingLeft: 20 }}>
-                <span className="text-caption" style={{ color: "var(--color-black)" }}>
-                  Contact
-                </span>
-              </div>
+            <div className="col-span-1 flex min-w-0 flex-col gap-5 md:contents">
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span className="text-body" style={{ color: "var(--color-primary)" }}>
-                    Tel. 00 32 15 75 59 43
-                  </span>
-                  <span className="text-body" style={{ color: "var(--color-primary)" }}>
-                    info@ns-sr.org
+                <div style={{ paddingLeft: 20 }}>
+                  <span className="text-caption" style={{ color: "var(--color-black)" }}>
+                    Contact
                   </span>
                 </div>
-                <p className="text-meta-tight" style={{ color: "var(--color-primary)", margin: 0 }}>
-                  Based between New York and Los Angeles with international project capabilities.
-                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <span className="text-body" style={{ color: "var(--color-primary)" }}>
+                      Tel. 00 32 15 75 59 43
+                    </span>
+                    <a
+                      href={SITE_CONTACT_MAILTO}
+                      className="text-body hover-smooth no-underline hover:underline underline-offset-2"
+                      style={{ color: "var(--color-primary)" }}
+                    >
+                      {SITE_CONTACT_EMAIL}
+                    </a>
+                  </div>
+                  <p className="text-meta-tight" style={{ color: "var(--color-primary)", margin: 0 }}>
+                    Based between New York and Los Angeles with international project capabilities.
+                  </p>
+                </div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                <div style={{ paddingLeft: 20 }}>
+                  <span className="text-caption" style={{ color: "var(--color-black)" }}>
+                    Follow
+                  </span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <a
+                    href={SITE_INSTAGRAM_DANIEL_DERRO}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-body hover-smooth no-underline hover:underline underline-offset-2"
+                    style={{ color: "var(--color-primary)" }}
+                  >
+                    @danielderro_
+                  </a>
+                  <a
+                    href={SITE_INSTAGRAM_NO_SCHOOL_STUDIO_RECORDS}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-body hover-smooth no-underline hover:underline underline-offset-2"
+                    style={{ color: "var(--color-primary)" }}
+                  >
+                    @noschoolstudiorecords
+                  </a>
+                </div>
               </div>
             </div>
           ) : hideAboutClients ? (
@@ -197,21 +239,7 @@ export default function InfoColumns({
           {homeHeroStackedAboutClients ? (
             <div />
           ) : contactMiddle && hideAboutClients ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              <div style={{ paddingLeft: 20 }}>
-                <span className="text-caption" style={{ color: "var(--color-black)" }}>
-                  Follow
-                </span>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <span className="text-body" style={{ color: "var(--color-primary)" }}>
-                  @danielderro_
-                </span>
-                <span className="text-body" style={{ color: "var(--color-primary)" }}>
-                  @noschoolstudiorecords
-                </span>
-              </div>
-            </div>
+            <div className="col-span-1 md:hidden" aria-hidden />
           ) : contactMiddle ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div style={{ paddingLeft: 20 }}>
@@ -224,9 +252,13 @@ export default function InfoColumns({
                   <span className="text-body" style={{ color: "var(--color-primary)" }}>
                     Tel. 00 32 15 75 59 43
                   </span>
-                  <span className="text-body" style={{ color: "var(--color-primary)" }}>
-                    info@ns-sr.org
-                  </span>
+                  <a
+                    href={SITE_CONTACT_MAILTO}
+                    className="text-body hover-smooth no-underline hover:underline underline-offset-2"
+                    style={{ color: "var(--color-primary)" }}
+                  >
+                    {SITE_CONTACT_EMAIL}
+                  </a>
                 </div>
                 <p className="text-meta-tight" style={{ color: "var(--color-primary)", margin: 0 }}>
                   Based between New York and Los Angeles with international project capabilities.
@@ -277,7 +309,7 @@ export default function InfoColumns({
 
           {/* --- Slot 3 (spans both sub-tracks on tablet so the row reads full-width) --- */}
           {contactMiddle && hideAboutClients ? (
-            <div className="md:col-span-2 lg:col-span-1" aria-hidden />
+            <div className="hidden md:block md:col-span-2 lg:col-span-1" aria-hidden />
           ) : shiftRight ? (
             <div
               className="md:col-span-2 lg:col-span-1"
@@ -310,19 +342,34 @@ export default function InfoColumns({
                 </span>
               </div>
               <div style={{ display: "flex", flexDirection: "column" }}>
-                <span className="text-body" style={{ color: "var(--color-primary)" }}>
+                <a
+                  href={SITE_INSTAGRAM_DANIEL_DERRO}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-body hover-smooth no-underline hover:underline underline-offset-2"
+                  style={{ color: "var(--color-primary)" }}
+                >
                   @danielderro_
-                </span>
-                <span className="text-body" style={{ color: "var(--color-primary)" }}>
+                </a>
+                <a
+                  href={SITE_INSTAGRAM_NO_SCHOOL_STUDIO_RECORDS}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-body hover-smooth no-underline hover:underline underline-offset-2"
+                  style={{ color: "var(--color-primary)" }}
+                >
                   @noschoolstudiorecords
-                </span>
+                </a>
               </div>
             </div>
           )}
       </div>
 
       {homeHeroStackedAboutClients ? (
-        <div className="hidden lg:col-span-1 lg:block lg:col-start-6" aria-hidden />
+        <>
+          <div className="hidden lg:col-span-1 lg:block lg:col-start-5" aria-hidden />
+          <div className="hidden lg:col-span-1 lg:block lg:col-start-6" aria-hidden />
+        </>
       ) : null}
 
     </div>
