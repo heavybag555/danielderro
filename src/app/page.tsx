@@ -1,5 +1,4 @@
 import SiteBrandStrip from "@/components/SiteBrandStrip";
-import SiteFooter from "@/components/SiteFooter";
 import InfoColumns from "@/components/InfoColumns";
 import GallerySection from "@/components/GallerySection";
 import { sanityFetchOrDefault } from "@/sanity/lib/fetch-safe";
@@ -68,7 +67,7 @@ export default async function Home() {
   );
 
   return (
-    <div className="flex flex-col gap-2.5 px-[var(--spacing-margin)] pb-[calc(80px+env(safe-area-inset-bottom,0px))] pt-[calc(var(--site-fixed-brand-strip-height)+128px)] md:pt-[calc(var(--site-fixed-brand-strip-height)+192px)] lg:pt-[120px]">
+    <div className="flex flex-col gap-2.5 px-[var(--spacing-margin)] pb-[env(safe-area-inset-bottom,0px)] pt-[calc(var(--site-fixed-brand-strip-height)+128px)] md:pt-[calc(var(--site-fixed-brand-strip-height)+192px)] lg:pt-[calc(var(--site-fixed-brand-strip-height)+120px)]">
       <SiteBrandStrip />
       <div className="flex flex-col gap-16 md:gap-24 lg:gap-[120px]">
         <section className="pt-16 pb-0 md:pt-24 lg:pt-[120px]">
@@ -82,8 +81,6 @@ export default async function Home() {
           <InfoColumns hideAboutClients contactMiddle hideHeroImage />
         </section>
       </div>
-
-      <SiteFooter hideBrandBelowLg />
     </div>
   );
 }

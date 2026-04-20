@@ -1,5 +1,4 @@
 import SiteBrandStrip from "@/components/SiteBrandStrip";
-import SiteFooter from "@/components/SiteFooter";
 import {
   SITE_CONTACT_EMAIL,
   SITE_CONTACT_MAILTO,
@@ -10,7 +9,7 @@ import {
 export default function InfoPage() {
   return (
     <div
-      className="max-w-full min-w-0 overflow-x-hidden pb-[120px] pt-[120px] max-lg:pt-[calc(var(--site-fixed-brand-strip-height)+120px)]"
+      className="max-w-full min-w-0 overflow-x-hidden pb-[120px] pt-[calc(var(--site-fixed-brand-strip-height)+120px)]"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -43,10 +42,10 @@ export default function InfoPage() {
                   into compelling luxury brand stories.
                 </p>
                 <div className="flex flex-col">
-                  <span className="text-meta" style={{ color: "var(--color-primary)" }}>
+                  <span className="text-micro" style={{ color: "var(--color-primary)" }}>
                     Venice, California, USA
                   </span>
-                  <span className="text-meta" style={{ color: "var(--color-primary)" }}>
+                  <span className="text-micro" style={{ color: "var(--color-primary)" }}>
                     Nineteen Eighty Six
                   </span>
                 </div>
@@ -128,7 +127,7 @@ export default function InfoPage() {
                   {SITE_CONTACT_EMAIL}
                 </a>
               </div>
-              <p className="text-meta-tight wrap-break-word" style={{ color: "var(--color-primary)", margin: 0 }}>
+              <p className="text-micro-tight wrap-break-word" style={{ color: "var(--color-primary)", margin: 0 }}>
                 Based between New York and Los Angeles with international project capabilities.
               </p>
             </div>
@@ -165,8 +164,6 @@ export default function InfoPage() {
           <div className="hidden lg:col-span-2 lg:col-start-5 lg:block" aria-hidden />
         </div>
       </div>
-
-      <SiteFooter activePath="/info" hideBrandBelowLg />
     </div>
   );
 }

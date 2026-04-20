@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useCallback, useRef, useLayoutEffect } from "react";
+import { useState, useCallback } from "react";
+import type { MotionValue } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
 import { formatSanityTag } from "@/lib/format-sanity-tag";
 import { MOTION } from "@/lib/motion";
-import SiteHeaderBand from "@/components/SiteHeaderBand";
+import SiteBrandStrip from "@/components/SiteBrandStrip";
 import { useMediaQuery } from "@/lib/use-media-query";
-import type { SiteNavItem } from "@/lib/site-nav";
 
 type SanityImageField = {
   asset: { _ref: string };
@@ -29,13 +29,6 @@ export type WorkProject = {
 
 type FilterKey = "photo" | "motion" | "nss";
 
-const NAV_ITEMS: SiteNavItem[] = [
-  { label: "Info", href: "/info" },
-  { label: "Work", href: "/work" },
-  { label: "Exhibitions", href: "/exhibitions", comingSoon: true },
-  { label: "Radio", href: "/radio", comingSoon: true },
-];
-
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "photo", label: "Photo" },
   { key: "motion", label: "Motion" },
@@ -49,6 +42,110 @@ function getProjectImage(
   project: WorkProject,
 ): SanityImageField | undefined {
   return project.coverImage ?? project.fallbackImage;
+}
+
+/** Parse intrinsic dimensions from a Sanity image asset `_ref`, e.g. `image-<hash>-1920x1080-jpg`. */
+function getSanityImageDims(
+  image: SanityImageField,
+): { width: number; height: number } | null {
+  const match = image.asset?._ref?.match(/-(\d+)x(\d+)-[a-z0-9]+$/i);
+  if (!match) return null;
+  const width = Number(match[1]);
+  const height = Number(match[2]);
+  if (!width || !height) return null;
+  return { width, height };
+}
+
+/** Fixed width of the cursor-following preview overlay on `/work`. */
+const HOVER_PREVIEW_WIDTH = 200;
+/** Fallback aspect ratio (height / width) if we can't parse dims from the asset ref. */
+const HOVER_PREVIEW_FALLBACK_ASPECT = 4 / 3;
+/** Gap between the cursor and the overlay's bottom-left corner (px, both axes). */
+const HOVER_PREVIEW_CURSOR_GAP = 16;
+/** Fade-in/out duration for the cursor-following preview overlay (seconds). */
+const HOVER_PREVIEW_FADE_DURATION = 0.18;
+/** Extra safety margin (px) used when deciding whether to flip the overlay near a viewport edge. */
+const HOVER_PREVIEW_EDGE_SAFE = 8;
+
+/**
+ * Single preview image in the cursor-following overlay stack. Each instance stays mounted
+ * while the filter is active (so rapid hover scrubbing never re-loads images) and derives its
+ * own transform from the shared pointer motion values. Extracted as a component so its hooks
+ * don't live inside a `.map()` loop.
+ */
+function HoverPreview({
+  project,
+  pointerX,
+  pointerY,
+  isActive,
+}: {
+  project: WorkProject;
+  pointerX: MotionValue<number>;
+  pointerY: MotionValue<number>;
+  isActive: boolean;
+}) {
+  const img = getProjectImage(project);
+  const dims = img ? getSanityImageDims(img) : null;
+  const aspect = dims
+    ? dims.height / dims.width
+    : HOVER_PREVIEW_FALLBACK_ASPECT;
+  const previewHeight = Math.round(HOVER_PREVIEW_WIDTH * aspect);
+
+  // X position: prefer to the right of the cursor; flip to the left if that would overflow the viewport.
+  const translateX = useTransform(pointerX, (px) => {
+    if (typeof window === "undefined") return px + HOVER_PREVIEW_CURSOR_GAP;
+    const vw = window.innerWidth;
+    const wouldOverflowRight =
+      px + HOVER_PREVIEW_CURSOR_GAP + HOVER_PREVIEW_WIDTH >
+      vw - HOVER_PREVIEW_EDGE_SAFE;
+    return wouldOverflowRight
+      ? px - HOVER_PREVIEW_CURSOR_GAP - HOVER_PREVIEW_WIDTH
+      : px + HOVER_PREVIEW_CURSOR_GAP;
+  });
+
+  // Y position: prefer above the cursor; flip below if that would overflow the top of the viewport.
+  const translateY = useTransform(pointerY, (py) => {
+    if (typeof window === "undefined")
+      return py - HOVER_PREVIEW_CURSOR_GAP - previewHeight;
+    const wouldOverflowTop =
+      py - HOVER_PREVIEW_CURSOR_GAP - previewHeight < HOVER_PREVIEW_EDGE_SAFE;
+    return wouldOverflowTop
+      ? py + HOVER_PREVIEW_CURSOR_GAP
+      : py - HOVER_PREVIEW_CURSOR_GAP - previewHeight;
+  });
+
+  if (!img) return null;
+
+  return (
+    <motion.div
+      initial={false}
+      animate={{ opacity: isActive ? 1 : 0 }}
+      transition={{
+        duration: HOVER_PREVIEW_FADE_DURATION,
+        ease: MOTION.ease.out,
+      }}
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        x: translateX,
+        y: translateY,
+        width: HOVER_PREVIEW_WIDTH,
+        height: previewHeight,
+        willChange: "opacity, transform",
+      }}
+    >
+      <Image
+        loader={sanityLoader}
+        src={sanityImageUrl(img)}
+        alt=""
+        fill
+        sizes={`${HOVER_PREVIEW_WIDTH}px`}
+        quality={85}
+        style={{ objectFit: "contain" }}
+      />
+    </motion.div>
+  );
 }
 
 function matchesFilter(
@@ -70,13 +167,14 @@ export default function WorkProjectGrid({
 }) {
   const [activeFilter, setActiveFilter] = useState<FilterKey | null>("photo");
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(0);
+  const [previewVisible, setPreviewVisible] = useState(false);
   const [tagBarHovered, setTagBarHovered] = useState(false);
   const [filterHoverKey, setFilterHoverKey] = useState<FilterKey | null>(null);
 
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
+
   const filtered = projects.filter((p) => matchesFilter(p, activeFilter));
-  const activeProject =
-    hoveredIndex !== null ? (filtered[hoveredIndex] ?? null) : null;
-  const bgImage = activeProject ? getProjectImage(activeProject) : null;
 
   const isLg = useMediaQuery("(min-width: 1024px)");
   const isMd = useMediaQuery("(min-width: 768px)");
@@ -93,19 +191,6 @@ export default function WorkProjectGrid({
   const toggleFilter = useCallback((key: FilterKey) => {
     setActiveFilter((prev) => (prev === key ? null : key));
     setHoveredIndex(0);
-  }, []);
-
-  const workHeaderRef = useRef<HTMLDivElement>(null);
-  const [workHeaderBlockHeight, setWorkHeaderBlockHeight] = useState(0);
-
-  useLayoutEffect(() => {
-    const el = workHeaderRef.current;
-    if (!el) return;
-    const measure = () => setWorkHeaderBlockHeight(el.offsetHeight);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
   }, []);
 
   const workFooterFilterColumn = (
@@ -182,89 +267,36 @@ export default function WorkProjectGrid({
         background: "#000000",
       }}
     >
-      {/* Background image — viewport-fixed; crossfades on hover; does not scroll with project list */}
-      <AnimatePresence>
-        {bgImage && !isMobile && (
-          <motion.div
-            key={sanityImageUrl(bgImage)}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isMobile ? 0.1 : 0.2 }}
-            exit={{ opacity: 0 }}
-            transition={{
-              duration: MOTION.duration.hover,
-              ease: MOTION.ease.heavy,
-            }}
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 0,
-              pointerEvents: "none",
-              display: isMobile ? "block" : "flex",
-              alignItems: isMobile ? undefined : "center",
-              justifyContent: isMobile ? undefined : "center",
-              overflow: "hidden",
-              filter: "grayscale(1)",
-            }}
-          >
-            {isMobile ? (
-              <div
-                className="relative h-full w-full"
-                style={{ minHeight: "100%" }}
-              >
-                <Image
-                  loader={sanityLoader}
-                  src={sanityImageUrl(bgImage)}
-                  alt=""
-                  fill
-                  sizes="100vw"
-                  quality={85}
-                  style={{ objectFit: "cover" }}
-                  priority
-                />
-              </div>
-            ) : (
-              <Image
-                loader={sanityLoader}
-                src={sanityImageUrl(bgImage)}
-                alt=""
-                width={1920}
-                height={1080}
-                sizes="100vw"
-                quality={85}
-                style={{
-                  width: "auto",
-                  height: "100%",
-                  maxWidth: "none",
-                }}
-                priority
-              />
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Cursor-following preview overlay — all preview images stay mounted and crossfade
+          via opacity so rapid project-to-project hovering stays smooth. Each preview reads
+          the shared pointer motion values and flips its position toward the opposite edge
+          when the default placement (top-right of cursor) would overflow the viewport. */}
+      {!isMobile ? (
+        <div
+          aria-hidden
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 5,
+            pointerEvents: "none",
+          }}
+        >
+          {filtered.map((project, idx) => (
+            <HoverPreview
+              key={project._id}
+              project={project}
+              pointerX={pointerX}
+              pointerY={pointerY}
+              isActive={previewVisible && idx === hoveredIndex}
+            />
+          ))}
+        </div>
+      ) : null}
 
-      {/* Fixed header — matches ProjectPage; stays pinned during overscroll */}
-      <div
-        ref={workHeaderRef}
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 100,
-          paddingTop: "calc(var(--spacing-margin) + env(safe-area-inset-top, 0px))",
-          paddingLeft: "var(--spacing-margin)",
-          paddingRight: "var(--spacing-margin)",
-          boxSizing: "border-box",
-        }}
-      >
-        <SiteHeaderBand
-          navItems={NAV_ITEMS}
-          variant="dark"
-          isActive={(item) => item.href === "/work"}
-          hideBrandBelowLg
-        />
-      </div>
+      {/* Fixed header — same Daniel Derro / Menu band as other pages.
+          `SiteBrandStrip` uses `blend-overlay` so its black text inverts to
+          white over the black work background automatically. */}
+      <SiteBrandStrip />
 
       {/* Content layer */}
       <div
@@ -284,6 +316,17 @@ export default function WorkProjectGrid({
         {/* ── Project rows: centered on md+; top-aligned on mobile so initial scroll isn’t mid-list ── */}
         <div
           data-lenis-prevent
+          onMouseMove={
+            isMobile
+              ? undefined
+              : (e) => {
+                  pointerX.set(e.clientX);
+                  pointerY.set(e.clientY);
+                }
+          }
+          onMouseLeave={
+            isMobile ? undefined : () => setPreviewVisible(false)
+          }
           style={{
             flex: 1,
             minHeight: 0,
@@ -294,9 +337,7 @@ export default function WorkProjectGrid({
             overflowY: "auto",
             overflowX: "hidden",
             WebkitOverflowScrolling: "touch",
-            paddingTop:
-              (workHeaderBlockHeight > 0 ? workHeaderBlockHeight + 10 : 10) +
-              WORK_PROJECT_TEXT_PAD_Y,
+            paddingTop: `calc(var(--site-fixed-brand-strip-height) + 10px + ${WORK_PROJECT_TEXT_PAD_Y}px)`,
             paddingBottom: isMobile
               ? `calc(${WORK_PROJECT_TEXT_PAD_Y}px + 168px + env(safe-area-inset-bottom, 0px))`
               : WORK_PROJECT_TEXT_PAD_Y,
@@ -331,7 +372,10 @@ export default function WorkProjectGrid({
                       gridColumn,
                       outline: "none",
                     }}
-                    onMouseEnter={() => setHoveredIndex(globalIdx)}
+                    onMouseEnter={() => {
+                      setHoveredIndex(globalIdx);
+                      if (!isMobile) setPreviewVisible(true);
+                    }}
                     onFocus={() => setHoveredIndex(globalIdx)}
                   >
                     {isMobile ? (

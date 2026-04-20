@@ -7,10 +7,13 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const helvetica =
+    '"Helvetica Neue", Helvetica, Arial, sans-serif' as const;
+
   return (
     <html lang="en">
-      <body>
-        <p style={{ fontFamily: "system-ui, sans-serif", padding: "1rem" }}>
+      <body style={{ fontFamily: helvetica }}>
+        <p style={{ padding: "1rem" }}>
           Something went wrong.
         </p>
         {process.env.NODE_ENV === "development" && error?.message ? (

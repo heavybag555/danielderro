@@ -23,10 +23,10 @@ function AboutBlock({ className }: { className?: string }) {
           stories.
         </p>
         <div className="flex flex-col">
-          <span className="text-meta" style={{ color: "var(--color-primary)" }}>
+          <span className="text-micro" style={{ color: "var(--color-primary)" }}>
             Venice, California, USA
           </span>
-          <span className="text-meta" style={{ color: "var(--color-primary)" }}>
+          <span className="text-micro" style={{ color: "var(--color-primary)" }}>
             Nineteen Eighty Six
           </span>
         </div>
@@ -106,7 +106,7 @@ export default function InfoColumns({
                 priority
               />
               <Image
-                src="/images/DEBT SS -105.jpg"
+                src="/images/debt-ss-105.jpg"
                 alt="Daniel Derro"
                 width={4083}
                 height={3000}
@@ -124,7 +124,7 @@ export default function InfoColumns({
                 priority
               />
               <Image
-                src="/images/DEBT SS -105.jpg"
+                src="/images/debt-ss-105.jpg"
                 alt="Daniel Derro"
                 width={4083}
                 height={3000}
@@ -167,7 +167,7 @@ export default function InfoColumns({
                       {SITE_CONTACT_EMAIL}
                     </a>
                   </div>
-                  <p className="text-meta-tight" style={{ color: "var(--color-primary)", margin: 0 }}>
+                  <p className="text-micro-tight" style={{ color: "var(--color-primary)", margin: 0 }}>
                     Based between New York and Los Angeles with international project capabilities.
                   </p>
                 </div>
@@ -260,7 +260,7 @@ export default function InfoColumns({
                     {SITE_CONTACT_EMAIL}
                   </a>
                 </div>
-                <p className="text-meta-tight" style={{ color: "var(--color-primary)", margin: 0 }}>
+                <p className="text-micro-tight" style={{ color: "var(--color-primary)", margin: 0 }}>
                   Based between New York and Los Angeles with international project capabilities.
                 </p>
               </div>
@@ -280,10 +280,10 @@ export default function InfoColumns({
                   into compelling luxury brand stories.
                 </p>
                 <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span className="text-meta" style={{ color: "var(--color-primary)" }}>
+                  <span className="text-micro" style={{ color: "var(--color-primary)" }}>
                     Venice, California, USA
                   </span>
-                  <span className="text-meta" style={{ color: "var(--color-primary)" }}>
+                  <span className="text-micro" style={{ color: "var(--color-primary)" }}>
                     Nineteen Eighty Six
                   </span>
                 </div>

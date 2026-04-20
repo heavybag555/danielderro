@@ -10,7 +10,8 @@
   --color-stroke: #373737;
 
   --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-serif: "Crimson Text", Georgia, serif;
+  /* Kept for any legacy references; same stack as sans — site uses Helvetica Neue only. */
+  --font-serif: var(--font-sans);
 
   /* Base tokens; responsive overrides at end of file */
   --spacing-margin: 12px;
@@ -212,17 +213,9 @@ html:has([data-work-surface]) body {
   }
 }
 
-/* ── Typography tokens from Figma ─────────────────────── */
+/* ── Typography — all site text styles (smallest → largest) ── */
 
-.text-caption {
-  font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: 11px;
-  line-height: 15px;
-  letter-spacing: 0.02em;
-}
-
-.text-meta {
+.text-micro {
   font-family: var(--font-sans);
   font-weight: 500;
   font-size: 8px;
@@ -230,12 +223,20 @@ html:has([data-work-surface]) body {
   letter-spacing: 0.03em;
 }
 
-.text-meta-tight {
+.text-micro-tight {
   font-family: var(--font-sans);
   font-weight: 500;
   font-size: 8px;
   line-height: 1.25;
   letter-spacing: 0.03em;
+}
+
+.text-caption {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 15px;
+  letter-spacing: 0.02em;
 }
 
 .text-body {
@@ -246,11 +247,11 @@ html:has([data-work-surface]) body {
   letter-spacing: -0.02em;
 }
 
-.text-h3 {
-  font-family: var(--font-serif);
+.text-heading {
+  font-family: var(--font-sans);
   font-weight: 600;
-  font-size: 17px;
-  line-height: .8;
+  font-size: 60px;
+  line-height: .85;
   letter-spacing: -0.03em;
 }
 

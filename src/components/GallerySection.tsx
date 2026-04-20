@@ -117,14 +117,14 @@ function HoverLabel({ item }: { item: PreviewStill }) {
           }}
         >
           <span
-            className="text-meta-tight"
+            className="text-micro-tight"
             style={{ color: "var(--color-black)" }}
           >
             {item.title}
           </span>
           {item.client?.trim() && (
             <span
-              className="text-meta-tight"
+              className="text-micro-tight"
               style={{
                 color: "var(--color-black)",
                 opacity: 0.5,
@@ -136,7 +136,7 @@ function HoverLabel({ item }: { item: PreviewStill }) {
         </div>
         {item.tags.length > 0 && (
           <span
-            className="text-meta-tight"
+            className="text-micro-tight"
             style={{
               display: "block",
               color: "var(--color-primary)",

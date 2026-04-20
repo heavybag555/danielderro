@@ -7,10 +7,9 @@ import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
 import { formatSanityTag } from "@/lib/format-sanity-tag";
 import { MOTION } from "@/lib/motion";
 import SiteFooter from "@/components/SiteFooter";
-import SiteHeaderBand from "@/components/SiteHeaderBand";
+import SiteBrandStrip from "@/components/SiteBrandStrip";
 import { MEDIA_DESKTOP_FINE_POINTER } from "@/lib/media-queries";
 import { useMediaQuery } from "@/lib/use-media-query";
-import type { SiteNavItem } from "@/lib/site-nav";
 
 type SanityImageField = {
   asset: { _ref: string };
@@ -53,13 +52,6 @@ type MediaItem = {
   image: SanityImageField;
   alt: string;
 };
-
-const NAV_ITEMS: SiteNavItem[] = [
-  { label: "Info", href: "/info" },
-  { label: "Return", href: "/work" },
-  { label: "Exhibitions", href: "/exhibitions", comingSoon: true },
-  { label: "Radio", href: "/radio", comingSoon: true },
-];
 
 function galleryToMedia(gallery: GalleryEntry[]): MediaItem[] {
   const items: MediaItem[] = [];
@@ -247,26 +239,8 @@ export default function ProjectPage({ project }: { project: Project }) {
         overflow: "hidden",
       }}
     >
-      {/* ── Fixed header ──────────────────────────────────── */}
-      <div
-        className="blend-overlay"
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 100,
-          padding: "var(--spacing-margin)",
-          boxSizing: "border-box",
-        }}
-      >
-        <SiteHeaderBand
-          navItems={NAV_ITEMS}
-          variant="light"
-          isActive={(item) => item.label === "Return"}
-          hideBrandBelowLg
-        />
-      </div>
+      {/* ── Fixed header — same Daniel Derro / Menu band as other pages ── */}
+      <SiteBrandStrip />
 
       {/* ── Full-height slideshow ─────────────────────────── */}
       <div
