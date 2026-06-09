@@ -73,7 +73,7 @@ export default async function Home() {
         <div id="home-gallery-fade-anchor">
           <GallerySection projects={projects} />
         </div>
-        <SitePageFooter flushTop />
+        <SitePageFooter />
       </div>
     </>
   );

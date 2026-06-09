@@ -169,7 +169,7 @@ function ThumbnailStrip({
             fill
             sizes={`${item.width}px`}
             quality={80}
-            style={{ objectFit: "contain", objectPosition: "left center" }}
+            style={{ objectFit: "contain", objectPosition: "left top" }}
           />
         </div>
       ))}
@@ -192,7 +192,6 @@ function ProjectRow({
   thumbHeight: number;
   variants: Variants;
 }) {
-  const isMobile = !isMd;
   const number = formatNumber(index);
   const category = categoryLabel(project);
   const images = getStripImages(project);
@@ -296,10 +295,9 @@ function ProjectRow({
             gridColumn: metaGridCol,
             minHeight: thumbHeight,
             display: "flex",
-            flexDirection: isMobile ? "row" : "column",
+            flexDirection: "column",
             justifyContent: "space-between",
-            alignItems: isMobile ? "flex-start" : "stretch",
-            columnGap: isMobile ? 8 : undefined,
+            alignItems: "flex-start",
           }}
         >
           <span className="text-caption work-row-text-muted" style={{ flexShrink: 0 }}>
@@ -380,8 +378,7 @@ export default function WorkProjectGrid({
         initial={reduceMotion ? false : { opacity: 0, filter: "blur(8px)" }}
         animate={{ opacity: 1, filter: "blur(0px)" }}
         transition={{ duration: 0.8, ease: MOTION.ease.heavy }}
-        className="pt-[var(--site-fixed-brand-strip-height)] md:pt-[calc(var(--spacing-margin)+env(safe-area-inset-top,0px))]"
-        className="pb-[120px]"
+        className="pb-[120px] pt-[calc(var(--spacing-margin)+env(safe-area-inset-top,0px))]"
         style={{
           paddingLeft: "var(--spacing-margin)",
           paddingRight: "var(--spacing-margin)",

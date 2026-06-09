@@ -3,8 +3,6 @@ import InfoColumns from "@/components/InfoColumns";
 type SitePageFooterProps = {
   /** White body copy on dark surfaces (e.g. /work). */
   onDark?: boolean;
-  /** Home: sit flush below the gallery with no gap above the divider. */
-  flushTop?: boolean;
 };
 
 /**
@@ -13,18 +11,14 @@ type SitePageFooterProps = {
  */
 export default function SitePageFooter({
   onDark = false,
-  flushTop = false,
 }: SitePageFooterProps) {
   return (
     <section
-      className={[
-        flushTop ? "site-page-footer-flush-top" : "",
-        onDark ? "site-footer-on-dark" : "",
-      ]
+      className={["site-page-footer", onDark ? "site-footer-on-dark" : ""]
         .filter(Boolean)
         .join(" ")}
     >
-      <InfoColumns siteFooter footerFlushTop={flushTop} />
+      <InfoColumns siteFooter />
     </section>
   );
 }

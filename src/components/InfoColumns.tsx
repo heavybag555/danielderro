@@ -24,7 +24,6 @@ export function AboutBlock({
           className={["text-semantic-title pl-5", blendTitle ? "blend-overlay" : ""]
             .filter(Boolean)
             .join(" ")}
-          style={{ margin: 0 }}
         >
           About
         </h2>
@@ -51,7 +50,6 @@ export function ClientsBlock({
         className={["text-semantic-title pl-5", blendTitle ? "blend-overlay" : ""]
           .filter(Boolean)
           .join(" ")}
-        style={{ margin: 0 }}
       >
         Clients
       </h2>
@@ -65,7 +63,7 @@ export function ClientsBlock({
 function ContactBlock() {
   return (
     <section className="flex min-w-0 flex-col gap-0">
-      <h2 className="site-footer-title text-semantic-title pl-5" style={{ margin: 0 }}>
+      <h2 className="site-footer-title text-semantic-title pl-5">
         Contact
       </h2>
       <div className="site-footer-copy flex flex-col gap-5">
@@ -89,7 +87,7 @@ function ContactBlock() {
 function FollowBlock() {
   return (
     <section className="flex min-w-0 flex-col gap-0">
-      <h2 className="site-footer-title text-semantic-title pl-5" style={{ margin: 0 }}>
+      <h2 className="site-footer-title text-semantic-title pl-5">
         Follow
       </h2>
       <div className="site-footer-copy flex flex-col">
@@ -161,8 +159,6 @@ type InfoColumnsProps = {
   homeMobileAboutAboveHero?: boolean;
   /** Shared page footer: Contact in col 3, Follow in col 4, semantic section titles. */
   siteFooter?: boolean;
-  /** Home: no gap above the footer divider. */
-  footerFlushTop?: boolean;
 };
 
 export default function InfoColumns({
@@ -173,7 +169,6 @@ export default function InfoColumns({
   hideHeroImage = false,
   homeMobileAboutAboveHero = false,
   siteFooter = false,
-  footerFlushTop = false,
 }: InfoColumnsProps) {
   const showAboutMobileFirst =
     homeMobileAboutAboveHero && !shiftRight && !hideAboutClients;
@@ -191,25 +186,16 @@ export default function InfoColumns({
 
     return (
       <div className="page-grid items-start">
-        <div
-          className={[
-            "site-footer-divider col-span-2 col-start-1 row-start-1 md:col-span-3 md:col-start-2 lg:col-span-4 lg:col-start-2",
-            footerFlushTop ? "site-footer-divider--flush" : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-          aria-hidden
-        />
-        <div className="col-span-1 col-start-1 row-start-2 min-w-max md:col-start-2 md:row-start-2 lg:col-start-2 lg:row-start-2">
+        <div className="col-span-1 col-start-1 row-start-1 min-w-max md:col-start-2 md:row-start-1 lg:col-start-2 lg:row-start-1">
           <FooterLogosBlock logos={footerLogosLeft} />
         </div>
-        <div className="col-span-1 col-start-1 row-start-3 md:col-start-3 md:row-start-2 lg:col-start-3 lg:row-start-2">
+        <div className="col-span-1 col-start-1 row-start-2 md:col-start-3 md:row-start-1 lg:col-start-3 lg:row-start-1">
           <ContactBlock />
         </div>
-        <div className="col-span-1 col-start-2 row-start-2 min-w-max md:col-start-4 md:row-start-2 lg:col-start-4 lg:row-start-2">
+        <div className="col-span-1 col-start-2 row-start-1 min-w-max md:col-start-4 md:row-start-1 lg:col-start-4 lg:row-start-1">
           <FooterLogosBlock logos={footerLogosRight} align="end" />
         </div>
-        <div className="col-span-1 col-start-2 row-start-3 md:col-start-4 md:row-start-3 lg:col-start-5 lg:row-start-2">
+        <div className="col-span-1 col-start-2 row-start-2 md:col-start-4 md:row-start-2 lg:col-start-5 lg:row-start-1">
           <FollowBlock />
         </div>
       </div>

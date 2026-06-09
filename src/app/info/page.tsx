@@ -37,7 +37,7 @@ export default function InfoPage() {
 
           <div className="col-span-2 flex min-w-0 flex-col gap-[40px] md:col-span-1 md:col-start-3 lg:col-span-1 lg:col-start-3">
             <section className="flex flex-col gap-0">
-              <h2 className="text-semantic-title pl-5" style={{ margin: 0 }}>
+              <h2 className="text-semantic-title pl-5">
                 About
               </h2>
               <div className="flex flex-col gap-5">

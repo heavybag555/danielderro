@@ -151,8 +151,7 @@ export default function HomeHero() {
         style={{ opacity: contentOpacity }}
       >
         <div className="page-grid w-full">
-        <div className="col-span-1 col-start-2 flex min-w-0 flex-col items-start gap-5 text-left md:col-start-2 lg:col-start-2">
-          <div className="flex flex-col items-start">
+          <div className="col-span-2 col-start-2 flex flex-col items-start md:col-start-2 lg:col-start-2">
             <span className="site-header-brand bg-black px-[2px] py-0 text-heading">
               Daniel Derro
             </span>
@@ -161,11 +160,12 @@ export default function HomeHero() {
             </span>
           </div>
 
+          <div className="col-span-1 col-start-2 mt-5 flex min-w-0 flex-col items-start gap-5 text-left md:col-start-2 lg:col-start-2">
           <p
             className="text-caption w-[240px] max-w-full shrink-0"
             style={{ color: "var(--color-primary)", margin: 0 }}
           >
-            <span className="text-semantic-title">About</span>{" "}
+            <span style={{ color: "var(--color-white)" }}>About </span>
             {SITE_ABOUT_COPY}
           </p>
 
@@ -173,7 +173,7 @@ export default function HomeHero() {
             className="text-caption w-[240px] max-w-full shrink-0"
             style={{ color: "var(--color-primary)", margin: 0 }}
           >
-            <span className="text-semantic-title">Clients</span>{" "}
+            <span style={{ color: "var(--color-white)" }}>Clients </span>
             {SITE_CLIENTS_COPY}
           </p>
 
@@ -204,7 +204,7 @@ export default function HomeHero() {
               />
             ))}
           </div>
-        </div>
+          </div>
         </div>
       </motion.div>
 
