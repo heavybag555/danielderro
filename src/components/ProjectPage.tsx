@@ -1,15 +1,10 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
 import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
 import { formatSanityTag } from "@/lib/format-sanity-tag";
-import { MOTION } from "@/lib/motion";
 import SiteFooter from "@/components/SiteFooter";
-import SiteBrandStrip from "@/components/SiteBrandStrip";
-import { MEDIA_DESKTOP_FINE_POINTER } from "@/lib/media-queries";
-import { useMediaQuery } from "@/lib/use-media-query";
 
 type SanityImageField = {
   asset: { _ref: string };
@@ -53,6 +48,8 @@ type MediaItem = {
   alt: string;
 };
 
+const PROJECT_IMAGE_PAD_Y = 200;
+
 function galleryToMedia(gallery: GalleryEntry[]): MediaItem[] {
   const items: MediaItem[] = [];
   for (const entry of gallery) {
@@ -77,92 +74,32 @@ function pad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-function NavCursorGlyph({ direction }: { direction: "prev" | "next" }) {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
-      {direction === "prev" ? (
-        <path
-          d="M15 18l-6-6 6-6"
-          stroke="white"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      ) : (
-        <path
-          d="M9 18l6-6-6-6"
-          stroke="white"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      )}
-    </svg>
-  );
-}
-
-const slideTransition = {
-  duration: MOTION.duration.gallerySlide,
-  ease: MOTION.ease.heavy,
-} as const;
-
-const slideFrameStyle = {
-  position: "absolute" as const,
-  inset: "var(--spacing-margin)",
-};
-
 export default function ProjectPage({ project }: { project: Project }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [prevIndex, setPrevIndex] = useState<number | null>(null);
-  const [navCursor, setNavCursor] = useState<{
-    direction: "prev" | "next";
-    x: number;
-    y: number;
-  } | null>(null);
-  const showSlideshowCursorArrows = useMediaQuery(MEDIA_DESKTOP_FINE_POINTER);
   const mediaItems = galleryToMedia(project.gallery ?? []);
   const total = mediaItems.length;
 
   useEffect(() => {
-    if (!showSlideshowCursorArrows) setNavCursor(null);
-  }, [showSlideshowCursorArrows]);
+    const root = scrollRef.current;
+    if (!root || total === 0) return;
 
-  const endSlideTransition = useCallback(() => {
-    setPrevIndex(null);
-  }, []);
+    const sections = root.querySelectorAll<HTMLElement>("[data-slide-index]");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting || entry.intersectionRatio < 0.5) continue;
+          if (!(entry.target instanceof HTMLElement)) continue;
+          const idx = Number(entry.target.dataset.slideIndex);
+          if (!Number.isNaN(idx)) setActiveIndex(idx);
+        }
+      },
+      { root, threshold: [0.5] },
+    );
 
-  const handleClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (total === 0) return;
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const isRight = x > rect.width / 2;
-
-      setActiveIndex((prev) => {
-        const next = isRight ? (prev + 1) % total : (prev - 1 + total) % total;
-        if (next === prev) return prev;
-        setPrevIndex(prev);
-        return next;
-      });
-    },
-    [total],
-  );
-
-  const updateNavCursor = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (total === 0 || !showSlideshowCursorArrows) return;
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      setNavCursor({
-        direction: x > rect.width / 2 ? "next" : "prev",
-        x: e.clientX,
-        y: e.clientY,
-      });
-    },
-    [total, showSlideshowCursorArrows],
-  );
-
-  const currentItem = mediaItems[activeIndex];
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, [total]);
 
   const titleContent = (
     <div
@@ -192,43 +129,17 @@ export default function ProjectPage({ project }: { project: Project }) {
       </span>
     ) : null;
 
-  const projectFooterLeft = (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        rowGap: 4,
-        minWidth: 0,
-      }}
-    >
-      {titleContent}
-    </div>
-  );
-
-  const slideCounter = total > 0 ? (
-    <span className="text-caption" style={{ display: "flex", gap: 4 }}>
-      <AnimatePresence mode="wait">
-        <motion.span
-          key={activeIndex}
-          className="text-caption"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.5 }}
-          exit={{ opacity: 0 }}
-          transition={{
-            duration: MOTION.duration.gallerySlide,
-            ease: MOTION.ease.heavy,
-          }}
-          style={{ color: "var(--color-black)" }}
-        >
+  const slideCounter =
+    total > 0 ? (
+      <span className="text-caption" style={{ display: "flex", gap: 4 }}>
+        <span className="text-caption" style={{ color: "var(--color-black)", opacity: 0.5 }}>
           {pad(activeIndex + 1)}
-        </motion.span>
-      </AnimatePresence>
-      <span className="text-caption" style={{ color: "var(--color-black)" }}>
-        {pad(total)}
+        </span>
+        <span className="text-caption" style={{ color: "var(--color-black)" }}>
+          {pad(total)}
+        </span>
       </span>
-    </span>
-  ) : null;
+    ) : null;
 
   return (
     <div
@@ -239,101 +150,71 @@ export default function ProjectPage({ project }: { project: Project }) {
         overflow: "hidden",
       }}
     >
-      {/* ── Fixed header — same Daniel Derro / Menu band as other pages ── */}
-      <SiteBrandStrip />
-
-      {/* ── Full-height slideshow ─────────────────────────── */}
       <div
-        onClick={handleClick}
-        onMouseEnter={updateNavCursor}
-        onMouseMove={updateNavCursor}
-        onMouseLeave={() => setNavCursor(null)}
+        ref={scrollRef}
+        data-lenis-prevent
+        className="project-scroll"
         style={{
           position: "absolute",
           inset: 0,
-          cursor:
-            total === 0 || !navCursor || !showSlideshowCursorArrows
-              ? "default"
-              : "none",
           zIndex: 1,
+          overflowY: "auto",
+          overflowX: "hidden",
+          WebkitOverflowScrolling: "touch",
         }}
       >
-        {prevIndex !== null && prevIndex !== activeIndex ? (
-          <>
-            <motion.div
-              key={`out-${prevIndex}-${activeIndex}`}
-              initial={{ opacity: 1 }}
-              animate={{ opacity: 0 }}
-              transition={slideTransition}
-              style={{ ...slideFrameStyle, zIndex: 1 }}
+        {mediaItems.map((item, index) => (
+          <section
+            key={item._key}
+            data-slide-index={index}
+            className="project-scroll-slide"
+            style={{
+              height: "100dvh",
+              boxSizing: "border-box",
+              paddingTop: PROJECT_IMAGE_PAD_Y,
+              paddingBottom: PROJECT_IMAGE_PAD_Y,
+              paddingLeft: "var(--spacing-margin)",
+              paddingRight: "var(--spacing-margin)",
+            }}
+          >
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                height: "100%",
+                minHeight: 0,
+              }}
             >
               <Image
                 loader={sanityLoader}
-                src={sanityImageUrl(mediaItems[prevIndex].image)}
-                alt={mediaItems[prevIndex].alt}
+                src={sanityImageUrl(item.image)}
+                alt={item.alt}
                 fill
                 sizes="100vw"
                 quality={90}
+                priority={index === 0}
                 style={{ objectFit: "contain" }}
               />
-            </motion.div>
-            <motion.div
-              key={`in-${activeIndex}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={slideTransition}
-              style={{ ...slideFrameStyle, zIndex: 2 }}
-              onAnimationComplete={endSlideTransition}
-            >
-              <Image
-                loader={sanityLoader}
-                src={sanityImageUrl(mediaItems[activeIndex].image)}
-                alt={mediaItems[activeIndex].alt}
-                fill
-                sizes="100vw"
-                quality={90}
-                style={{ objectFit: "contain" }}
-                priority
-              />
-            </motion.div>
-          </>
-        ) : currentItem ? (
-          <div style={slideFrameStyle}>
-            <Image
-              loader={sanityLoader}
-              src={sanityImageUrl(currentItem.image)}
-              alt={currentItem.alt}
-              fill
-              sizes="100vw"
-              quality={90}
-              style={{ objectFit: "contain" }}
-              priority
-            />
-          </div>
-        ) : null}
+            </div>
+          </section>
+        ))}
       </div>
 
-      {showSlideshowCursorArrows && navCursor && total > 0 ? (
-        <div
-          aria-hidden
-          style={{
-            position: "fixed",
-            left: navCursor.x,
-            top: navCursor.y,
-            transform: "translate(-50%, -50%)",
-            pointerEvents: "none",
-            zIndex: 99,
-            mixBlendMode: "exclusion",
-          }}
-        >
-          <NavCursorGlyph direction={navCursor.direction} />
-        </div>
-      ) : null}
-
-      {/* ── Footer with project info ─────────────────────── */}
       <SiteFooter
         activePath="/work"
-        leftContent={projectFooterLeft}
+        leftContent={
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              rowGap: 4,
+              minWidth: 0,
+            }}
+          >
+            {titleContent}
+          </div>
+        }
         middleContent={tagsContent}
         rightContent={slideCounter}
       />

@@ -69,6 +69,42 @@ html:has([data-work-surface]) body {
   background-color: var(--color-black);
 }
 
+.site-footer-divider {
+  border-top: 0.5px solid rgba(0, 0, 0, 0.2);
+  margin-top: 120px;
+  min-height: 0;
+  align-self: stretch;
+}
+
+.site-footer-divider--flush,
+.site-page-footer-flush-top .site-footer-divider {
+  margin-top: 0;
+}
+
+.site-page-footer-flush-top {
+  margin-top: 0;
+}
+
+#home-gallery-fade-anchor,
+#home-gallery-fade-anchor > section {
+  margin-bottom: 0;
+}
+
+.site-footer-on-dark .site-footer-divider {
+  border-top-color: rgba(255, 255, 255, 0.2);
+}
+
+.site-footer-copy,
+.site-footer-copy a {
+  color: var(--color-black);
+}
+
+/* Footer body copy on dark surfaces (/work): black default is unreadable. */
+.site-footer-on-dark .site-footer-copy,
+.site-footer-on-dark .site-footer-copy a {
+  color: var(--color-white);
+}
+
 /* ── Responsive column grid (2 / 4 / 6) ───────────────── */
 
 .page-grid {
@@ -96,11 +132,100 @@ html:has([data-work-surface]) body {
   .page-grid {
     grid-template-columns: repeat(6, 1fr);
   }
+}
 
-  /* Work page: keep the same column gutter rhythm as tablet (56px) so project
-     title / client / tag blocks read with the same horizontal spacing. */
-  .page-grid.work-project-grid-row {
-    column-gap: 56px;
+/* Project detail (/work/[slug]): vertical scroll with viewport snapping per image. */
+.project-scroll {
+  scroll-snap-type: y mandatory;
+}
+
+.project-scroll-slide {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* Work index row: grey fill sweeps from the top-left on hover; text inverts to black. */
+.work-row {
+  position: relative;
+}
+
+.work-row-hit {
+  position: absolute;
+  z-index: 2;
+  box-sizing: border-box;
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+
+.work-row-frame {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.work-row-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--color-gray-light);
+  transform: scale(0);
+  transform-origin: top left;
+  transition: transform 0.28s cubic-bezier(0.76, 0, 0.24, 1);
+  z-index: 0;
+}
+
+.work-row:has(.work-row-hit:hover) .work-row-frame::before,
+.work-row:has(.work-row-hit:focus-visible) .work-row-frame::before {
+  transform: scale(1);
+}
+
+.work-row-meta {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.work-row-media {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: flex-start;
+  pointer-events: none;
+}
+
+.work-row-text-title {
+  color: var(--color-white);
+  transition: color 0.28s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.work-row-text-muted {
+  /* Opaque grey — avoids compositing shifts when the hover fill appears. */
+  color: #808080;
+  font-variant-numeric: tabular-nums;
+}
+
+.work-row:has(.work-row-hit:hover) .work-row-text-title,
+.work-row:has(.work-row-hit:focus-visible) .work-row-text-title {
+  color: var(--color-black);
+}
+
+.work-row:has(.work-row-hit:hover) .work-row-text-muted,
+.work-row:has(.work-row-hit:focus-visible) .work-row-text-muted {
+  color: #808080;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .work-row-frame::before,
+  .work-row-text-title {
+    transition: none;
   }
 }
 
@@ -193,11 +318,19 @@ html:has([data-work-surface]) body {
   }
 }
 
-/* Fixed brand strip (home / info, below lg): reserve space so content clears the band */
+/* Fixed brand strip: reserve space so content clears the band */
 :root {
   --site-fixed-brand-strip-height: calc(
-    env(safe-area-inset-top, 0px) + var(--spacing-margin) * 2 + 17px
+    env(safe-area-inset-top, 0px) + var(--spacing-margin) * 2 + 24px
   );
+}
+
+@media (max-width: 767px) {
+  :root {
+    --site-fixed-brand-strip-height: calc(
+      env(safe-area-inset-top, 0px) + var(--spacing-margin) * 2 + 47px
+    );
+  }
 }
 
 /* Layout tokens: tighter gutters on small screens; --spacing-margin stays 12px at all breakpoints */
@@ -243,7 +376,7 @@ html:has([data-work-surface]) body {
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: 16px;
-  line-height: 19px;
+  line-height: 20px;
   letter-spacing: -0.02em;
 }
 
@@ -255,12 +388,85 @@ html:has([data-work-surface]) body {
   letter-spacing: -0.03em;
 }
 
+.text-semantic-title {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 20px;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: rgba(0, 0, 0, 0.2);
+}
+
+.site-footer-on-dark .text-semantic-title {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.hero-text .text-body {
+  -webkit-text-stroke: 0.35px var(--color-black);
+  paint-order: stroke fill;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+}
+
+.hero-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.8;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 180px 180px;
+}
+
+.site-brand-strip {
+  z-index: 200;
+}
+
+.site-header-brand,
+.site-header-menu-cell {
+  color: var(--color-black);
+}
+
+html:has([data-work-surface]) .site-header-brand,
+html:has([data-work-surface]) .site-header-menu-cell {
+  color: var(--color-white);
+}
+
+.site-header-meta {
+  color: var(--color-primary);
+  mix-blend-mode: normal;
+}
+
+/* Home hero: non-red foreground reads white over the photo. */
+[data-home-hero] .site-header-brand {
+  color: var(--color-white);
+}
+
+[data-home-hero] .text-semantic-title {
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 15px;
+  letter-spacing: 0.02em;
+  color: var(--color-white);
+}
+
 /* Container-level exclusion blend for overlays on imagery (softer than difference).
    Overrides the palette so child elements using CSS vars read correctly after blend. */
-.blend-overlay {
+html[data-hero-bg-visible="true"] .blend-overlay,
+html:has([data-home-hero]):not([data-hero-bg-visible="false"]) .blend-overlay {
   mix-blend-mode: exclusion;
   --color-black: #ffffff;
   --color-white: #000000;
   --color-stroke: #c8c8c8;
   --color-primary: #31ffff;
+}
+
+html[data-hero-bg-visible="false"] .blend-overlay {
+  mix-blend-mode: normal;
+  --color-black: #000000;
+  --color-white: #ffffff;
+  --color-stroke: #373737;
+  --color-primary: #ce0000;
 }

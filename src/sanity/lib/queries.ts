@@ -80,7 +80,9 @@ export const workPageProjectsQuery = groq`
     projectType,
     tags,
     coverImage,
-    "fallbackImage": coalesce(gallery[0].image, gallery[0].thumbnail),
+    "galleryThumbs": gallery[]{
+      "image": coalesce(image, thumbnail)
+    },
   }
 `;
 

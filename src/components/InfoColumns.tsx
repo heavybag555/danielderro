@@ -6,31 +6,139 @@ import {
   SITE_INSTAGRAM_DANIEL_DERRO,
   SITE_INSTAGRAM_NO_SCHOOL_STUDIO_RECORDS,
 } from "@/lib/site-contact";
+import { HERO_LOGOS, SITE_ABOUT_COPY, SITE_CLIENTS_COPY } from "@/lib/site-content";
 
-function AboutBlock({ className }: { className?: string }) {
+export function AboutBlock({
+  className,
+  blendTitle = false,
+  hideTitle = false,
+}: {
+  className?: string;
+  blendTitle?: boolean;
+  hideTitle?: boolean;
+}) {
   return (
-    <div className={["flex flex-col gap-5", className].filter(Boolean).join(" ")}>
-      <div className="pl-5">
-        <span className="text-caption" style={{ color: "var(--color-black)" }}>
+    <div className={["flex flex-col gap-0", className].filter(Boolean).join(" ")}>
+      {!hideTitle ? (
+        <h2
+          className={["text-semantic-title pl-5", blendTitle ? "blend-overlay" : ""]
+            .filter(Boolean)
+            .join(" ")}
+          style={{ margin: 0 }}
+        >
           About
-        </span>
-      </div>
+        </h2>
+      ) : null}
       <div className="flex flex-col gap-5">
         <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
-          Daniel Derro creates visual narratives for luxury fashion and cultural brands, bringing
-          authentic street perspective to premium campaigns. His work for Prada, Dior, and Givenchy
-          demonstrates his ability to translate genuine cultural moments into compelling luxury brand
-          stories.
+          {SITE_ABOUT_COPY}
         </p>
-        <div className="flex flex-col">
-          <span className="text-micro" style={{ color: "var(--color-primary)" }}>
-            Venice, California, USA
-          </span>
-          <span className="text-micro" style={{ color: "var(--color-primary)" }}>
-            Nineteen Eighty Six
-          </span>
-        </div>
       </div>
+    </div>
+  );
+}
+
+export function ClientsBlock({
+  className,
+  blendTitle = false,
+}: {
+  className?: string;
+  blendTitle?: boolean;
+}) {
+  return (
+    <div className={["flex flex-col gap-0", className].filter(Boolean).join(" ")}>
+      <h2
+        className={["text-semantic-title pl-5", blendTitle ? "blend-overlay" : ""]
+          .filter(Boolean)
+          .join(" ")}
+        style={{ margin: 0 }}
+      >
+        Clients
+      </h2>
+      <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
+        {SITE_CLIENTS_COPY}
+      </p>
+    </div>
+  );
+}
+
+function ContactBlock() {
+  return (
+    <section className="flex min-w-0 flex-col gap-0">
+      <h2 className="site-footer-title text-semantic-title pl-5" style={{ margin: 0 }}>
+        Contact
+      </h2>
+      <div className="site-footer-copy flex flex-col gap-5">
+        <div className="flex flex-col">
+          <span className="text-body">Tel. 00 32 15 75 59 43</span>
+          <a
+            href={SITE_CONTACT_MAILTO}
+            className="text-body hover-smooth underline underline-offset-2"
+          >
+            {SITE_CONTACT_EMAIL}
+          </a>
+        </div>
+        <p className="text-micro-tight" style={{ margin: 0 }}>
+          Based between New York and Los Angeles with international project capabilities.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function FollowBlock() {
+  return (
+    <section className="flex min-w-0 flex-col gap-0">
+      <h2 className="site-footer-title text-semantic-title pl-5" style={{ margin: 0 }}>
+        Follow
+      </h2>
+      <div className="site-footer-copy flex flex-col">
+        <a
+          href={SITE_INSTAGRAM_DANIEL_DERRO}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-body hover-smooth no-underline hover:underline underline-offset-2"
+        >
+          @danielderro_
+        </a>
+        <a
+          href={SITE_INSTAGRAM_NO_SCHOOL_STUDIO_RECORDS}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-body hover-smooth no-underline hover:underline underline-offset-2"
+        >
+          @noschoolstudiorecords
+        </a>
+      </div>
+    </section>
+  );
+}
+
+function FooterLogosBlock({
+  logos,
+  align = "start",
+}: {
+  logos: readonly (typeof HERO_LOGOS)[number][];
+  align?: "start" | "end";
+}) {
+  return (
+    <div
+      className={[
+        "flex min-w-max items-start gap-0",
+        align === "end" ? "self-end justify-end" : "self-start justify-start",
+      ].join(" ")}
+    >
+      {logos.map((logo) => (
+        <img
+          key={logo.src}
+          src={logo.src}
+          alt={logo.alt}
+          width={logo.width}
+          height={logo.height}
+          className="box-border block h-[40px] w-auto shrink-0 border-[0.5px] border-black object-contain"
+          style={{ objectFit: "contain" }}
+        />
+      ))}
     </div>
   );
 }
@@ -51,6 +159,10 @@ type InfoColumnsProps = {
    * below the images.
    */
   homeMobileAboutAboveHero?: boolean;
+  /** Shared page footer: Contact in col 3, Follow in col 4, semantic section titles. */
+  siteFooter?: boolean;
+  /** Home: no gap above the footer divider. */
+  footerFlushTop?: boolean;
 };
 
 export default function InfoColumns({
@@ -60,6 +172,8 @@ export default function InfoColumns({
   contactMiddle = false,
   hideHeroImage = false,
   homeMobileAboutAboveHero = false,
+  siteFooter = false,
+  footerFlushTop = false,
 }: InfoColumnsProps) {
   const showAboutMobileFirst =
     homeMobileAboutAboveHero && !shiftRight && !hideAboutClients;
@@ -70,6 +184,37 @@ export default function InfoColumns({
   /** Home lower band: mobile uses two columns; Contact + Follow stack in column one. */
   const contactFollowMobileTwoCol =
     contactMiddle && hideAboutClients && !homeHeroStackedAboutClients;
+
+  if (siteFooter) {
+    const footerLogosLeft = HERO_LOGOS.slice(0, 3);
+    const footerLogosRight = HERO_LOGOS.slice(3);
+
+    return (
+      <div className="page-grid items-start">
+        <div
+          className={[
+            "site-footer-divider col-span-2 col-start-1 row-start-1 md:col-span-3 md:col-start-2 lg:col-span-4 lg:col-start-2",
+            footerFlushTop ? "site-footer-divider--flush" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          aria-hidden
+        />
+        <div className="col-span-1 col-start-1 row-start-2 min-w-max md:col-start-2 md:row-start-2 lg:col-start-2 lg:row-start-2">
+          <FooterLogosBlock logos={footerLogosLeft} />
+        </div>
+        <div className="col-span-1 col-start-1 row-start-3 md:col-start-3 md:row-start-2 lg:col-start-3 lg:row-start-2">
+          <ContactBlock />
+        </div>
+        <div className="col-span-1 col-start-2 row-start-2 min-w-max md:col-start-4 md:row-start-2 lg:col-start-4 lg:row-start-2">
+          <FooterLogosBlock logos={footerLogosRight} align="end" />
+        </div>
+        <div className="col-span-1 col-start-2 row-start-3 md:col-start-4 md:row-start-3 lg:col-start-5 lg:row-start-2">
+          <FollowBlock />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -85,12 +230,14 @@ export default function InfoColumns({
           <div className="hidden lg:col-span-1 lg:block" aria-hidden />
           <div className="hidden lg:col-span-1 lg:block" aria-hidden />
         </>
-      ) : null}
+      ) : (
+        <div className="hidden md:col-span-2 md:col-start-1 md:block lg:col-span-2 lg:col-start-1" aria-hidden />
+      )}
 
       <div
         className={
           homeHeroStackedAboutClients
-            ? "col-span-2 w-full min-w-0 md:col-span-2 md:col-start-1 lg:col-span-2 lg:col-start-1"
+            ? "col-span-2 w-full min-w-0 md:col-span-1 md:col-start-3 lg:col-span-1 lg:col-start-3"
             : "col-span-2 w-full min-w-0 md:col-span-2 lg:col-span-1 lg:col-start-3"
         }
       >
@@ -137,7 +284,7 @@ export default function InfoColumns({
       <div
         className={
           homeHeroStackedAboutClients
-            ? "col-span-2 grid w-full min-w-0 grid-cols-1 gap-x-(--spacing-gutter) gap-y-0 md:col-span-2 md:col-start-3 md:grid-cols-subgrid lg:col-span-2 lg:col-start-3 lg:grid-cols-1 lg:gap-x-0"
+            ? "col-span-2 grid w-full min-w-0 grid-cols-1 gap-x-(--spacing-gutter) gap-y-0 md:col-span-1 md:col-start-4 md:grid-cols-subgrid lg:col-span-1 lg:col-start-4 lg:grid-cols-1 lg:gap-x-0"
             : contactFollowMobileTwoCol
               ? "col-span-2 grid w-full min-w-0 grid-cols-2 gap-x-(--spacing-gutter) gap-y-0 md:col-span-2 md:col-start-3 md:grid-cols-subgrid lg:col-span-3 lg:col-start-4 lg:grid-cols-subgrid"
               : "col-span-2 grid w-full min-w-0 grid-cols-1 gap-x-(--spacing-gutter) gap-y-5 md:col-span-2 md:col-start-3 md:grid-cols-subgrid lg:col-span-3 lg:col-start-4 lg:grid-cols-subgrid"
@@ -161,7 +308,7 @@ export default function InfoColumns({
                     </span>
                     <a
                       href={SITE_CONTACT_MAILTO}
-                      className="text-body hover-smooth no-underline hover:underline underline-offset-2"
+                      className="text-body hover-smooth underline underline-offset-2"
                       style={{ color: "var(--color-primary)" }}
                     >
                       {SITE_CONTACT_EMAIL}
@@ -203,7 +350,7 @@ export default function InfoColumns({
           ) : hideAboutClients ? (
             <div />
           ) : homeHeroStackedAboutClients ? (
-            <div className="min-w-0 md:col-span-2">
+            <div className="min-w-0">
               <div className="flex flex-col gap-5 lg:gap-[40px]">
                 {showAboutMobileFirst ? (
                   <div className="hidden md:block">
@@ -212,19 +359,7 @@ export default function InfoColumns({
                 ) : (
                   <AboutBlock />
                 )}
-                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                  <div style={{ paddingLeft: 20 }}>
-                    <span className="text-caption" style={{ color: "var(--color-black)" }}>
-                      Clients
-                    </span>
-                  </div>
-                  <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
-                    Prada, Nike, Givenchy, Dior, Stüssy, Adidas, pgLang, Burberry, Carhartt WIP, Our
-                    Legacy, New Balance, Fake Mink, ASICS, Moncler, T Magazine, Giveon, Popeye,
-                    Stormzy, Yeezy, Slam Jam, Converse, Alo, Nike Golf, Crash, Jordan, Union, Dazed,
-                    Babylon, Neighborhood, Saint Laurent, Kaleidoscope, i-D, Interview Magazine
-                  </p>
-                </div>
+                <ClientsBlock />
               </div>
             </div>
           ) : showAboutMobileFirst ? (
@@ -254,7 +389,7 @@ export default function InfoColumns({
                   </span>
                   <a
                     href={SITE_CONTACT_MAILTO}
-                    className="text-body hover-smooth no-underline hover:underline underline-offset-2"
+                    className="text-body hover-smooth underline underline-offset-2"
                     style={{ color: "var(--color-primary)" }}
                   >
                     {SITE_CONTACT_EMAIL}
@@ -279,32 +414,12 @@ export default function InfoColumns({
                   Dior, and Givenchy demonstrates his ability to translate genuine cultural moments
                   into compelling luxury brand stories.
                 </p>
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span className="text-micro" style={{ color: "var(--color-primary)" }}>
-                    Venice, California, USA
-                  </span>
-                  <span className="text-micro" style={{ color: "var(--color-primary)" }}>
-                    Nineteen Eighty Six
-                  </span>
-                </div>
               </div>
             </div>
           ) : hideAboutClients ? (
             <div />
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              <div style={{ paddingLeft: 20 }}>
-                <span className="text-caption" style={{ color: "var(--color-black)" }}>
-                  Clients
-                </span>
-              </div>
-              <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
-                Prada, Nike, Givenchy, Dior, Stüssy, Adidas, pgLang, Burberry, Carhartt WIP, Our
-                Legacy, New Balance, Fake Mink, ASICS, Moncler, T Magazine, Giveon, Popeye, Stormzy,
-                Yeezy, Slam Jam, Converse, Alo, Nike Golf, Crash, Jordan, Union, Dazed, Babylon,
-                Neighborhood, Saint Laurent, Kaleidoscope, i-D, Interview Magazine
-              </p>
-            </div>
+            <ClientsBlock />
           )}
 
           {/* --- Slot 3 (spans both sub-tracks on tablet so the row reads full-width) --- */}

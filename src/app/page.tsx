@@ -1,5 +1,5 @@
-import SiteBrandStrip from "@/components/SiteBrandStrip";
-import InfoColumns from "@/components/InfoColumns";
+import HomeHero from "@/components/HomeHero";
+import SitePageFooter from "@/components/SitePageFooter";
 import GallerySection from "@/components/GallerySection";
 import { sanityFetchOrDefault } from "@/sanity/lib/fetch-safe";
 
@@ -67,20 +67,14 @@ export default async function Home() {
   );
 
   return (
-    <div className="flex flex-col gap-2.5 px-[var(--spacing-margin)] pb-[env(safe-area-inset-bottom,0px)] pt-[calc(var(--site-fixed-brand-strip-height)+128px)] md:pt-[calc(var(--site-fixed-brand-strip-height)+192px)] lg:pt-[calc(var(--site-fixed-brand-strip-height)+120px)]">
-      <SiteBrandStrip />
-      <div className="flex flex-col gap-16 md:gap-24 lg:gap-[120px]">
-        <section className="pt-16 pb-0 md:pt-24 lg:pt-[120px]">
-          <InfoColumns hideContact homeMobileAboutAboveHero />
-          <div id="home-gallery-fade-anchor" className="mt-24 md:mt-40 lg:mt-[240px]">
-            <GallerySection projects={projects} />
-          </div>
-        </section>
-
-        <section className="py-16 md:py-24 lg:py-[120px]">
-          <InfoColumns hideAboutClients contactMiddle hideHeroImage />
-        </section>
+    <>
+      <HomeHero />
+      <div className="flex flex-col px-[var(--spacing-margin)] pb-[120px]">
+        <div id="home-gallery-fade-anchor">
+          <GallerySection projects={projects} />
+        </div>
+        <SitePageFooter flushTop />
       </div>
-    </div>
+    </>
   );
 }

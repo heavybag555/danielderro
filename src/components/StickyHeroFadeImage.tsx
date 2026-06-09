@@ -4,8 +4,9 @@ import Image from "next/image";
 import { useEffect } from "react";
 import { motion, useMotionValue } from "framer-motion";
 
-/** Sentinel id on the home page: top edge of the gallery (see `page.tsx`). */
-export const HOME_GALLERY_FADE_ANCHOR_ID = "home-gallery-fade-anchor";
+import { HOME_GALLERY_FADE_ANCHOR_ID } from "@/lib/home-gallery";
+
+export { HOME_GALLERY_FADE_ANCHOR_ID };
 
 /** When the gallery top is below this viewport Y, portrait stays fully visible. */
 const FADE_START_VIEWPORT_TOP_PX = 780;

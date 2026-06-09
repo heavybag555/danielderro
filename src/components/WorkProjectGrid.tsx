@@ -1,15 +1,20 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import type { MotionValue } from "framer-motion";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useMotionValue, useTransform } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
-import { formatSanityTag } from "@/lib/format-sanity-tag";
 import { MOTION } from "@/lib/motion";
-import SiteBrandStrip from "@/components/SiteBrandStrip";
+import SitePageFooter from "@/components/SitePageFooter";
 import { useMediaQuery } from "@/lib/use-media-query";
+import { hasNavigationOccurred } from "@/lib/nav-state";
 
 type SanityImageField = {
   asset: { _ref: string };
@@ -24,27 +29,24 @@ export type WorkProject = {
   projectType: string;
   tags?: string[];
   coverImage?: SanityImageField;
-  fallbackImage?: SanityImageField;
+  galleryThumbs?: { image?: SanityImageField }[];
 };
 
-type FilterKey = "photo" | "motion" | "nss";
+/** Thumbnail strip heights (px). */
+const THUMB_HEIGHT = 80;
+const THUMB_HEIGHT_SMALL = 60;
+/** Gap between strip thumbnails (px). */
+const THUMB_GAP = 0;
+/** Padding inside each bordered work row (px); matches `.work-row-frame`. */
+const WORK_ROW_PADDING = 4;
+/** Fallback aspect ratio (width / height) when intrinsic dims can't be parsed. */
+const THUMB_FALLBACK_ASPECT = 4 / 3;
 
-const FILTERS: { key: FilterKey; label: string }[] = [
-  { key: "photo", label: "Photo" },
-  { key: "motion", label: "Motion" },
-  { key: "nss", label: "No-School Studio Records" },
-];
+/** useLayoutEffect on the client, useEffect during SSR (avoids the dev warning). */
+const useIsoLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
-/** Vertical inset for project text inside the scroll region (below header / above footer). */
-const WORK_PROJECT_TEXT_PAD_Y = 120;
-
-function getProjectImage(
-  project: WorkProject,
-): SanityImageField | undefined {
-  return project.coverImage ?? project.fallbackImage;
-}
-
-/** Parse intrinsic dimensions from a Sanity image asset `_ref`, e.g. `image-<hash>-1920x1080-jpg`. */
+/** Parse intrinsic dimensions from a Sanity asset `_ref`, e.g. `image-<hash>-1920x1080-jpg`. */
 function getSanityImageDims(
   image: SanityImageField,
 ): { width: number; height: number } | null {
@@ -56,108 +58,278 @@ function getSanityImageDims(
   return { width, height };
 }
 
-/** Fixed width of the cursor-following preview overlay on `/work`. */
-const HOVER_PREVIEW_WIDTH = 200;
-/** Fallback aspect ratio (height / width) if we can't parse dims from the asset ref. */
-const HOVER_PREVIEW_FALLBACK_ASPECT = 4 / 3;
-/** Gap between the cursor and the overlay's bottom-left corner (px, both axes). */
-const HOVER_PREVIEW_CURSOR_GAP = 16;
-/** Fade-in/out duration for the cursor-following preview overlay (seconds). */
-const HOVER_PREVIEW_FADE_DURATION = 0.18;
-/** Extra safety margin (px) used when deciding whether to flip the overlay near a viewport edge. */
-const HOVER_PREVIEW_EDGE_SAFE = 8;
+/** Cover image first, then gallery thumbnails — deduped by asset ref. */
+function getStripImages(project: WorkProject): SanityImageField[] {
+  const raw: (SanityImageField | undefined)[] = [
+    project.coverImage,
+    ...(project.galleryThumbs ?? []).map((g) => g?.image),
+  ];
+  const seen = new Set<string>();
+  const out: SanityImageField[] = [];
+  for (const img of raw) {
+    const ref = img?.asset?._ref;
+    if (!ref || seen.has(ref)) continue;
+    seen.add(ref);
+    out.push(img);
+  }
+  return out;
+}
 
 /**
- * Single preview image in the cursor-following overlay stack. Each instance stays mounted
- * while the filter is active (so rapid hover scrubbing never re-loads images) and derives its
- * own transform from the shared pointer motion values. Extracted as a component so its hooks
- * don't live inside a `.map()` loop.
+ * Normalized category: commissioned work (has a client) reads as "Commercial",
+ * everything else (or an explicit `personal` tag) reads as "Personal".
  */
-function HoverPreview({
-  project,
-  pointerX,
-  pointerY,
-  isActive,
+function categoryLabel(project: WorkProject): string {
+  if (project.tags?.includes("personal")) return "Personal";
+  if (project.client?.trim()) return "Commercial";
+  return "Personal";
+}
+
+function formatNumber(index: number): string {
+  return String(index + 1).padStart(3, "0");
+}
+
+/**
+ * Horizontal row of contain-sized thumbnails. Measures its own width and only
+ * renders as many thumbnails as fully fit (plus the inter-thumb gaps) so the
+ * strip never spills horizontally. Overflow is clipped as a safety net.
+ */
+function ThumbnailStrip({
+  images,
+  height,
+  maxWidth,
 }: {
-  project: WorkProject;
-  pointerX: MotionValue<number>;
-  pointerY: MotionValue<number>;
-  isActive: boolean;
+  images: SanityImageField[];
+  height: number;
+  /** When set, fit only this many pixels of thumbnails (container shrink-wraps to content). */
+  maxWidth?: number;
 }) {
-  const img = getProjectImage(project);
-  const dims = img ? getSanityImageDims(img) : null;
-  const aspect = dims
-    ? dims.height / dims.width
-    : HOVER_PREVIEW_FALLBACK_ASPECT;
-  const previewHeight = Math.round(HOVER_PREVIEW_WIDTH * aspect);
+  const ref = useRef<HTMLDivElement>(null);
+  const [layout, setLayout] = useState({ count: 0, width: 0 });
 
-  // X position: prefer to the right of the cursor; flip to the left if that would overflow the viewport.
-  const translateX = useTransform(pointerX, (px) => {
-    if (typeof window === "undefined") return px + HOVER_PREVIEW_CURSOR_GAP;
-    const vw = window.innerWidth;
-    const wouldOverflowRight =
-      px + HOVER_PREVIEW_CURSOR_GAP + HOVER_PREVIEW_WIDTH >
-      vw - HOVER_PREVIEW_EDGE_SAFE;
-    return wouldOverflowRight
-      ? px - HOVER_PREVIEW_CURSOR_GAP - HOVER_PREVIEW_WIDTH
-      : px + HOVER_PREVIEW_CURSOR_GAP;
-  });
+  const sized = useMemo(
+    () =>
+      images.map((img) => {
+        const dims = getSanityImageDims(img);
+        const aspect = dims ? dims.width / dims.height : THUMB_FALLBACK_ASPECT;
+        return { img, width: Math.max(1, Math.round(height * aspect)) };
+      }),
+    [images, height],
+  );
 
-  // Y position: prefer above the cursor; flip below if that would overflow the top of the viewport.
-  const translateY = useTransform(pointerY, (py) => {
-    if (typeof window === "undefined")
-      return py - HOVER_PREVIEW_CURSOR_GAP - previewHeight;
-    const wouldOverflowTop =
-      py - HOVER_PREVIEW_CURSOR_GAP - previewHeight < HOVER_PREVIEW_EDGE_SAFE;
-    return wouldOverflowTop
-      ? py + HOVER_PREVIEW_CURSOR_GAP
-      : py - HOVER_PREVIEW_CURSOR_GAP - previewHeight;
-  });
+  useIsoLayoutEffect(() => {
+    const available = maxWidth;
 
-  if (!img) return null;
+    if (available === undefined) {
+      setLayout({ count: 0, width: 0 });
+      return;
+    }
+
+    let used = 0;
+    let fit = 0;
+    for (const item of sized) {
+      const next = fit === 0 ? item.width : THUMB_GAP + item.width;
+      if (available > 0 && used + next > available) break;
+      used += next;
+      fit += 1;
+    }
+
+    setLayout({ count: fit, width: used });
+  }, [sized, maxWidth]);
+
+  if (layout.count === 0) return null;
 
   return (
-    <motion.div
-      initial={false}
-      animate={{ opacity: isActive ? 1 : 0 }}
-      transition={{
-        duration: HOVER_PREVIEW_FADE_DURATION,
-        ease: MOTION.ease.out,
-      }}
+    <div
+      ref={ref}
       style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        x: translateX,
-        y: translateY,
-        width: HOVER_PREVIEW_WIDTH,
-        height: previewHeight,
-        willChange: "opacity, transform",
+        display: "flex",
+        gap: THUMB_GAP,
+        height,
+        width: layout.width,
+        maxWidth: "100%",
+        overflow: "hidden",
+        flex: "0 0 auto",
       }}
     >
-      <Image
-        loader={sanityLoader}
-        src={sanityImageUrl(img)}
-        alt=""
-        fill
-        sizes={`${HOVER_PREVIEW_WIDTH}px`}
-        quality={85}
-        style={{ objectFit: "contain" }}
-      />
-    </motion.div>
+      {sized.slice(0, layout.count).map((item, i) => (
+        <div
+          key={i}
+          style={{
+            position: "relative",
+            height,
+            width: item.width,
+            flex: "0 0 auto",
+          }}
+        >
+          <Image
+            loader={sanityLoader}
+            src={sanityImageUrl(item.img)}
+            alt=""
+            fill
+            sizes={`${item.width}px`}
+            quality={80}
+            style={{ objectFit: "contain", objectPosition: "left center" }}
+          />
+        </div>
+      ))}
+    </div>
   );
 }
 
-function matchesFilter(
-  project: WorkProject,
-  filter: FilterKey | null,
-): boolean {
-  if (!filter) return true;
-  if (filter === "photo") return project.projectType === "photography";
-  if (filter === "motion") return project.projectType === "video";
-  if (filter === "nss")
-    return project.tags?.includes("no-school-studio") ?? false;
-  return true;
+function ProjectRow({
+  project,
+  index,
+  isLg,
+  isMd,
+  thumbHeight,
+  variants,
+}: {
+  project: WorkProject;
+  index: number;
+  isLg: boolean;
+  isMd: boolean;
+  thumbHeight: number;
+  variants: Variants;
+}) {
+  const isMobile = !isMd;
+  const number = formatNumber(index);
+  const category = categoryLabel(project);
+  const images = getStripImages(project);
+
+  const rowRef = useRef<HTMLDivElement>(null);
+  const metaRef = useRef<HTMLDivElement>(null);
+  const stripPlacementRef = useRef<HTMLDivElement>(null);
+  const [stripMaxWidth, setStripMaxWidth] = useState<number | undefined>(undefined);
+  const [frameRect, setFrameRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
+  const metaGridCol = isLg ? 3 : isMd ? 2 : 1;
+  const mediaGridCol = isLg ? "4 / 7" : isMd ? "3 / 5" : 2;
+
+  useIsoLayoutEffect(() => {
+    const row = rowRef.current;
+    const meta = metaRef.current;
+    const media = stripPlacementRef.current;
+    if (!row) return;
+
+    const measure = () => {
+      const rowRect = row.getBoundingClientRect();
+
+      if (media) {
+        const mediaRect = media.getBoundingClientRect();
+        setStripMaxWidth(
+          Math.max(0, rowRect.right - mediaRect.left - WORK_ROW_PADDING * 2),
+        );
+      }
+
+      if (meta) {
+        const metaRect = meta.getBoundingClientRect();
+        const mediaRect = media?.getBoundingClientRect();
+        const hasMedia = Boolean(mediaRect && mediaRect.width > 0);
+        const topEdge = hasMedia
+          ? Math.min(metaRect.top, mediaRect!.top)
+          : metaRect.top;
+        const bottomEdge = hasMedia
+          ? Math.max(metaRect.bottom, mediaRect!.bottom)
+          : metaRect.bottom;
+        const rightEdge = hasMedia ? mediaRect!.right : metaRect.right;
+        const pad = WORK_ROW_PADDING;
+
+        setFrameRect({
+          left: metaRect.left - rowRect.left - pad,
+          top: topEdge - rowRect.top - pad,
+          width: rightEdge - metaRect.left + pad * 2,
+          height: bottomEdge - topEdge + pad * 2,
+        });
+      }
+    };
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(row);
+    if (meta) ro.observe(meta);
+    if (media) ro.observe(media);
+    return () => ro.disconnect();
+  }, [isLg, isMd, thumbHeight, images.length]);
+
+  return (
+    <motion.li variants={variants} style={{ listStyle: "none" }}>
+      <div ref={rowRef} className="work-row page-grid items-start">
+        {isLg ? <div style={{ gridColumn: "1 / 3" }} aria-hidden /> : null}
+        {isMd && !isLg ? <div style={{ gridColumn: "1 / 2" }} aria-hidden /> : null}
+
+        {frameRect ? (
+          <>
+            <div
+              className="work-row-frame"
+              style={{
+                left: frameRect.left,
+                top: frameRect.top,
+                width: frameRect.width,
+                height: frameRect.height,
+              }}
+              aria-hidden
+            />
+            <Link
+              href={`/work/${project.slug.current}`}
+              className="work-row-hit"
+              aria-label={project.title}
+              style={{
+                left: frameRect.left,
+                top: frameRect.top,
+                width: frameRect.width,
+                height: frameRect.height,
+              }}
+            />
+          </>
+        ) : null}
+
+        <div
+          ref={metaRef}
+          className="work-row-meta"
+          style={{
+            gridColumn: metaGridCol,
+            minHeight: thumbHeight,
+            display: "flex",
+            flexDirection: isMobile ? "row" : "column",
+            justifyContent: "space-between",
+            alignItems: isMobile ? "flex-start" : "stretch",
+            columnGap: isMobile ? 8 : undefined,
+          }}
+        >
+          <span className="text-caption work-row-text-muted" style={{ flexShrink: 0 }}>
+            {number}
+          </span>
+          <div style={{ minWidth: 0 }}>
+            <span className="text-caption work-row-text-title block">
+              {project.title}
+            </span>
+            <span className="text-caption work-row-text-muted block">
+              {category}
+            </span>
+          </div>
+        </div>
+
+        <div
+          ref={stripPlacementRef}
+          className="work-row-media"
+          style={{
+            gridColumn: mediaGridCol,
+            width: "max-content",
+            maxWidth: "100%",
+            justifySelf: "start",
+          }}
+        >
+          <ThumbnailStrip images={images} height={thumbHeight} maxWidth={stripMaxWidth} />
+        </div>
+      </div>
+    </motion.li>
+  );
 }
 
 export default function WorkProjectGrid({
@@ -165,420 +337,85 @@ export default function WorkProjectGrid({
 }: {
   projects: WorkProject[];
 }) {
-  const [activeFilter, setActiveFilter] = useState<FilterKey | null>("photo");
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(0);
-  const [previewVisible, setPreviewVisible] = useState(false);
-  const [tagBarHovered, setTagBarHovered] = useState(false);
-  const [filterHoverKey, setFilterHoverKey] = useState<FilterKey | null>(null);
-
-  const pointerX = useMotionValue(0);
-  const pointerY = useMotionValue(0);
-
-  const filtered = projects.filter((p) => matchesFilter(p, activeFilter));
-
   const isLg = useMediaQuery("(min-width: 1024px)");
   const isMd = useMediaQuery("(min-width: 768px)");
-  const isMobile = !isMd;
-  /** Tablet: 4-col grid, first column empty, three projects per row; desktop: 6-col checkerboard; mobile: one column only */
-  const isTablet = isMd && !isLg;
-  const chunkSize = isLg ? 4 : isTablet ? 3 : 1;
+  const isSmallMobile = useMediaQuery("(max-width: 600px)");
+  const reduceMotion = useReducedMotion();
 
-  const rows: WorkProject[][] = [];
-  for (let i = 0; i < filtered.length; i += chunkSize) {
-    rows.push(filtered.slice(i, i + chunkSize));
-  }
+  // Decide once, at mount: stagger only on a fresh load, not after an in-app
+  // navigation (the page transition already animates the surface in).
+  const [staggerOnLoad] = useState(() => !hasNavigationOccurred());
+  const doStagger = staggerOnLoad && !reduceMotion;
 
-  const toggleFilter = useCallback((key: FilterKey) => {
-    setActiveFilter((prev) => (prev === key ? null : key));
-    setHoveredIndex(0);
-  }, []);
+  const thumbHeight = isSmallMobile ? THUMB_HEIGHT_SMALL : THUMB_HEIGHT;
+  const rowGap = isMd ? 80 : 56;
 
-  const workFooterFilterColumn = (
-    <div
-      style={{ display: "flex", flexDirection: "column" }}
-      onMouseEnter={() => setTagBarHovered(true)}
-      onMouseLeave={() => {
-        setTagBarHovered(false);
-        setFilterHoverKey(null);
-      }}
-    >
-      {FILTERS.map((f) => {
-        const selectionActive =
-          activeFilter === null || activeFilter === f.key;
-        const inHoverEmphasis =
-          tagBarHovered &&
-          filterHoverKey !== null &&
-          f.key === filterHoverKey;
-        const inHoverDim =
-          tagBarHovered &&
-          filterHoverKey !== null &&
-          f.key !== filterHoverKey;
-        const color = inHoverEmphasis
-          ? "rgba(255, 255, 255, 1)"
-          : inHoverDim
-            ? "rgba(255, 255, 255, 0.5)"
-            : selectionActive
-              ? "rgba(255, 255, 255, 1)"
-              : "rgba(255, 255, 255, 0.5)";
+  const listVariants: Variants = {
+    hidden: {},
+    show: {
+      transition: {
+        staggerChildren: doStagger ? 0.05 : 0,
+        delayChildren: doStagger ? 0.08 : 0,
+      },
+    },
+  };
 
-        return (
-          <motion.button
-            key={f.key}
-            type="button"
-            onClick={() => toggleFilter(f.key)}
-            onMouseEnter={() => setFilterHoverKey(f.key)}
-            className="text-body"
-            animate={{ color }}
-            transition={{
-              duration: MOTION.duration.hover,
-              ease: MOTION.ease.heavy,
-            }}
-            style={{
-              background: "none",
-              border: "none",
-              padding: 0,
-              cursor: "pointer",
-              textAlign: "left",
-            }}
-          >
-            {f.label}
-          </motion.button>
-        );
-      })}
-    </div>
-  );
-
-  const workFooterVenice = (
-    <span
-      className="text-caption"
-      style={{ color: "var(--color-primary)" }}
-    >
-      Venice, California
-    </span>
-  );
+  const rowVariants: Variants = doStagger
+    ? {
+        hidden: { opacity: 0, filter: "blur(6px)" },
+        show: {
+          opacity: 1,
+          filter: "blur(0px)",
+          transition: { duration: 0.7, ease: MOTION.ease.heavy },
+        },
+      }
+    : {
+        hidden: { opacity: 1, filter: "blur(0px)" },
+        show: { opacity: 1, filter: "blur(0px)" },
+      };
 
   return (
-    <div
-      style={{
-        position: "relative",
-        height: "100dvh",
-        minHeight: "100dvh",
-        overflow: "hidden",
-        background: "#000000",
-      }}
-    >
-      {/* Cursor-following preview overlay — all preview images stay mounted and crossfade
-          via opacity so rapid project-to-project hovering stays smooth. Each preview reads
-          the shared pointer motion values and flips its position toward the opposite edge
-          when the default placement (top-right of cursor) would overflow the viewport. */}
-      {!isMobile ? (
-        <div
-          aria-hidden
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 5,
-            pointerEvents: "none",
-          }}
-        >
-          {filtered.map((project, idx) => (
-            <HoverPreview
-              key={project._id}
-              project={project}
-              pointerX={pointerX}
-              pointerY={pointerY}
-              isActive={previewVisible && idx === hoveredIndex}
-            />
-          ))}
-        </div>
-      ) : null}
-
-      {/* Fixed header — same Daniel Derro / Menu band as other pages.
-          `SiteBrandStrip` uses `blend-overlay` so its black text inverts to
-          white over the black work background automatically. */}
-      <SiteBrandStrip />
-
-      {/* Content layer */}
-      <div
+    <main style={{ minHeight: "100dvh", background: "var(--color-black)" }}>
+      <motion.div
+        initial={reduceMotion ? false : { opacity: 0, filter: "blur(8px)" }}
+        animate={{ opacity: 1, filter: "blur(0px)" }}
+        transition={{ duration: 0.8, ease: MOTION.ease.heavy }}
+        className="pt-[var(--site-fixed-brand-strip-height)] md:pt-[calc(var(--spacing-margin)+env(safe-area-inset-top,0px))]"
+        className="pb-[120px]"
         style={{
-          position: "relative",
-          zIndex: 1,
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-          padding: isMobile
-            ? "0 var(--spacing-margin) 0"
-            : "0 var(--spacing-margin) var(--spacing-margin)",
+          paddingLeft: "var(--spacing-margin)",
+          paddingRight: "var(--spacing-margin)",
           boxSizing: "border-box",
-          gap: 10,
         }}
       >
-        {/* ── Project rows: centered on md+; top-aligned on mobile so initial scroll isn’t mid-list ── */}
-        <div
-          data-lenis-prevent
-          onMouseMove={
-            isMobile
-              ? undefined
-              : (e) => {
-                  pointerX.set(e.clientX);
-                  pointerY.set(e.clientY);
-                }
-          }
-          onMouseLeave={
-            isMobile ? undefined : () => setPreviewVisible(false)
-          }
+        <motion.ol
+          variants={listVariants}
+          initial="hidden"
+          animate="show"
           style={{
-            flex: 1,
-            minHeight: 0,
+            listStyle: "none",
+            margin: 0,
+            padding: 0,
             display: "flex",
             flexDirection: "column",
-            justifyContent: isMobile ? "flex-start" : "center",
-            gap: isMobile ? 48 : 120,
-            overflowY: "auto",
-            overflowX: "hidden",
-            WebkitOverflowScrolling: "touch",
-            paddingTop: `calc(var(--site-fixed-brand-strip-height) + 10px + ${WORK_PROJECT_TEXT_PAD_Y}px)`,
-            paddingBottom: isMobile
-              ? `calc(${WORK_PROJECT_TEXT_PAD_Y}px + 168px + env(safe-area-inset-bottom, 0px))`
-              : WORK_PROJECT_TEXT_PAD_Y,
+            gap: rowGap,
           }}
         >
-          {rows.map((row, rowIdx) => (
-            <div
-              key={rowIdx}
-              className="page-grid work-project-grid-row items-start"
-            >
-              {isLg && chunkSize > 1 ? (
-                <div style={{ gridColumn: "1 / 3" }} aria-hidden />
-              ) : null}
-              {isTablet ? (
-                <div style={{ gridColumn: "1 / 2" }} aria-hidden />
-              ) : null}
-              {row.map((project, slotIdx) => {
-                const previewImage = getProjectImage(project);
-                const col = 3 + slotIdx;
-                const globalIdx = rowIdx * chunkSize + slotIdx;
-                const gridColumn = isTablet
-                  ? `${2 + slotIdx} / ${3 + slotIdx}`
-                  : isMobile
-                    ? "1 / 3"
-                    : `${col} / ${col + 1}`;
-                return (
-                  <Link
-                    key={project._id}
-                    href={`/work/${project.slug.current}`}
-                    className="no-underline"
-                    style={{
-                      gridColumn,
-                      outline: "none",
-                    }}
-                    onMouseEnter={() => {
-                      setHoveredIndex(globalIdx);
-                      if (!isMobile) setPreviewVisible(true);
-                    }}
-                    onFocus={() => setHoveredIndex(globalIdx)}
-                  >
-                    {isMobile ? (
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: previewImage
-                            ? "minmax(0, 1fr) 40px"
-                            : "minmax(0, 1fr)",
-                          columnGap: "var(--spacing-gutter)",
-                          alignItems: "start",
-                          width: "100%",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 0,
-                            minWidth: 0,
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              flexDirection: "row",
-                              flexWrap: "nowrap",
-                              alignItems: "baseline",
-                              gap: 4,
-                              minWidth: 0,
-                            }}
-                          >
-                            <span
-                              className="text-caption"
-                              style={{
-                                color: "var(--color-white)",
-                                minWidth: 0,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {project.title}
-                            </span>
-                            {project.client?.trim() && (
-                              <span
-                                className="text-caption"
-                                style={{
-                                  color: "rgba(255, 255, 255, 0.5)",
-                                  flexShrink: 0,
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                {project.client.trim()}
-                              </span>
-                            )}
-                          </div>
-                          {project.tags && project.tags.length > 0 ? (
-                            <div style={{ minWidth: 0 }}>
-                              <span
-                                className="text-caption"
-                                style={{
-                                  display: "block",
-                                  color: "var(--color-primary)",
-                                }}
-                              >
-                                {project.tags.map(formatSanityTag).join(", ")}
-                              </span>
-                            </div>
-                          ) : null}
-                        </div>
-                        {previewImage ? (
-                          <div
-                            style={{
-                              width: 40,
-                              justifySelf: "end",
-                            }}
-                          >
-                            <Image
-                              loader={sanityLoader}
-                              src={sanityImageUrl(previewImage)}
-                              alt=""
-                              width={40}
-                              height={53}
-                              sizes="40px"
-                              quality={85}
-                              style={{
-                                width: 40,
-                                height: "auto",
-                                maxWidth: "100%",
-                                display: "block",
-                              }}
-                            />
-                          </div>
-                        ) : null}
-                      </div>
-                    ) : (
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 0,
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "row",
-                            flexWrap: "wrap",
-                            alignItems: "baseline",
-                            gap: 8,
-                          }}
-                        >
-                          <span
-                            className="text-caption"
-                            style={{ color: "var(--color-white)" }}
-                          >
-                            {project.title}
-                          </span>
-                          {project.client?.trim() && (
-                            <span
-                              className="text-caption"
-                              style={{
-                                color: "rgba(255, 255, 255, 0.5)",
-                              }}
-                            >
-                              {project.client.trim()}
-                            </span>
-                          )}
-                        </div>
-                        {project.tags && project.tags.length > 0 && (
-                          <span
-                            className="text-caption"
-                            style={{
-                              display: "block",
-                              color: "var(--color-primary)",
-                            }}
-                          >
-                            {project.tags.map(formatSanityTag).join(", ")}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
+          {projects.map((project, index) => (
+            <ProjectRow
+              key={project._id}
+              project={project}
+              index={index}
+              isLg={isLg}
+              isMd={isMd}
+              thumbHeight={thumbHeight}
+              variants={rowVariants}
+            />
           ))}
-        </div>
+        </motion.ol>
 
-        {/* ── Work footer (filters): in-flow with page padding on md+ ── */}
-        {!isMobile ? (
-          <footer style={{ flexShrink: 0 }}>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: 20 }}
-            >
-              {workFooterFilterColumn}
-              {workFooterVenice}
-            </div>
-          </footer>
-        ) : null}
-      </div>
-
-      {/* Mobile: fixed full-bleed footer (outside padded content layer) ── */}
-      {isMobile ? (
-        <footer
-          className="bg-black/5 backdrop-blur-md"
-          style={{
-            position: "fixed",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 50,
-            width: "100%",
-            boxSizing: "border-box",
-            paddingBottom: "env(safe-area-inset-bottom, 0px)",
-          }}
-        >
-          <div
-            className="page-grid items-end"
-            style={{
-              paddingLeft: "var(--spacing-margin)",
-              paddingRight: "var(--spacing-margin)",
-              paddingTop: "var(--spacing-margin)",
-              paddingBottom: "var(--spacing-margin)",
-            }}
-          >
-            <div style={{ gridColumn: "1 / 2", minWidth: 0 }}>
-              {workFooterFilterColumn}
-            </div>
-            <div
-              style={{
-                gridColumn: "2 / 3",
-                justifySelf: "end",
-                textAlign: "right",
-                alignSelf: "end",
-              }}
-            >
-              {workFooterVenice}
-            </div>
-          </div>
-        </footer>
-      ) : null}
-    </div>
+        <SitePageFooter onDark />
+      </motion.div>
+    </main>
   );
 }
