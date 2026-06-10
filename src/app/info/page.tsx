@@ -1,12 +1,17 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 
-import { ClientsBlock } from "@/components/InfoColumns";
 import SitePageFooter from "@/components/SitePageFooter";
+import { SITE_CLIENTS_COPY } from "@/lib/site-content";
+
+export const metadata: Metadata = {
+  title: "Info",
+};
 
 export default function InfoPage() {
   return (
     <div
-      className="max-w-full min-w-0 overflow-x-hidden pb-[120px] pt-[var(--site-fixed-brand-strip-height)]"
+      className="max-w-full min-w-0 overflow-x-hidden pb-[120px] pt-[calc(var(--spacing-margin)+env(safe-area-inset-top,0px))]"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -17,11 +22,10 @@ export default function InfoPage() {
       }}
     >
       <div className="flex min-w-0 max-w-full flex-col">
-        <div className="page-grid">
-          {/* Hero image row — spans cols 2–4 (lg), 2–4 (md) */}
-          <div className="hidden md:col-span-1 md:col-start-1 md:block lg:col-span-1 lg:col-start-1" aria-hidden />
+        <div className="page-grid items-start">
+          <div className="hidden lg:col-span-2 lg:col-start-1 lg:block" aria-hidden />
 
-          <div className="col-span-2 mb-10 md:col-span-3 md:col-start-2 lg:col-span-3 lg:col-start-2">
+          <div className="col-span-2 mb-10 md:col-span-2 md:col-start-1 lg:col-span-2 lg:col-start-3 lg:mb-0">
             <Image
               src="/images/daniel-hero-new.jpg"
               alt="Daniel Derro"
@@ -32,14 +36,12 @@ export default function InfoPage() {
             />
           </div>
 
-          <div className="hidden lg:col-span-2 lg:col-start-5 lg:block" aria-hidden />
-          <div className="hidden md:col-span-2 md:col-start-1 md:block lg:col-span-2 lg:col-start-1" aria-hidden />
-
-          <div className="col-span-2 flex min-w-0 flex-col gap-[40px] md:col-span-1 md:col-start-3 lg:col-span-1 lg:col-start-3">
-            <section className="flex flex-col gap-0">
-              <h2 className="text-semantic-title pl-5">
-                About
-              </h2>
+          <div className="col-span-2 flex min-w-0 flex-col gap-[40px] md:col-span-2 md:col-start-3 lg:col-span-2 lg:col-start-5">
+            <section
+              className="flex flex-col gap-0"
+              style={{ color: "var(--color-primary)" }}
+            >
+              <h2 className="text-semantic-title pl-5">About</h2>
               <div className="flex flex-col gap-5">
                 <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
                   Daniel Derro creates visual narratives for luxury fashion and cultural brands,
@@ -74,11 +76,18 @@ export default function InfoPage() {
               </div>
             </section>
 
-            <ClientsBlock />
+            <section
+              className="flex flex-col gap-0"
+              style={{ color: "var(--color-primary)" }}
+            >
+              <h2 className="text-semantic-title pl-5">Clients</h2>
+              <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
+                {SITE_CLIENTS_COPY}
+              </p>
+            </section>
           </div>
 
-          {/* lg: cols 4–6 empty */}
-          <div className="hidden lg:col-span-3 lg:col-start-4 lg:block" aria-hidden />
+          <div className="hidden lg:col-span-4 lg:col-start-7 lg:block" aria-hidden />
         </div>
 
         <SitePageFooter />

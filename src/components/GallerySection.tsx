@@ -1,98 +1,33 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
 import { formatSanityTag } from "@/lib/format-sanity-tag";
 import { MOTION } from "@/lib/motion";
+import type { HomeGalleryStill } from "@/lib/home-gallery";
 
-type SanityImageField = {
-  asset: { _ref: string };
-  hotspot?: { x: number; y: number };
+/** Staggered enter: a gentle opacity + blur cascade across the grid (no slide). */
+const GRID_VARIANTS: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.025, delayChildren: 0.05 } },
 };
 
-type GalleryImage = {
-  _type: "imageAsset";
-  _key: string;
-  image: SanityImageField;
-  caption?: string;
-  alt?: string;
+const ITEM_VARIANTS: Variants = {
+  hidden: { opacity: 0, filter: "blur(6px)" },
+  show: {
+    opacity: 1,
+    filter: "blur(0px)",
+    transition: { duration: 0.7, ease: MOTION.ease.heavy },
+  },
 };
 
-type GalleryVideo = {
-  _type: "videoAsset";
-  _key: string;
-  thumbnail?: SanityImageField;
-  caption?: string;
-  title?: string;
-};
+/** Hover label only appears after the pointer rests briefly — avoids flash on quick passes. */
+const HOVER_LABEL_DELAY_MS = 220;
 
-type GalleryEntry = GalleryImage | GalleryVideo;
-
-type Project = {
-  _id: string;
-  title: string;
-  slug: { current: string };
-  client?: string;
-  projectType: string;
-  tags?: string[];
-  coverImage?: { asset: { _ref: string } };
-  gallery?: GalleryEntry[];
-};
-
-type Props = {
-  projects: Project[];
-};
-
-type PreviewStill = {
-  _key: string;
-  slug: string;
-  title: string;
-  client?: string;
-  tags: string[];
-  image: SanityImageField;
-  alt: string;
-};
-
-function galleryEntriesToPreviewStills(
-  entries: GalleryEntry[],
-  project: Project
-): PreviewStill[] {
-  const slug = project.slug?.current;
-  if (!slug) return [];
-
-  const out: PreviewStill[] = [];
-  for (const entry of entries) {
-    if (entry._type === "imageAsset" && entry.image?.asset?._ref) {
-      out.push({
-        _key: `${project._id}__${entry._key}`,
-        slug,
-        title: project.title,
-        client: project.client,
-        tags: project.tags ?? [],
-        image: entry.image,
-        alt: entry.alt?.trim() || entry.caption?.trim() || "",
-      });
-      continue;
-    }
-    if (entry._type === "videoAsset" && entry.thumbnail?.asset?._ref) {
-      out.push({
-        _key: `${project._id}__${entry._key}`,
-        slug,
-        title: project.title,
-        client: project.client,
-        tags: project.tags ?? [],
-        image: entry.thumbnail,
-        alt: entry.caption?.trim() || entry.title?.trim() || "",
-      });
-    }
-  }
-  return out;
-}
-
-function HoverLabel({ item }: { item: PreviewStill }) {
+function HoverLabel({ item }: { item: HomeGalleryStill }) {
   return (
     <div
       className="page-grid items-start"
@@ -106,7 +41,7 @@ function HoverLabel({ item }: { item: PreviewStill }) {
         pointerEvents: "none",
       }}
     >
-      <div className="col-span-2 flex flex-col gap-0.5 md:col-span-2 md:col-start-2 lg:col-span-1 lg:col-start-3">
+      <div className="col-span-2 flex flex-col gap-0.5 md:col-span-1 md:col-start-4 lg:col-start-4 lg:col-span-2">
         <div
           style={{
             display: "flex",
@@ -116,19 +51,13 @@ function HoverLabel({ item }: { item: PreviewStill }) {
             gap: 8,
           }}
         >
-          <span
-            className="text-micro-tight"
-            style={{ color: "var(--color-black)" }}
-          >
+          <span className="text-micro-tight" style={{ color: "var(--color-black)" }}>
             {item.title}
           </span>
           {item.client?.trim() && (
             <span
               className="text-micro-tight"
-              style={{
-                color: "var(--color-black)",
-                opacity: 0.5,
-              }}
+              style={{ color: "var(--color-black)", opacity: 0.5 }}
             >
               {item.client.trim()}
             </span>
@@ -137,10 +66,7 @@ function HoverLabel({ item }: { item: PreviewStill }) {
         {item.tags.length > 0 && (
           <span
             className="text-micro-tight"
-            style={{
-              display: "block",
-              color: "var(--color-primary)",
-            }}
+            style={{ display: "block", color: "var(--color-primary)" }}
           >
             {item.tags.map(formatSanityTag).join(", ")}
           </span>
@@ -150,200 +76,96 @@ function HoverLabel({ item }: { item: PreviewStill }) {
   );
 }
 
-function ProjectImages({ items }: { items: PreviewStill[] }) {
+export default function GallerySection({
+  stills,
+}: {
+  stills: HomeGalleryStill[];
+}) {
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
-  const hoveredItem = items.find((i) => i._key === hoveredKey) ?? null;
+  const [stableHoveredKey, setStableHoveredKey] = useState<string | null>(null);
+  const reduceMotion = useReducedMotion();
 
-  return (
-    <>
-      <div
-        className="page-grid items-start"
-        style={{ rowGap: "var(--spacing-gutter)" }}
-      >
-        {items.map((item) => {
-          const dimmed = hoveredKey !== null && hoveredKey !== item._key;
-          return (
-            <motion.div
-              key={item._key}
-              className="col-span-1"
-              onMouseEnter={() => setHoveredKey(item._key)}
-              onMouseLeave={() => setHoveredKey(null)}
-              animate={{
-                opacity: dimmed ? 0.2 : 1,
-                filter: dimmed ? "grayscale(100%)" : "grayscale(0%)",
-              }}
-              transition={{
-                duration: MOTION.duration.hover,
-                ease: MOTION.ease.heavy,
-              }}
-              style={{
-                width: "100%",
-                position: "relative",
-                overflow: "hidden",
-              }}
-            >
-              <Link href={`/work/${item.slug}`} style={{ display: "block" }}>
-                <Image
-                  loader={sanityLoader}
-                  src={sanityImageUrl(item.image)}
-                  alt={item.alt}
-                  width={600}
-                  height={750}
-                  sizes="(max-width: 767px) 50vw, (max-width: 1023px) 25vw, 17vw"
-                  quality={90}
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    display: "block",
-                  }}
-                />
-              </Link>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      <AnimatePresence>
-        {hoveredItem && (
-          <motion.div
-            key={hoveredItem._key}
-            className="blend-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{
-              duration: MOTION.duration.hover,
-              ease: MOTION.ease.heavy,
-            }}
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 100,
-              pointerEvents: "none",
-            }}
-          >
-            <HoverLabel item={hoveredItem} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
-  );
-}
-
-const STORAGE_KEY = "gallery-order-v1";
-const MAX_IMAGES = 30;
-
-type StoredGallery = {
-  contentKey: string;
-  keys: string[];
-};
-
-function getContentKey(projects: Project[]): string {
-  return projects
-    .map((p) => {
-      const imageKeys = (p.gallery ?? [])
-        .filter(
-          (e) =>
-            (e._type === "imageAsset" && (e as GalleryImage).image?.asset?._ref) ||
-            (e._type === "videoAsset" && (e as GalleryVideo).thumbnail?.asset?._ref)
-        )
-        .map((e) => e._key)
-        .join(",");
-      return `${p._id}:${imageKeys}`;
-    })
-    .sort()
-    .join("|");
-}
-
-function shuffle<T>(arr: T[]): T[] {
-  const result = [...arr];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-}
-
-function buildFairGallery(projects: Project[]): PreviewStill[] {
-  const projectStills = projects
-    .map((p) => ({
-      stills: galleryEntriesToPreviewStills(p.gallery ?? [], p),
-    }))
-    .filter((ps) => ps.stills.length > 0);
-
-  const N = projectStills.length;
-  if (N === 0) return [];
-
-  const base = Math.floor(MAX_IMAGES / N);
-  const extra = MAX_IMAGES % N;
-
-  // Shuffle project order so representation is random
-  const shuffledProjects = shuffle(projectStills);
-
-  const result: PreviewStill[] = [];
-  shuffledProjects.forEach((ps, idx) => {
-    const quota = base + (idx < extra ? 1 : 0);
-    if (quota === 0) return;
-    // Shuffle which images from this project appear
-    const picked = shuffle(ps.stills).slice(0, quota);
-    result.push(...picked);
-  });
-
-  // Final interleave shuffle so same-project images don't cluster
-  return shuffle(result);
-}
-
-export default function GallerySection({ projects }: Props) {
-  const [stills, setStills] = useState<PreviewStill[] | null>(null);
-
+  // Dim tracks the pointer immediately; the center label waits for a brief rest.
   useEffect(() => {
-    const contentKey = getContentKey(projects);
-
-    // Build lookup for restoration
-    const allStills = projects.flatMap((p) =>
-      galleryEntriesToPreviewStills(p.gallery ?? [], p)
+    if (reduceMotion) {
+      setStableHoveredKey(hoveredKey);
+      return;
+    }
+    if (!hoveredKey) {
+      setStableHoveredKey(null);
+      return;
+    }
+    const id = window.setTimeout(
+      () => setStableHoveredKey(hoveredKey),
+      HOVER_LABEL_DELAY_MS,
     );
-    const lookup = new Map(allStills.map((s) => [s._key, s]));
+    return () => window.clearTimeout(id);
+  }, [hoveredKey, reduceMotion]);
 
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const stored: StoredGallery = JSON.parse(raw);
-        if (stored.contentKey === contentKey) {
-          const restored = stored.keys
-            .map((k) => lookup.get(k))
-            .filter((s): s is PreviewStill => s !== undefined);
-          if (restored.length > 0) {
-            setStills(restored);
-            return;
-          }
-        }
-      }
-    } catch {
-      // ignore parse errors
-    }
+  const labelItem =
+    stableHoveredKey !== null
+      ? (stills.find((i) => i._key === stableHoveredKey) ?? null)
+      : null;
 
-    // First visit or content changed — generate and persist
-    const generated = buildFairGallery(projects);
-    setStills(generated);
-
-    try {
-      const toStore: StoredGallery = {
-        contentKey,
-        keys: generated.map((s) => s._key),
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
-    } catch {
-      // ignore storage errors (e.g. private browsing quota)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  if (stills === null || stills.length === 0) return null;
+  if (stills.length === 0) return null;
 
   return (
     <section>
-      <ProjectImages items={stills} />
+      <div className="page-grid items-start">
+        <div className="hidden lg:col-span-2 lg:block" aria-hidden />
+        <motion.div
+          className="col-span-2 grid grid-cols-2 items-start md:col-span-4 md:grid-cols-4 lg:col-span-6 lg:col-start-3 lg:grid-cols-6"
+          style={{ gap: "var(--spacing-gutter)" }}
+          variants={reduceMotion ? undefined : GRID_VARIANTS}
+          initial={reduceMotion ? false : "hidden"}
+          animate={reduceMotion ? undefined : "show"}
+          onMouseLeave={() => setHoveredKey(null)}
+        >
+          {stills.map((item) => {
+            const dimmed = hoveredKey !== null && hoveredKey !== item._key;
+            return (
+              <motion.div
+                key={item._key}
+                className="min-w-0"
+                variants={reduceMotion ? undefined : ITEM_VARIANTS}
+                style={{ width: "100%" }}
+              >
+                <div
+                  className="gallery-tile-media"
+                  data-dimmed={dimmed ? "true" : "false"}
+                  onMouseEnter={() => setHoveredKey(item._key)}
+                  style={{ width: "100%", position: "relative", overflow: "hidden" }}
+                >
+                  <Link href={`/work/${item.slug}`} style={{ display: "block" }}>
+                    <Image
+                      loader={sanityLoader}
+                      src={sanityImageUrl(item.image)}
+                      alt={item.alt}
+                      width={600}
+                      height={750}
+                      sizes="(max-width: 767px) 50vw, (max-width: 1023px) 25vw, 10vw"
+                      quality={90}
+                      style={{ width: "100%", height: "auto", display: "block" }}
+                    />
+                  </Link>
+                </div>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+        <div className="hidden lg:col-span-2 lg:block" aria-hidden />
+      </div>
+
+      {/* Single persistent overlay — content swaps without exit/enter remounts. */}
+      <motion.div
+        className="blend-overlay"
+        animate={{ opacity: labelItem ? 1 : 0 }}
+        transition={{ duration: MOTION.duration.hover, ease: MOTION.ease.heavy }}
+        style={{ position: "fixed", inset: 0, zIndex: 100, pointerEvents: "none" }}
+        aria-hidden={!labelItem}
+      >
+        {labelItem ? <HoverLabel item={labelItem} /> : null}
+      </motion.div>
     </section>
   );
 }

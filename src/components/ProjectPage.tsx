@@ -131,7 +131,10 @@ export default function ProjectPage({ project }: { project: Project }) {
 
   const slideCounter =
     total > 0 ? (
-      <span className="text-caption" style={{ display: "flex", gap: 4 }}>
+      <span
+        className="text-caption"
+        style={{ display: "flex", gap: 4, fontVariantNumeric: "tabular-nums" }}
+      >
         <span className="text-caption" style={{ color: "var(--color-black)", opacity: 0.5 }}>
           {pad(activeIndex + 1)}
         </span>

@@ -1,10 +1,4 @@
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Work",
-};
-
-export default function WorkLayout({
+export default function RadioLayout({
   children,
 }: {
   children: React.ReactNode;

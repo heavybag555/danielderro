@@ -1,43 +1,14 @@
 import HomeHero from "@/components/HomeHero";
 import SitePageFooter from "@/components/SitePageFooter";
 import GallerySection from "@/components/GallerySection";
+import {
+  buildHomeGallery,
+  HOME_GALLERY_FADE_ANCHOR_ID,
+  type HomeGalleryProject,
+} from "@/lib/home-gallery";
 import { sanityFetchOrDefault } from "@/sanity/lib/fetch-safe";
 
 export const dynamic = "force-dynamic";
-
-type SanityImageField = {
-  asset: { _ref: string };
-  hotspot?: { x: number; y: number };
-};
-
-type GalleryImage = {
-  _type: "imageAsset";
-  _key: string;
-  image: SanityImageField;
-  caption?: string;
-  alt?: string;
-};
-
-type GalleryVideo = {
-  _type: "videoAsset";
-  _key: string;
-  thumbnail?: SanityImageField;
-  caption?: string;
-  title?: string;
-};
-
-type GalleryEntry = GalleryImage | GalleryVideo;
-
-type Project = {
-  _id: string;
-  title: string;
-  slug: { current: string };
-  client?: string;
-  projectType: string;
-  tags?: string[];
-  coverImage?: { asset: { _ref: string } };
-  gallery?: GalleryEntry[];
-};
 
 const projectWithGalleryQuery = `
   *[_type == "project"] | order(order asc, date desc) {
@@ -45,9 +16,7 @@ const projectWithGalleryQuery = `
     title,
     slug,
     client,
-    projectType,
     tags,
-    coverImage,
     gallery[] {
       _type,
       _key,
@@ -61,17 +30,18 @@ const projectWithGalleryQuery = `
 `;
 
 export default async function Home() {
-  const projects: Project[] = await sanityFetchOrDefault<Project[]>(
+  const projects = await sanityFetchOrDefault<HomeGalleryProject[]>(
     projectWithGalleryQuery,
     [],
   );
+  const stills = buildHomeGallery(projects);
 
   return (
     <>
       <HomeHero />
       <div className="flex flex-col px-[var(--spacing-margin)] pb-[120px]">
-        <div id="home-gallery-fade-anchor">
-          <GallerySection projects={projects} />
+        <div id={HOME_GALLERY_FADE_ANCHOR_ID}>
+          <GallerySection stills={stills} />
         </div>
         <SitePageFooter />
       </div>

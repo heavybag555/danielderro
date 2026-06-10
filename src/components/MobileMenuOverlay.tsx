@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { createPortal } from "react-dom";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { MOTION } from "@/lib/motion";
@@ -11,10 +10,10 @@ const NAV_ITEMS: SiteNavItem[] = [
   { label: "Info", href: "/info" },
   { label: "Work", href: "/work" },
   { label: "Exhibitions", href: "/exhibitions", comingSoon: true },
-  { label: "Radio", href: "/radio", comingSoon: true },
+  { label: "Radio", href: "/radio" },
 ];
 
-const overlayTransition = {
+const dropdownTransition = {
   duration: MOTION.duration.fade,
   ease: MOTION.ease.heavy,
 } as const;
@@ -31,7 +30,7 @@ type OverlayNavLinkProps = {
   children: React.ReactNode;
   /** Resting color; swaps to the inverse on hover. */
   color: "#ffffff" | "#000000";
-  /** Two-digit accent number shown in the top-right corner of the row. */
+  /** Two-digit accent number shown beside the row. */
   accent: string;
 };
 
@@ -74,8 +73,10 @@ function OverlayNavLink({
 type MobileMenuOverlayProps = {
   /** Foreground color for the trigger label (matches surrounding brand links). */
   triggerColor?: string;
+  /** Exclusion blend on the trigger only (home hero); dropdown stays solid red. */
+  blendOverlay?: boolean;
   /**
-   * Optional override, currently ignored — the overlay always shows the
+   * Optional override, currently ignored — the dropdown always shows the
    * canonical site nav (Home, Info, Work, Exhibitions, Radio).
    */
   navItems?: SiteNavItem[];
@@ -83,68 +84,83 @@ type MobileMenuOverlayProps = {
 
 export function MobileMenuTrigger({
   triggerColor = "var(--color-black)",
+  blendOverlay = false,
 }: MobileMenuOverlayProps) {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const items = NAV_ITEMS;
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const close = useCallback(() => setOpen(false), []);
+  const toggle = useCallback(() => setOpen((prev) => !prev), []);
 
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = "";
-      };
-    }
+    if (!open) return;
+
+    const onPointerDown = (event: MouseEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, [open]);
 
-  const close = useCallback(() => setOpen(false), []);
-
-  const overlay = (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={overlayTransition}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 300,
-            background: "#ce0000",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            padding: "var(--spacing-margin)",
-            boxSizing: "border-box",
-          }}
+  return (
+    <div ref={containerRef} className="relative flex justify-end">
+      <button
+        type="button"
+        onClick={toggle}
+        className="text-body"
+        aria-expanded={open}
+        aria-haspopup="true"
+        style={{
+          background: "none",
+          border: "none",
+          padding: 0,
+          cursor: "pointer",
+        }}
+      >
+        <span
+          className={["site-header-brand", blendOverlay ? "blend-overlay" : ""]
+            .filter(Boolean)
+            .join(" ")}
+          style={blendOverlay ? undefined : { color: triggerColor }}
         >
-          {/* Close button — top right */}
-          <button
-            type="button"
-            onClick={close}
-            className="text-body"
+          {open ? "Close" : "Menu"}
+        </span>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.nav
+            className="site-menu-dropdown"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={dropdownTransition}
+            aria-label="Site navigation"
             style={{
               position: "absolute",
-              top: "calc(var(--spacing-margin) + env(safe-area-inset-top, 0px))",
-              right: "var(--spacing-margin)",
-              background: "none",
-              border: "none",
-              padding: 0,
-              cursor: "pointer",
-              color: "#ffffff",
-              zIndex: 1,
+              top: "100%",
+              right: 0,
+              zIndex: 250,
+              marginTop: 4,
+              padding: "var(--spacing-margin)",
+              boxSizing: "border-box",
+              display: "flex",
+              flexDirection: "column",
+              gap: 0,
             }}
           >
-            Close
-          </button>
-
-          {/* Nav links — Home first (black), then Info, Work, … */}
-          <nav style={{ display: "flex", flexDirection: "column", gap: 0 }}>
             <OverlayNavLink href="/" onClick={close} color="#000000" accent="01">
               Home
             </OverlayNavLink>
@@ -160,16 +176,10 @@ export function MobileMenuTrigger({
                     cursor: "default",
                   }}
                 >
-                  <span
-                    className="text-heading"
-                    style={{ color: "#ffffff" }}
-                  >
+                  <span className="text-heading" style={{ color: "#ffffff" }}>
                     {item.label}
                   </span>
-                  <span
-                    className="text-body"
-                    style={{ color: "#000000" }}
-                  >
+                  <span className="text-body" style={{ color: "#000000" }}>
                     – Coming Soon
                   </span>
                 </span>
@@ -185,30 +195,9 @@ export function MobileMenuTrigger({
                 </OverlayNavLink>
               ),
             )}
-          </nav>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="text-body"
-        style={{
-          background: "none",
-          border: "none",
-          padding: 0,
-          cursor: "pointer",
-          color: triggerColor,
-        }}
-      >
-        Menu
-      </button>
-
-      {mounted ? createPortal(overlay, document.body) : null}
-    </>
+          </motion.nav>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
