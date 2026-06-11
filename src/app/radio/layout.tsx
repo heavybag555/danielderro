@@ -4,8 +4,6 @@ export default function RadioLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div data-work-surface className="min-h-dvh bg-black">
-      {children}
-    </div>
+    <div className="min-h-dvh">{children}</div>
   );
 }

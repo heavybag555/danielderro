@@ -12,7 +12,7 @@ function SiteHeaderMeta() {
 
   return (
     <div
-      className="flex flex-col"
+      className="flex flex-col items-start gap-0"
       style={{ isolation: "isolate", mixBlendMode: "normal" }}
     >
       <span className="text-micro site-header-meta" style={metaStyle}>
@@ -47,23 +47,18 @@ export default function SiteBrandStrip({ blendOverlay = false }: SiteBrandStripP
         boxSizing: "border-box",
       }}
     >
-      <div className="site-brand-strip-grid page-grid relative max-md:gap-y-1">
-        <div className="col-span-1 flex min-w-0 self-start">
+      <div className="site-brand-strip-grid page-grid relative">
+        <div className="site-header-brand-cell flex min-w-0 self-start">
           <Link href="/" className={`${brandLink}${blendClass}`}>
             Daniel Derro
           </Link>
         </div>
 
-        <div className="site-header-menu-cell col-span-1 col-start-2 flex w-full min-w-0 self-start justify-end max-md:row-start-1 md:col-start-4 md:row-start-1 lg:col-span-1 lg:col-start-10 lg:justify-self-end">
+        <div className="site-header-menu-cell flex w-full min-w-0 self-start justify-end">
           <MobileMenuTrigger triggerColor="currentColor" blendOverlay={blendOverlay} />
         </div>
 
-        <div
-          className="hidden md:col-span-1 md:col-start-3 md:row-start-1 md:block lg:col-span-6 lg:col-start-4"
-          aria-hidden
-        />
-
-        <div className="col-span-1 col-start-2 flex min-w-0 self-start max-md:row-start-2 md:row-start-1">
+        <div className="site-header-meta-cell min-w-0 self-start">
           <SiteHeaderMeta />
         </div>
       </div>

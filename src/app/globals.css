@@ -18,6 +18,7 @@
   --spacing-gutter: 20px;
   --spacing-section: 120px;
   --spacing-stack: 20px;
+  --work-row-gap: clamp(56px, 10vw, 80px);
 }
 
 /* Strip box shadows globally (scoped off Sanity Studio) */
@@ -77,7 +78,11 @@ html:has([data-work-surface]) body {
 }
 
 .site-page-footer {
-  margin-top: 120px;
+  margin-top: var(--site-footer-padding);
+}
+
+.site-page-bottom-padding {
+  padding-bottom: var(--site-footer-padding);
 }
 
 .site-page-footer-cell {
@@ -89,17 +94,28 @@ html:has([data-work-surface]) body {
   min-width: 0;
 }
 
-.site-footer-copy .text-caption {
-  line-height: 12px;
-}
-
+/* Grid cell for logo groups — no inner layout container; images flow inline. */
 .site-page-footer-logos {
-  width: max-content;
-  max-width: 100%;
+  min-width: 0;
+  font-size: 0;
+  line-height: 0;
 }
 
 .site-page-footer-logos--end {
-  justify-self: end;
+  text-align: right;
+}
+
+.site-page-footer-logo {
+  display: inline-block;
+  vertical-align: top;
+  box-sizing: border-box;
+  height: 24px;
+  width: auto;
+  border: 0.5px solid var(--color-black);
+}
+
+.site-footer-on-dark .site-page-footer-logo {
+  border-color: var(--color-white);
 }
 
 #home-gallery-fade-anchor,
@@ -131,6 +147,64 @@ html:has([data-work-surface]) body {
   color: var(--color-white);
 }
 
+/* Info page: paired images stay equal width; copy sits under the first.
+   Below xl they scale as a fixed pair; at xl they lock to cols 4–5 / 6–7. */
+.info-page {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+}
+
+.info-page-images {
+  display: flex;
+  gap: var(--spacing-gutter);
+  width: 100%;
+}
+
+.info-page-image {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.info-page-image-el {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.info-page-copy {
+  margin-top: 40px;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .info-page-copy {
+    width: calc((100% - var(--spacing-gutter)) / 2);
+  }
+}
+
+@media (min-width: 1280px) {
+  .info-page {
+    margin-left: calc(3 * var(--grid-span-1-width) + 3 * var(--spacing-gutter));
+  }
+
+  .info-page-images {
+    width: auto;
+  }
+
+  .info-page-image {
+    flex: none;
+    width: var(--grid-span-2-width);
+  }
+
+  .info-page-copy {
+    width: var(--grid-span-2-width);
+  }
+}
+
 /* ── Responsive column grid (2 / 4 / 10) ───────────────── */
 
 .page-grid {
@@ -154,9 +228,94 @@ html:has([data-work-surface]) body {
   }
 }
 
+/* Small-desktop tier: 6 columns from 1024–1279 so content is not crammed
+   into the narrow tracks of the full 10-column layout. */
 @media (min-width: 1024px) {
   .page-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* Large desktop: full 10-column composition. */
+@media (min-width: 1280px) {
+  .page-grid {
     grid-template-columns: repeat(10, 1fr);
+  }
+}
+
+/* Mobile footer: two columns — contact / follow text on row 1, logos below on row 2. */
+@media (max-width: 767px) {
+  .site-page-footer .page-grid.site-page-footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 40px;
+  }
+
+  .site-page-footer-cell--contact {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .site-page-footer-cell--follow {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .site-page-footer-logos--right {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    text-align: left;
+  }
+}
+
+/* SitePageFooter: explicit grid placement — all blocks top-aligned on row 1 from md up. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .site-page-footer-cell--contact {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .site-page-footer-cell--follow {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .site-page-footer-logos--right {
+    grid-column: 3 / 5;
+    grid-row: 1;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .site-page-footer-cell--contact {
+    grid-column: 4;
+    grid-row: 1;
+  }
+
+  .site-page-footer-cell--follow {
+    grid-column: 5;
+    grid-row: 1;
+  }
+
+  .site-page-footer-logos--right {
+    grid-column: 6;
+    grid-row: 1;
+  }
+}
+
+@media (min-width: 1280px) {
+  .site-page-footer-cell--contact {
+    grid-column: 4;
+    grid-row: 1;
+  }
+
+  .site-page-footer-cell--follow {
+    grid-column: 5;
+    grid-row: 1;
+  }
+
+  .site-page-footer-logos--right {
+    grid-column: 8;
+    grid-row: 1;
   }
 }
 
@@ -186,6 +345,16 @@ html:has([data-work-surface]) body {
 
 @media (min-width: 1024px) {
   :root {
+    --grid-span-1-width: calc((var(--page-grid-width) - (5 * var(--spacing-gutter))) / 6);
+    --grid-span-2-width: calc(
+      ((var(--page-grid-width) - (5 * var(--spacing-gutter))) / 6) * 2 +
+        var(--spacing-gutter)
+    );
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
     --grid-span-1-width: calc((var(--page-grid-width) - (9 * var(--spacing-gutter))) / 10);
     --grid-span-2-width: calc(
       ((var(--page-grid-width) - (9 * var(--spacing-gutter))) / 10) * 2 +
@@ -204,44 +373,64 @@ html:has([data-work-surface]) body {
   scroll-snap-stop: always;
 }
 
-/* Work index row: the whole content area is one link with a grey fill that
-   sweeps from the top-left on hover; text inverts to black. The link hugs its
-   content (number/title + thumbnail strip) and clips any overflow. */
+/* Work index row: page-grid column placement + flex link that fills its span.
+   Thumbnail count is reduced in JS when the strip runs out of width. */
+.work-project-list {
+  --work-thumb-height: clamp(60px, 11vw, 80px);
+}
+
 .work-row {
   position: relative;
 }
 
 .work-row-link {
-  grid-column: 1 / 3;
-  justify-self: start;
+  grid-column: 1 / -1;
   position: relative;
   display: flex;
-  gap: var(--spacing-gutter);
   align-items: flex-start;
-  width: max-content;
-  max-width: 100%;
+  gap: var(--spacing-gutter);
   box-sizing: border-box;
-  padding: 4px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 4px 0 4px 0;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-  overflow: hidden;
   color: inherit;
   text-decoration: none;
   outline: none;
 }
 
-@media (min-width: 768px) {
+/* Work index: mobile + tablet — col 1 through end; desktop (10-col) — col 4 through end. */
+@media (min-width: 1280px) {
   .work-row-link {
-    grid-column: 2 / 5;
+    grid-column: 4 / -1;
   }
 }
 
-@media (min-width: 1024px) {
-  .work-row-link {
-    grid-column: 3 / 11;
+/* Meta = one column (two on desktop); thumbnails fill the rest. Meta width is an exact
+   page-grid track span so the strip always begins on the next column line. */
+.work-row-meta {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  min-width: 0;
+  width: var(--grid-span-1-width);
+  padding-left: 4px;
+}
+
+@media (min-width: 1280px) {
+  .work-row-meta {
+    width: var(--grid-span-2-width);
   }
 }
 
+.work-row-strip {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: var(--work-thumb-height);
+  overflow: hidden;
+}
+
+/* Hover fill — top-left origin, beneath content. */
 .work-row-link::before {
   content: "";
   position: absolute;
@@ -258,20 +447,35 @@ html:has([data-work-surface]) body {
   transform: scale(1);
 }
 
+/* Left rule drawn without taking layout width so content stays on the grid lines. */
+.work-row-link::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  z-index: 1;
+  pointer-events: none;
+}
+
 .work-row-link > * {
   position: relative;
   z-index: 1;
 }
 
-.work-row-meta {
+.work-row-strip-inner {
+  display: flex;
+  gap: 0;
+  height: 100%;
   min-width: 0;
 }
 
-@media (min-width: 768px) {
-  .work-row-meta {
-    width: var(--grid-span-2-width);
-    flex: 0 0 auto;
-  }
+.work-row-strip-thumb {
+  position: relative;
+  flex: 0 0 auto;
+  height: 100%;
 }
 
 .work-row-text-stack {
@@ -288,6 +492,7 @@ html:has([data-work-surface]) body {
 .work-row-text-title {
   color: var(--color-white);
   transition: color 0.28s cubic-bezier(0.76, 0, 0.24, 1);
+  overflow-wrap: anywhere;
 }
 
 .work-row-text-muted {
@@ -324,6 +529,14 @@ html:has([data-work-surface]) body {
   }
 }
 
+/* Small-desktop tier (6-col grid): the 10-column split below would overflow,
+   so keep the footer as a simple two-ended layout (title left, tags/counter right). */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  footer.page-grid.project-footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .project-footer-title {
   display: flex;
   min-width: 0;
@@ -340,7 +553,7 @@ html:has([data-work-surface]) body {
   }
 }
 
-@media (min-width: 1024px) and (pointer: fine) {
+@media (min-width: 1280px) and (pointer: fine) {
   .project-footer-title {
     grid-column: span 1 / span 1;
   }
@@ -364,7 +577,7 @@ html:has([data-work-surface]) body {
   }
 }
 
-@media (min-width: 1024px) and (pointer: fine) {
+@media (min-width: 1280px) and (pointer: fine) {
   .project-footer-stack {
     display: none;
   }
@@ -379,7 +592,7 @@ html:has([data-work-surface]) body {
   align-self: end;
 }
 
-@media (min-width: 1024px) and (pointer: fine) {
+@media (min-width: 1280px) and (pointer: fine) {
   .project-footer-split-tags,
   .project-footer-split-counter {
     display: flex;
@@ -390,15 +603,25 @@ html:has([data-work-surface]) body {
   display: none;
 }
 
-@media (min-width: 1024px) and (pointer: fine) {
+@media (min-width: 1280px) and (pointer: fine) {
   .project-footer-spacer {
     display: block;
     grid-column: span 5 / span 5;
   }
 }
 
+/* Pages whose in-flow content aligns with the header line (info, work, radio). */
+.site-page-content-offset {
+  padding-top: calc(var(--site-content-offset-top) + env(safe-area-inset-top, 0px));
+}
+
 /* Fixed brand strip: reserve space so content clears the band */
 :root {
+  --site-content-offset-top: 200px;
+  --site-footer-padding: 200px;
+  --radio-player-bar-height: 44px;
+  --radio-player-bottom-offset: 20px;
+  --site-menu-dropdown-width: 320px;
   --site-fixed-brand-strip-height: calc(
     env(safe-area-inset-top, 0px) + var(--spacing-margin) * 2 + 24px
   );
@@ -407,7 +630,7 @@ html:has([data-work-surface]) body {
 @media (max-width: 767px) {
   :root {
     --site-fixed-brand-strip-height: calc(
-      env(safe-area-inset-top, 0px) + var(--spacing-margin) * 2 + 47px
+      env(safe-area-inset-top, 0px) + var(--spacing-margin) * 2 + 24px
     );
   }
 }
@@ -484,6 +707,115 @@ html:has([data-work-surface]) body {
   background-size: 180px 180px;
 }
 
+/* Home hero */
+[data-home-hero] {
+  box-sizing: border-box;
+  background: var(--color-white);
+}
+
+.home-hero-scroll-frame {
+  background: var(--color-white);
+}
+
+.home-hero-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.home-hero-center-titles {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.home-hero-center-studio {
+  opacity: 0.4;
+}
+
+/* Hide header brand while the hero is in view; fade back in once scrolled past. */
+.site-header-brand-cell {
+  transition: opacity 0.5s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+html[data-hero-bg-visible="true"] .site-header-brand-cell {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Home intro — text cols 4–5 · image cols 6–8 on xl. */
+.home-intro-copy {
+  margin-bottom: var(--site-footer-padding);
+  padding-top: 48px;
+}
+
+.home-intro-copy-inner {
+  grid-column: 1 / 2;
+  grid-row: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.home-intro-image-wrap {
+  position: relative;
+  grid-column: 2 / 3;
+  grid-row: 1;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.home-intro-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.home-intro-image-wrap .hero-grain {
+  opacity: 0.8;
+}
+
+.home-intro-copy-title {
+  color: var(--color-primary);
+  opacity: 1;
+}
+
+@media (min-width: 768px) {
+  .home-intro-copy-inner {
+    grid-column: 1 / span 2;
+  }
+
+  .home-intro-image-wrap {
+    grid-column: 3 / span 2;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .home-intro-copy-inner {
+    grid-column: 2 / span 2;
+  }
+
+  .home-intro-image-wrap {
+    grid-column: 4 / span 3;
+  }
+}
+
+@media (min-width: 1280px) {
+  .home-intro-copy-inner {
+    grid-column: 4 / span 2;
+  }
+
+  .home-intro-image-wrap {
+    grid-column: 6 / span 3;
+  }
+}
+
 .site-brand-strip {
   z-index: 200;
   overflow: visible;
@@ -497,19 +829,62 @@ html:has([data-work-surface]) body {
   align-self: start;
 }
 
+/* Site header: shares .page-grid tracks (2 / 4 / 6 / 10) so column numbers align with content. */
+.site-header-brand-cell {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.site-header-menu-cell {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+}
+
+.site-header-meta-cell {
+  display: none;
+  min-width: 0;
+  align-self: start;
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .site-header-menu-cell {
+    grid-column: -1;
+  }
+
+  .site-header-meta-cell {
+    display: flex;
+    grid-column: 2 / 3;
+    grid-row: 1;
+  }
+}
+
+@media (min-width: 1280px) {
+  .site-header-menu-cell {
+    grid-column: 10;
+  }
+
+  .site-header-meta-cell {
+    display: flex;
+    grid-column: 4 / 5;
+    grid-row: 1;
+  }
+}
+
 .site-header-brand,
 .site-header-menu-cell {
   color: var(--color-black);
   overflow: visible;
 }
 
-/* Menu dropdown: solid primary red, two grid columns wide, no hero blend. */
+/* Menu dropdown: solid primary red, fixed width, no hero blend. */
 .site-menu-dropdown {
   mix-blend-mode: normal;
   isolation: isolate;
   background: var(--color-primary);
-  width: var(--grid-span-2-width);
-  min-width: 0;
+  width: var(--site-menu-dropdown-width);
+  min-width: var(--site-menu-dropdown-width);
+  max-width: var(--site-menu-dropdown-width);
 }
 
 html:has([data-work-surface]) .site-header-brand,
@@ -547,18 +922,120 @@ html[data-hero-bg-visible="false"] .blend-overlay {
   --color-primary: #ce0000;
 }
 
-/* ── Radio (/radio) — library (cols 4–5) + active detail (cols 6–8) ── */
+/* ── Radio (/radio) — mobile/tablet: intro stacked above episodes (center 2 cols)
+   desktop: intro (2 cols) beside episodes (middle 4 cols) · tracklist (cols 8–9 on xl) ── */
 
-.radio-library-intro {
-  margin-bottom: 20px;
+/* Stacked intro + episodes — mobile and tablet only */
+.radio-center {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   width: 100%;
+  min-width: 0;
+  align-self: start;
+  grid-column: span 2;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .radio-center {
+    grid-column: 2 / span 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .radio-center {
+    display: contents;
+  }
+
+  .radio-center .radio-intro {
+    grid-column: 1 / span 2;
+    grid-row: 1;
+    align-self: start;
+  }
+
+  .radio-center .radio-episodes {
+    grid-column: 3 / span 4;
+    grid-row: 1;
+    align-self: start;
+  }
+}
+
+@media (min-width: 1280px) {
+  .radio-center .radio-intro {
+    grid-column: 2 / span 2;
+  }
+
+  .radio-center .radio-episodes {
+    grid-column: 4 / span 4;
+  }
+}
+
+/* Player — always aligned to middle episode columns */
+.radio-center-columns {
+  grid-column: span 2;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .radio-center-columns {
+    grid-column: 2 / span 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .radio-center-columns {
+    grid-column: 3 / span 4;
+  }
+}
+
+@media (min-width: 1280px) {
+  .radio-center-columns {
+    grid-column: 4 / span 4;
+  }
+}
+
+.radio-page-content {
+  padding-bottom: var(--spacing-margin);
+}
+
+.radio-page[data-player-visible] .radio-page-content {
+  padding-bottom: calc(
+    var(--radio-player-bar-height) + var(--radio-player-bottom-offset) +
+      env(safe-area-inset-bottom, 0px) + var(--spacing-margin)
+  );
+}
+
+.radio-intro {
+  width: var(--grid-span-2-width);
   max-width: 100%;
+  align-self: start;
+}
+
+.radio-intro-images {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.radio-intro-image {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: auto;
+  border: 0.5px solid rgb(0 0 0 / 0.1);
 }
 
 .radio-library-intro-description {
   margin-top: 20px;
-  width: var(--grid-span-1-width);
+  width: 100%;
   max-width: 100%;
+  text-align: center;
+}
+
+@media (max-width: 767px) {
+  .radio-library-intro-description {
+    width: calc(var(--grid-span-1-width) / 2);
+    margin-inline: auto;
+  }
 }
 
 .radio-library-intro-muted {
@@ -586,8 +1063,8 @@ html[data-hero-bg-visible="false"] .blend-overlay {
   box-sizing: border-box;
   padding: 4px;
   border: 0;
-  border-top: 1px solid rgb(255 255 255 / 0.1);
-  border-left: 1px solid rgb(255 255 255 / 0.1);
+  border-top: 1px solid rgb(0 0 0 / 0.1);
+  border-left: 1px solid rgb(0 0 0 / 0.1);
   background: transparent;
   color: inherit;
   text-align: left;
@@ -641,7 +1118,7 @@ html[data-hero-bg-visible="false"] .blend-overlay {
 }
 
 .radio-episode-row-title {
-  color: var(--color-white);
+  color: var(--color-black);
   transition: color 0.28s cubic-bezier(0.76, 0, 0.24, 1);
 }
 
@@ -663,33 +1140,118 @@ html[data-hero-bg-visible="false"] .blend-overlay {
   }
 }
 
-.radio-detail {
-  margin-top: 40px;
+.radio-episodes {
+  width: 100%;
+  min-width: 0;
+}
+
+.radio-tracklist-panel {
+  width: 100%;
+  min-width: 0;
+  align-self: start;
 }
 
 @media (min-width: 1024px) {
-  .radio-detail {
-    margin-top: 0;
+  .radio-page .page-grid > .radio-center .radio-intro,
+  .radio-page .page-grid > .radio-center .radio-episodes,
+  .radio-page .page-grid > .radio-tracklist-panel {
+    grid-row: 1;
   }
 }
 
-.radio-cover {
-  margin: 0 0 20px;
-  padding: 0;
+.radio-tracklist-box {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 4px;
+  border-top: 1px solid rgb(0 0 0 / 0.1);
+  border-left: 1px solid rgb(0 0 0 / 0.1);
+}
+
+.radio-tracklist-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.radio-tracklist-header-label {
+  color: var(--color-primary);
+}
+
+.radio-fixed-player {
+  position: fixed;
+  bottom: calc(var(--radio-player-bottom-offset) + env(safe-area-inset-bottom, 0px));
+  left: 0;
+  z-index: 40;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0 var(--spacing-margin);
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.radio-fixed-player-grid {
   width: 100%;
 }
 
-.radio-player-wrap {
+.radio-fixed-player-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  box-sizing: border-box;
   width: 100%;
-  margin-bottom: 20px;
+  min-width: 0;
+  min-height: var(--radio-player-bar-height);
+  padding: 4px 12px;
+  border: 0.5px solid rgb(0 0 0 / 0.1);
+  border-radius: 0;
+}
+
+.radio-fixed-player-fill {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.radio-fixed-player-fill-image {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  transform: scale(1.03);
+  filter: blur(8px);
+}
+
+.radio-fixed-player-slot .radio-player {
+  position: relative;
+  z-index: 2;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.radio-fixed-player[data-visible] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radio-fixed-player {
+    transition: none;
+  }
 }
 
 /* Native-audio radio player — flat inline bar: play · progress · time · volume,
-   12px gaps, no container fill/stroke. */
+   20px gaps, no container fill/stroke. Icons sit on the same left/right rails
+   as the artwork above. */
 .radio-player {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 20px;
   width: 100%;
   min-width: 0;
   height: 36px;
@@ -699,9 +1261,9 @@ html[data-hero-bg-visible="false"] .blend-overlay {
 .radio-player__play {
   flex: 0 0 auto;
   display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
+  place-items: center start;
+  width: 20px;
+  height: 20px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -758,65 +1320,17 @@ html[data-hero-bg-visible="false"] .blend-overlay {
   font-variant-numeric: tabular-nums;
 }
 
-.radio-player__volume {
-  position: relative;
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-}
-
 .radio-player__volume-button {
+  flex: 0 0 auto;
   display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
+  place-items: center end;
+  width: 18px;
+  height: 18px;
   padding: 0;
   border: 0;
   background: transparent;
   color: #fff;
   cursor: pointer;
-}
-
-.radio-player__volume-pop {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%) translateY(4px);
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 80px;
-  padding: 8px 0;
-  background: #000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 160ms ease, transform 160ms ease;
-}
-
-.radio-player__volume:hover .radio-player__volume-pop,
-.radio-player__volume:focus-within .radio-player__volume-pop {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateX(-50%) translateY(0);
-}
-
-.radio-player__volume-track {
-  position: relative;
-  width: 4px;
-  height: 100%;
-  border-radius: 3px;
-  background: rgb(255 255 255 / 0.22);
-  cursor: ns-resize;
-  touch-action: none;
-}
-
-.radio-player__volume-fill {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  border-radius: 3px;
-  background: #fff;
 }
 
 .radio-tracklist {
@@ -851,6 +1365,6 @@ html[data-hero-bg-visible="false"] .blend-overlay {
 }
 
 .radio-tracklist-title {
-  color: var(--color-white);
+  color: var(--color-black);
 }
 

@@ -41,6 +41,21 @@ export const RADIO_INTRO = {
     "A research based project cataloging rare and important music. Artists that challenged our understanding of morality and sanity, exploring the complexities and absurdity of human existence.",
 } as const;
 
+export const RADIO_INTRO_IMAGES = [
+  {
+    src: "/images/radio/radio-dublin-stamp.png",
+    alt: "Radio Dublin",
+    width: 851,
+    height: 1024,
+  },
+  {
+    src: "/images/radio/identity-correction-radio-logo.png",
+    alt: "Identity Correction Radio — More Music – Less Talk",
+    width: 1024,
+    height: 220,
+  },
+] as const;
+
 export const RADIO_EPISODES: RadioEpisode[] = [
   {
     id: "01",

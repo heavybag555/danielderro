@@ -81,13 +81,12 @@ function VolumeIcon({ muted }: { muted: boolean }) {
 export default function RadioPlayer({ src }: RadioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const volumeTrackRef = useRef<HTMLDivElement>(null);
+  const prevSrcRef = useRef<string | null>(null);
 
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
   const [scrubbing, setScrubbing] = useState(false);
 
@@ -103,10 +102,7 @@ export default function RadioPlayer({ src }: RadioPlayerProps) {
     const onPlay = () => setPlaying(true);
     const onPause = () => setPlaying(false);
     const onEnded = () => setPlaying(false);
-    const onVolume = () => {
-      setVolume(audio.volume);
-      setMuted(audio.muted);
-    };
+    const onVolume = () => setMuted(audio.muted);
 
     audio.addEventListener("loadedmetadata", onLoaded);
     audio.addEventListener("durationchange", onLoaded);
@@ -128,6 +124,34 @@ export default function RadioPlayer({ src }: RadioPlayerProps) {
       audio.removeEventListener("volumechange", onVolume);
     };
   }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const shouldAutoPlay = prevSrcRef.current !== null && prevSrcRef.current !== src;
+    prevSrcRef.current = src;
+
+    setCurrent(0);
+    setDuration(0);
+    setReady(false);
+    setPlaying(false);
+    audio.load();
+
+    if (!shouldAutoPlay) return;
+
+    const playWhenReady = () => {
+      void audio.play().catch(() => setPlaying(false));
+    };
+
+    if (audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+      playWhenReady();
+      return;
+    }
+
+    audio.addEventListener("canplay", playWhenReady, { once: true });
+    return () => audio.removeEventListener("canplay", playWhenReady);
+  }, [src]);
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
@@ -180,33 +204,6 @@ export default function RadioPlayer({ src }: RadioPlayerProps) {
     [scrubbing],
   );
 
-  const setVolumeFromClientY = useCallback((clientY: number) => {
-    const track = volumeTrackRef.current;
-    const audio = audioRef.current;
-    if (!track || !audio) return;
-    const rect = track.getBoundingClientRect();
-    const ratio = Math.min(1, Math.max(0, 1 - (clientY - rect.top) / rect.height));
-    audio.volume = ratio;
-    audio.muted = ratio === 0;
-  }, []);
-
-  const onVolumePointerDown = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      volumeTrackRef.current?.setPointerCapture(event.pointerId);
-      setVolumeFromClientY(event.clientY);
-      const move = (e: PointerEvent) => setVolumeFromClientY(e.clientY);
-      const up = (e: PointerEvent) => {
-        volumeTrackRef.current?.releasePointerCapture(e.pointerId);
-        window.removeEventListener("pointermove", move);
-        window.removeEventListener("pointerup", up);
-      };
-      window.addEventListener("pointermove", move);
-      window.addEventListener("pointerup", up);
-    },
-    [setVolumeFromClientY],
-  );
-
   const toggleMute = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -214,12 +211,9 @@ export default function RadioPlayer({ src }: RadioPlayerProps) {
   }, []);
 
   const progress = duration > 0 ? Math.min(1, current / duration) : 0;
-  const isMutedView = muted || volume === 0;
-  const volumeLevel = isMutedView ? 0 : volume;
 
   return (
     <div className="radio-player" data-playing={playing} data-ready={ready}>
-      {/* preload metadata so duration + seeking work immediately */}
       <audio ref={audioRef} src={src} preload="metadata" />
 
       <button
@@ -253,34 +247,14 @@ export default function RadioPlayer({ src }: RadioPlayerProps) {
 
       <span className="radio-player__time">{formatTime(current)}</span>
 
-      <div className="radio-player__volume">
-        <button
-          type="button"
-          className="radio-player__volume-button"
-          onClick={toggleMute}
-          aria-label={isMutedView ? "Unmute" : "Mute"}
-        >
-          <VolumeIcon muted={isMutedView} />
-        </button>
-        <div className="radio-player__volume-pop">
-          <div
-            ref={volumeTrackRef}
-            className="radio-player__volume-track"
-            role="slider"
-            aria-label="Volume"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(volumeLevel * 100)}
-            onPointerDown={onVolumePointerDown}
-          >
-            <span
-              className="radio-player__volume-fill"
-              aria-hidden="true"
-              style={{ height: `${volumeLevel * 100}%` }}
-            />
-          </div>
-        </div>
-      </div>
+      <button
+        type="button"
+        className="radio-player__volume-button"
+        onClick={toggleMute}
+        aria-label={muted ? "Unmute" : "Mute"}
+      >
+        <VolumeIcon muted={muted} />
+      </button>
     </div>
   );
 }

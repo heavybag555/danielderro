@@ -1,4 +1,5 @@
 import HomeHero from "@/components/HomeHero";
+import HomeIntroCopy from "@/components/HomeIntroCopy";
 import SitePageFooter from "@/components/SitePageFooter";
 import GallerySection from "@/components/GallerySection";
 import {
@@ -39,7 +40,8 @@ export default async function Home() {
   return (
     <>
       <HomeHero />
-      <div className="flex flex-col px-[var(--spacing-margin)] pb-[120px]">
+      <div className="site-page-bottom-padding flex flex-col px-[var(--spacing-margin)]">
+        <HomeIntroCopy />
         <div id={HOME_GALLERY_FADE_ANCHOR_ID}>
           <GallerySection stills={stills} />
         </div>

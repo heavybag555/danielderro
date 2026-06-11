@@ -41,7 +41,7 @@ function HoverLabel({ item }: { item: HomeGalleryStill }) {
         pointerEvents: "none",
       }}
     >
-      <div className="col-span-2 flex flex-col gap-0.5 md:col-span-1 md:col-start-4 lg:col-start-4 lg:col-span-2">
+      <div className="col-span-2 flex flex-col gap-0.5 md:col-span-1 md:col-start-4 lg:col-start-2 lg:col-span-3 xl:col-start-4 xl:col-span-2">
         <div
           style={{
             display: "flex",
@@ -112,9 +112,9 @@ export default function GallerySection({
   return (
     <section>
       <div className="page-grid items-start">
-        <div className="hidden lg:col-span-2 lg:block" aria-hidden />
+        <div className="hidden xl:col-span-2 xl:block" aria-hidden />
         <motion.div
-          className="col-span-2 grid grid-cols-2 items-start md:col-span-4 md:grid-cols-4 lg:col-span-6 lg:col-start-3 lg:grid-cols-6"
+          className="col-span-2 grid grid-cols-2 items-start md:col-span-4 md:grid-cols-4 lg:col-span-6 lg:col-start-1 lg:grid-cols-5 xl:col-start-3 xl:grid-cols-6"
           style={{ gap: "var(--spacing-gutter)" }}
           variants={reduceMotion ? undefined : GRID_VARIANTS}
           initial={reduceMotion ? false : "hidden"}
@@ -153,7 +153,7 @@ export default function GallerySection({
             );
           })}
         </motion.div>
-        <div className="hidden lg:col-span-2 lg:block" aria-hidden />
+        <div className="hidden xl:col-span-2 xl:block" aria-hidden />
       </div>
 
       {/* Single persistent overlay — content swaps without exit/enter remounts. */}

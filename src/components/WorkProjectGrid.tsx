@@ -1,12 +1,16 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
 import SitePageFooter from "@/components/SitePageFooter";
 import { MOTION } from "@/lib/motion";
-import { useMediaQuery } from "@/lib/use-media-query";
+import {
+  countFittingThumbnails,
+  getThumbWidth,
+} from "@/lib/work-strip-fit";
 
 /** Staggered enter: opacity + blur cascade down the list (no slide). */
 const LIST_VARIANTS: Variants = {
@@ -39,25 +43,8 @@ export type WorkProject = {
   galleryThumbs?: { image?: SanityImageField }[];
 };
 
-/** Thumbnail strip heights (px). */
-const THUMB_HEIGHT = 80;
-const THUMB_HEIGHT_SMALL = 60;
-/** Most thumbnails to render per row; extras beyond the strip width are clipped. */
+/** Most thumbnails considered per row; visible count is trimmed to fit width. */
 const THUMB_MAX = 12;
-/** Fallback aspect ratio (width / height) when intrinsic dims can't be parsed. */
-const THUMB_FALLBACK_ASPECT = 4 / 3;
-
-/** Parse intrinsic dimensions from a Sanity asset `_ref`, e.g. `image-<hash>-1920x1080-jpg`. */
-function getSanityImageDims(
-  image: SanityImageField,
-): { width: number; height: number } | null {
-  const match = image.asset?._ref?.match(/-(\d+)x(\d+)-[a-z0-9]+$/i);
-  if (!match) return null;
-  const width = Number(match[1]);
-  const height = Number(match[2]);
-  if (!width || !height) return null;
-  return { width, height };
-}
 
 /** Cover image first, then gallery thumbnails — deduped by asset ref. */
 function getStripImages(project: WorkProject): SanityImageField[] {
@@ -90,40 +77,24 @@ function formatNumber(index: number): string {
   return String(index + 1).padStart(3, "0");
 }
 
-/**
- * Horizontal row of contain-sized thumbnails. The parent link clips overflow,
- * so the strip simply lays out left-to-right and any thumbnails past the
- * available width are hidden — no measurement needed.
- */
 function ThumbnailStrip({
   images,
-  height,
+  stripHeight,
 }: {
   images: SanityImageField[];
-  height: number;
+  stripHeight: number;
 }) {
   if (images.length === 0) return null;
 
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: 0,
-        height,
-        minWidth: 0,
-        maxWidth: "100%",
-        overflow: "hidden",
-        flex: "0 1 auto",
-      }}
-    >
+    <div className="work-row-strip-inner">
       {images.map((img, i) => {
-        const dims = getSanityImageDims(img);
-        const aspect = dims ? dims.width / dims.height : THUMB_FALLBACK_ASPECT;
-        const width = Math.max(1, Math.round(height * aspect));
+        const width = getThumbWidth(img, stripHeight);
         return (
           <div
-            key={i}
-            style={{ position: "relative", height, width, flex: "0 0 auto" }}
+            key={img.asset._ref ?? i}
+            className="work-row-strip-thumb"
+            style={{ width }}
           >
             <Image
               loader={sanityLoader}
@@ -141,20 +112,59 @@ function ThumbnailStrip({
   );
 }
 
+function useFittingThumbnailCount(
+  images: SanityImageField[],
+  stripRef: React.RefObject<HTMLDivElement | null>,
+) {
+  const [visibleCount, setVisibleCount] = useState(images.length);
+  const [stripHeight, setStripHeight] = useState(80);
+
+  useLayoutEffect(() => {
+    const strip = stripRef.current;
+    if (!strip) return;
+
+    let frame = 0;
+
+    const measure = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const height = strip.clientHeight;
+        const width = strip.clientWidth;
+        if (!height) return;
+        setStripHeight(height);
+        if (!width) return;
+        setVisibleCount(countFittingThumbnails(images, height, width));
+      });
+    };
+
+    const ro = new ResizeObserver(measure);
+    ro.observe(strip);
+    measure();
+
+    return () => {
+      ro.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [images, stripRef]);
+
+  return { visibleCount, stripHeight };
+}
+
 function ProjectRow({
   project,
   index,
-  thumbHeight,
   variants,
 }: {
   project: WorkProject;
   index: number;
-  thumbHeight: number;
   variants?: Variants;
 }) {
+  const stripRef = useRef<HTMLDivElement>(null);
   const number = formatNumber(index);
   const category = categoryLabel(project);
   const images = getStripImages(project);
+  const { visibleCount, stripHeight } = useFittingThumbnailCount(images, stripRef);
+  const visibleImages = images.slice(0, visibleCount);
 
   return (
     <motion.li variants={variants} style={{ listStyle: "none" }}>
@@ -167,7 +177,7 @@ function ProjectRow({
           <div
             className="work-row-meta"
             style={{
-              minHeight: thumbHeight,
+              minHeight: stripHeight,
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
@@ -190,7 +200,9 @@ function ProjectRow({
             </div>
           </div>
 
-          <ThumbnailStrip images={images} height={thumbHeight} />
+          <div ref={stripRef} className="work-row-strip">
+            <ThumbnailStrip images={visibleImages} stripHeight={stripHeight} />
+          </div>
         </Link>
       </div>
     </motion.li>
@@ -202,18 +214,13 @@ export default function WorkProjectGrid({
 }: {
   projects: WorkProject[];
 }) {
-  const isSmallMobile = useMediaQuery("(max-width: 600px)");
-  const isMd = useMediaQuery("(min-width: 768px)");
   const reduceMotion = useReducedMotion();
-
-  const thumbHeight = isSmallMobile ? THUMB_HEIGHT_SMALL : THUMB_HEIGHT;
-  const rowGap = isMd ? 80 : 56;
   const stagger = !reduceMotion;
 
   return (
     <main style={{ minHeight: "100dvh", background: "var(--color-black)" }}>
       <div
-        className="pb-[120px] pt-[calc(var(--spacing-margin)+env(safe-area-inset-top,0px))]"
+        className="site-page-content-offset site-page-bottom-padding"
         style={{
           paddingLeft: "var(--spacing-margin)",
           paddingRight: "var(--spacing-margin)",
@@ -221,6 +228,7 @@ export default function WorkProjectGrid({
         }}
       >
         <motion.ol
+          className="work-project-list"
           variants={stagger ? LIST_VARIANTS : undefined}
           initial={stagger ? "hidden" : false}
           animate={stagger ? "show" : undefined}
@@ -230,7 +238,7 @@ export default function WorkProjectGrid({
             padding: 0,
             display: "flex",
             flexDirection: "column",
-            gap: rowGap,
+            gap: "var(--work-row-gap)",
           }}
         >
           {projects.map((project, index) => (
@@ -238,7 +246,6 @@ export default function WorkProjectGrid({
               key={project._id}
               project={project}
               index={index}
-              thumbHeight={thumbHeight}
               variants={stagger ? ROW_VARIANTS : undefined}
             />
           ))}
