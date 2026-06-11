@@ -79,9 +79,8 @@ export default function HomeHero() {
             playsInline
             preload="auto"
             aria-hidden
-            className="h-full w-full scale-[1.03] object-cover blur-[8px]"
+            className="h-full w-full object-cover"
           />
-          <div className="hero-grain" />
         </div>
       </motion.div>
 

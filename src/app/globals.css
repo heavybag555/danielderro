@@ -159,8 +159,14 @@ html:has([data-work-surface]) body {
 
 .info-page-images {
   display: flex;
-  gap: var(--spacing-gutter);
+  gap: 0;
   width: 100%;
+}
+
+@media (min-width: 768px) {
+  .info-page-images {
+    gap: var(--spacing-gutter);
+  }
 }
 
 .info-page-image {
@@ -442,11 +448,17 @@ html:has([data-work-surface]) body {
   z-index: 0;
 }
 
-.work-row-link:hover::before,
-.work-row-link:focus-visible::before {
-  transform: scale(1);
-}
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  .work-row-link:hover::before,
+  .work-row-link:focus-visible::before {
+    transform: scale(1);
+  }
 
+  .work-row-link:hover .work-row-text-title,
+  .work-row-link:focus-visible .work-row-text-title {
+    color: var(--color-black);
+  }
+}
 /* Left rule drawn without taking layout width so content stays on the grid lines. */
 .work-row-link::after {
   content: "";
@@ -499,11 +511,6 @@ html:has([data-work-surface]) body {
   /* Opaque grey — avoids compositing shifts when the hover fill appears. */
   color: #808080;
   font-variant-numeric: tabular-nums;
-}
-
-.work-row-link:hover .work-row-text-title,
-.work-row-link:focus-visible .work-row-text-title {
-  color: var(--color-black);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -621,7 +628,7 @@ html:has([data-work-surface]) body {
   --site-footer-padding: 200px;
   --radio-player-bar-height: 44px;
   --radio-player-bottom-offset: 20px;
-  --site-menu-dropdown-width: 320px;
+  --site-menu-dropdown-width: 240px;
   --site-fixed-brand-strip-height: calc(
     env(safe-area-inset-top, 0px) + var(--spacing-margin) * 2 + 24px
   );
@@ -665,10 +672,10 @@ html:has([data-work-surface]) body {
 
 .text-body {
   font-family: var(--font-sans);
-  font-weight: 600;
+  font-weight: 500;
   font-size: 16px;
   line-height: 20px;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.005em;
 }
 
 .text-heading {
@@ -676,15 +683,15 @@ html:has([data-work-surface]) body {
   font-weight: 600;
   font-size: 30px;
   line-height: .9;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.025em;
 }
 
 .text-semantic-title {
   font-family: var(--font-sans);
-  font-weight: 600;
+  font-weight: 500;
   font-size: 16px;
   line-height: 20px;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.005em;
   margin: 0;
   color: inherit;
 }
@@ -755,19 +762,25 @@ html[data-hero-bg-visible="true"] .site-header-brand-cell {
 }
 
 .home-intro-copy-inner {
-  grid-column: 1 / 2;
-  grid-row: 1;
+  grid-column: 1 / -1;
+  grid-row: 2;
   min-width: 0;
   width: 100%;
 }
 
 .home-intro-image-wrap {
   position: relative;
-  grid-column: 2 / 3;
+  grid-column: 1 / -1;
   grid-row: 1;
   min-width: 0;
   width: 100%;
   overflow: hidden;
+}
+
+@media (max-width: 767px) {
+  .home-intro-copy .page-grid {
+    row-gap: 40px;
+  }
 }
 
 .home-intro-image {
@@ -789,10 +802,12 @@ html[data-hero-bg-visible="true"] .site-header-brand-cell {
 @media (min-width: 768px) {
   .home-intro-copy-inner {
     grid-column: 1 / span 2;
+    grid-row: 1;
   }
 
   .home-intro-image-wrap {
     grid-column: 3 / span 2;
+    grid-row: 1;
   }
 }
 
@@ -994,13 +1009,13 @@ html[data-hero-bg-visible="false"] .blend-overlay {
 }
 
 .radio-page-content {
-  padding-bottom: var(--spacing-margin);
+  padding-bottom: var(--site-footer-padding);
 }
 
 .radio-page[data-player-visible] .radio-page-content {
   padding-bottom: calc(
-    var(--radio-player-bar-height) + var(--radio-player-bottom-offset) +
-      env(safe-area-inset-bottom, 0px) + var(--spacing-margin)
+    var(--site-footer-padding) + var(--radio-player-bar-height) +
+      var(--radio-player-bottom-offset) + env(safe-area-inset-bottom, 0px)
   );
 }
 
@@ -1032,8 +1047,22 @@ html[data-hero-bg-visible="false"] .blend-overlay {
 }
 
 @media (max-width: 767px) {
+  .radio-center {
+    gap: 80px;
+  }
+
+  .radio-intro-image:first-child {
+    display: none;
+  }
+
+  .radio-intro {
+    width: 100%;
+    align-self: stretch;
+  }
+
   .radio-library-intro-description {
-    width: calc(var(--grid-span-1-width) / 2);
+    width: var(--grid-span-1-width);
+    text-align: left;
     margin-inline: auto;
   }
 }

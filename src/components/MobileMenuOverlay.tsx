@@ -9,7 +9,6 @@ import type { SiteNavItem } from "@/lib/site-nav";
 const NAV_ITEMS: SiteNavItem[] = [
   { label: "Info", href: "/info" },
   { label: "Work", href: "/work" },
-  { label: "Exhibitions", href: "/exhibitions", comingSoon: true },
   { label: "Radio", href: "/radio" },
 ];
 
@@ -77,7 +76,7 @@ type MobileMenuOverlayProps = {
   blendOverlay?: boolean;
   /**
    * Optional override, currently ignored — the dropdown always shows the
-   * canonical site nav (Home, Info, Work, Exhibitions, Radio).
+   * canonical site nav (Home, Info, Work, Radio).
    */
   navItems?: SiteNavItem[];
 };
@@ -158,7 +157,7 @@ export function MobileMenuTrigger({
               boxSizing: "border-box",
               display: "flex",
               flexDirection: "column",
-              gap: 0,
+              gap: 4,
             }}
           >
             <OverlayNavLink href="/" onClick={close} color="#000000" accent="01">

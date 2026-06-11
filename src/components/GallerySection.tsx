@@ -1,13 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
 import { formatSanityTag } from "@/lib/format-sanity-tag";
 import { MOTION } from "@/lib/motion";
-import type { HomeGalleryStill } from "@/lib/home-gallery";
+import {
+  HOME_GALLERY_MOBILE_COLUMNS,
+  HOME_GALLERY_MOBILE_MAX,
+  trimGalleryToFullRows,
+  type HomeGalleryStill,
+} from "@/lib/home-gallery";
+import { useMediaQuery } from "@/lib/use-media-query";
 
 /** Staggered enter: a gentle opacity + blur cascade across the grid (no slide). */
 const GRID_VARIANTS: Variants = {
@@ -84,6 +90,18 @@ export default function GallerySection({
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const [stableHoveredKey, setStableHoveredKey] = useState<string | null>(null);
   const reduceMotion = useReducedMotion();
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const visibleStills = useMemo(
+    () =>
+      isMobile
+        ? trimGalleryToFullRows(
+            stills,
+            HOME_GALLERY_MOBILE_COLUMNS,
+            HOME_GALLERY_MOBILE_MAX,
+          )
+        : stills,
+    [isMobile, stills],
+  );
 
   // Dim tracks the pointer immediately; the center label waits for a brief rest.
   useEffect(() => {
@@ -104,10 +122,10 @@ export default function GallerySection({
 
   const labelItem =
     stableHoveredKey !== null
-      ? (stills.find((i) => i._key === stableHoveredKey) ?? null)
+      ? (visibleStills.find((i) => i._key === stableHoveredKey) ?? null)
       : null;
 
-  if (stills.length === 0) return null;
+  if (visibleStills.length === 0) return null;
 
   return (
     <section>
@@ -121,7 +139,7 @@ export default function GallerySection({
           animate={reduceMotion ? undefined : "show"}
           onMouseLeave={() => setHoveredKey(null)}
         >
-          {stills.map((item) => {
+          {visibleStills.map((item) => {
             const dimmed = hoveredKey !== null && hoveredKey !== item._key;
             return (
               <motion.div

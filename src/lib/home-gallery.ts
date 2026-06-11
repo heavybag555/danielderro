@@ -47,6 +47,22 @@ const GALLERY_COLUMNS = 6;
 const GALLERY_ROWS = 10;
 const MAX_IMAGES = GALLERY_COLUMNS * GALLERY_ROWS;
 
+export const HOME_GALLERY_MOBILE_COLUMNS = 2;
+export const HOME_GALLERY_MOBILE_ROWS = 6;
+export const HOME_GALLERY_MOBILE_MAX =
+  HOME_GALLERY_MOBILE_COLUMNS * HOME_GALLERY_MOBILE_ROWS;
+
+/** Trim to complete rows; optional cap for breakpoint-specific limits. */
+export function trimGalleryToFullRows(
+  stills: HomeGalleryStill[],
+  columns: number,
+  maxImages = stills.length,
+): HomeGalleryStill[] {
+  const capped = stills.slice(0, maxImages);
+  const fullRows = Math.floor(capped.length / columns) * columns;
+  return capped.slice(0, fullRows);
+}
+
 function projectStills(project: HomeGalleryProject): HomeGalleryStill[] {
   const slug = project.slug?.current;
   if (!slug) return [];
