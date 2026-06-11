@@ -725,20 +725,45 @@ html:has([data-work-surface]) body {
 }
 
 .home-hero-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   box-sizing: border-box;
   min-width: 0;
+}
+
+.home-hero-center-grid {
+  position: absolute;
+  right: var(--spacing-margin);
+  bottom: var(--site-footer-padding);
+  left: var(--spacing-margin);
+  width: auto;
 }
 
 .home-hero-center-titles {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  gap: 40px;
+  text-align: left;
+  grid-column: 1;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .home-hero-center-titles {
+    grid-column: 4;
+  }
+}
+
+.home-hero-center-names {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 4px;
-  text-align: center;
+  text-align: left;
+}
+
+.home-hero-center-names .text-body {
+  display: block;
+  line-height: 1;
 }
 
 .home-hero-center-studio {

@@ -17,7 +17,6 @@ export default function HomeHero() {
     offset: ["start start", "end start"],
   });
 
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
   const heroScrollPadding = useTransform(scrollYProgress, (progress) => {
     const padding = 200 * progress;
     return `${padding}px`;
@@ -87,14 +86,20 @@ export default function HomeHero() {
       <motion.div
         className="home-hero-center pointer-events-none absolute inset-0 z-[2] box-border"
         style={{
-          opacity: contentOpacity,
-          paddingLeft: heroScrollPadding,
-          paddingRight: heroScrollPadding,
+          WebkitMaskImage: backgroundMask,
+          maskImage: backgroundMask,
         }}
       >
-        <div className="home-hero-center-titles">
-          <span className="text-heading text-white">Daniel Derro</span>
-          <span className="text-heading text-white home-hero-center-studio">No School Studios</span>
+        <div className="page-grid home-hero-center-grid">
+          <div className="home-hero-center-titles">
+            <div className="home-hero-center-names">
+              <span className="text-body text-white">Daniel Derro</span>
+              <span className="text-body text-white home-hero-center-studio">No School Studios</span>
+            </div>
+            <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+              Visual artist, Venice.
+            </span>
+          </div>
         </div>
       </motion.div>
     </section>

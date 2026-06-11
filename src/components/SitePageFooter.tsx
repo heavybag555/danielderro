@@ -15,15 +15,12 @@ function ContactBlock() {
   return (
     <section className="site-footer-copy flex min-w-0 flex-col gap-0">
       <div className="flex flex-col gap-0">
-        <div className="flex flex-col gap-0">
-          <span className="text-body">Tel. 00 32 15 75 59 43</span>
-          <a
-            href={SITE_CONTACT_MAILTO}
-            className="text-body hover-smooth underline underline-offset-2"
-          >
-            {SITE_CONTACT_EMAIL}
-          </a>
-        </div>
+        <a
+          href={SITE_CONTACT_MAILTO}
+          className="text-body hover-smooth underline underline-offset-2"
+        >
+          {SITE_CONTACT_EMAIL}
+        </a>
         <p className="text-micro-tight m-0 mt-5">
           Based between New York and Los Angeles with international project capabilities.
         </p>
