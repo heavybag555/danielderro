@@ -31,7 +31,11 @@ export const projectBySlugQuery = groq`
       _key,
       // imageAsset fields
       _type == "imageAsset" => {
-        image,
+        image {
+          ...,
+          "lqip": asset->metadata.lqip,
+          "dimensions": asset->metadata.dimensions,
+        },
         caption,
         alt,
       },
@@ -40,7 +44,11 @@ export const projectBySlugQuery = groq`
         title,
         videoUrl,
         "videoFileUrl": videoFile.asset->url,
-        thumbnail,
+        thumbnail {
+          ...,
+          "lqip": asset->metadata.lqip,
+          "dimensions": asset->metadata.dimensions,
+        },
         caption,
       },
     },

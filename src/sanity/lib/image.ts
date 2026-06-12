@@ -19,6 +19,17 @@ export function sanityImageUrl(source: ImageSource): string {
   return builder.image(source).auto("format").fit("max").url();
 }
 
+/** Tiny blurred CDN URL — project slide fallback only when full image is slow. */
+export function sanityImageBlurUrl(source: ImageSource): string {
+  return builder.image(source).width(32).blur(50).auto("format").fit("max").url();
+}
+
+/** Max CDN width for project detail slides (object-fit contain in padded viewport). */
+export const PROJECT_SLIDE_MAX_WIDTH = 1920;
+
+/** Default quality for project slides — tuned for speed over gallery thumbs. */
+export const PROJECT_SLIDE_QUALITY = 75;
+
 /**
  * Custom loader for next/image — lets Sanity CDN handle all image
  * processing in a single pass, eliminating double compression from
@@ -30,3 +41,24 @@ export const sanityLoader: ImageLoader = ({ src, width, quality }) => {
   url.searchParams.set("q", (quality ?? 90).toString());
   return url.toString();
 };
+
+/** Project slide loader — caps width/quality so srcset never over-fetches. */
+export const projectSlideLoader: ImageLoader = ({ src, width, quality }) => {
+  return sanityLoader({
+    src,
+    width: Math.min(width, PROJECT_SLIDE_MAX_WIDTH),
+    quality: quality ?? PROJECT_SLIDE_QUALITY,
+  });
+};
+
+/** Direct CDN URL for preload/prefetch (bypasses next/image srcset). */
+export function projectSlideImageUrl(
+  source: ImageSource,
+  width = PROJECT_SLIDE_MAX_WIDTH,
+): string {
+  return projectSlideLoader({
+    src: sanityImageUrl(source),
+    width: Math.min(width, PROJECT_SLIDE_MAX_WIDTH),
+    quality: PROJECT_SLIDE_QUALITY,
+  });
+}

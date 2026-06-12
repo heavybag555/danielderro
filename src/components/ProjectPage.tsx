@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
 import { formatSanityTag } from "@/lib/format-sanity-tag";
+import { projectMediaItems, type ProjectMediaItem, type ProjectSlideImageSource } from "@/lib/project-media";
+import { projectSlideImageUrl } from "@/sanity/lib/image";
 import SiteFooter from "@/components/SiteFooter";
+import ProjectSlideImage from "@/components/ProjectSlideImage";
 
-type SanityImageField = {
-  asset: { _ref: string };
-  hotspot?: { x: number; y: number };
-};
+type SanityImageField = ProjectSlideImageSource;
 
 type GalleryImage = {
   _type: "imageAsset";
@@ -42,42 +40,22 @@ export type Project = {
   gallery?: GalleryEntry[];
 };
 
-type MediaItem = {
-  _key: string;
-  image: SanityImageField;
-  alt: string;
-};
-
 const PROJECT_IMAGE_PAD_Y = 200;
-
-function galleryToMedia(gallery: GalleryEntry[]): MediaItem[] {
-  const items: MediaItem[] = [];
-  for (const entry of gallery) {
-    if (entry._type === "imageAsset" && entry.image?.asset?._ref) {
-      items.push({
-        _key: entry._key,
-        image: entry.image,
-        alt: entry.alt?.trim() || entry.caption?.trim() || "",
-      });
-    } else if (entry._type === "videoAsset" && entry.thumbnail?.asset?._ref) {
-      items.push({
-        _key: entry._key,
-        image: entry.thumbnail,
-        alt: entry.caption?.trim() || entry.title?.trim() || "",
-      });
-    }
-  }
-  return items;
-}
+const EAGER_SLIDE_COUNT = 4;
 
 function pad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
+function prefetchSlideWidth(): number {
+  const margin = 24;
+  return Math.min(Math.max(window.innerWidth - margin, 640), 1920);
+}
+
 export default function ProjectPage({ project }: { project: Project }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const mediaItems = galleryToMedia(project.gallery ?? []);
+  const mediaItems: ProjectMediaItem[] = projectMediaItems(project);
   const total = mediaItems.length;
 
   useEffect(() => {
@@ -100,6 +78,33 @@ export default function ProjectPage({ project }: { project: Project }) {
     sections.forEach((section) => observer.observe(section));
     return () => observer.disconnect();
   }, [total]);
+
+  // After first paint, prefetch remaining slides at capped width without blocking eager slides.
+  useEffect(() => {
+    if (total <= EAGER_SLIDE_COUNT) return;
+
+    const width = prefetchSlideWidth();
+    let index = EAGER_SLIDE_COUNT;
+
+    const prefetchOne = () => {
+      if (index >= total) return;
+      const item = mediaItems[index];
+      const img = new window.Image();
+      img.src = projectSlideImageUrl(item.image, width);
+      index += 1;
+      if (index < total) scheduleNext();
+    };
+
+    const scheduleNext = () => {
+      if (typeof window.requestIdleCallback === "function") {
+        window.requestIdleCallback(() => prefetchOne(), { timeout: 2000 });
+      } else {
+        window.setTimeout(prefetchOne, 16);
+      }
+    };
+
+    scheduleNext();
+  }, [mediaItems, total]);
 
   const titleContent = (
     <div
@@ -180,25 +185,12 @@ export default function ProjectPage({ project }: { project: Project }) {
               paddingRight: "var(--spacing-margin)",
             }}
           >
-            <div
-              style={{
-                position: "relative",
-                width: "100%",
-                height: "100%",
-                minHeight: 0,
-              }}
-            >
-              <Image
-                loader={sanityLoader}
-                src={sanityImageUrl(item.image)}
-                alt={item.alt}
-                fill
-                sizes="100vw"
-                quality={90}
-                priority={index === 0}
-                style={{ objectFit: "contain" }}
-              />
-            </div>
+            <ProjectSlideImage
+              image={item.image}
+              alt={item.alt}
+              priority={index === 0}
+              eager={index < EAGER_SLIDE_COUNT}
+            />
           </section>
         ))}
       </div>
