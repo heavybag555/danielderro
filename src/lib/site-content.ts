@@ -1,8 +1,54 @@
 export const SITE_ABOUT_COPY =
   "Daniel Derro creates visual narratives for luxury fashion and cultural brands, bringing authentic street perspective to premium campaigns. His work for Prada, Dior, and Givenchy demonstrates his ability to translate genuine cultural moments into compelling luxury brand stories.";
 
+export const INFO_ABOUT = [
+  SITE_ABOUT_COPY,
+  "His artistic practice centers on social connection and community engagement, including work within correctional facilities and youth mentorship programs. This depth of human experience brings genuine authenticity to commercial work, creating campaigns that resonate beyond surface aesthetics.",
+] as const;
+
 export const SITE_CLIENTS_COPY =
   "Prada, Nike, Givenchy, Dior, Stüssy, Adidas, pgLang, Burberry, Carhartt WIP, Our Legacy, New Balance, Fake Mink, ASICS, Moncler, T Magazine, Giveon, Popeye, Stormzy, Yeezy, Slam Jam, Converse, Alo, Nike Golf, Crash, Jordan, Union, Dazed, Babylon, Neighborhood, Saint Laurent, Kaleidoscope, i-D, Interview Magazine";
+
+export const SITE_CLIENTS = SITE_CLIENTS_COPY.split(", ");
+
+export const INFO_SERVICES = [
+  {
+    title: "Creative Direction",
+    items: [
+      "Concept Development",
+      "Campaign Integration",
+      "Brand Consulting",
+      "Release Strategy",
+    ],
+  },
+  {
+    title: "Photography",
+    items: [
+      "Medium Format Film",
+      "High-End Digital Capture",
+      "Editorial",
+      "Campaign",
+    ],
+  },
+  {
+    title: "Film Direction",
+    items: [
+      "Campaign Film",
+      "Album Visuals",
+      "Music Industry Collaborations",
+      "Documentary",
+    ],
+  },
+  {
+    title: "Production",
+    items: [
+      "Casting",
+      "Location Scouting",
+      "Full Creative Delivery",
+      "Concept through Final",
+    ],
+  },
+] as const;
 
 /** Second hero portrait — sits in the home hero logo strip (first image is the background fill). */
 export const HERO_STACK_PORTRAIT = {

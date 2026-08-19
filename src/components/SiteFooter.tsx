@@ -44,20 +44,17 @@ export default function SiteFooter({
 
   return (
     <footer
-      className={`page-grid project-footer-grid items-end ${inverted ? "" : "blend-overlay"}`}
+      className={`project-footer-shell ${inverted ? "" : "blend-overlay"}`}
       style={{
         ...footerBar,
         alignItems: "end",
       }}
     >
-      <div className="project-footer-title">{leftContent}</div>
-      <div className="project-footer-stack">
-        {middleContent}
-        {rightContent}
+      <div className="content-wide project-footer-grid">
+        <div className="project-footer-title">{leftContent}</div>
+        <div className="project-footer-tags">{middleContent}</div>
+        <div className="project-footer-counter">{rightContent}</div>
       </div>
-      <div className="project-footer-split-tags">{middleContent}</div>
-      <div className="project-footer-split-counter">{rightContent}</div>
-      <div className="project-footer-spacer" aria-hidden />
     </footer>
   );
 }

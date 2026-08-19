@@ -79,14 +79,33 @@ export const videoProjectsQuery = groq`
   }
 `;
 
-export const workPageProjectsQuery = groq`
-  *[_type == "project"] | order(order asc, date desc) {
+export const homeHeroProjectsQuery = groq`
+  *[_type == "project"] | order(date desc, title asc) {
     _id,
     title,
     slug,
     client,
     projectType,
     tags,
+    date,
+    coverImage,
+    "galleryThumb": coalesce(
+      gallery[_type == "imageAsset" && defined(image.asset)][0].image,
+      gallery[_type == "videoAsset" && defined(thumbnail.asset)][0].thumbnail
+    ),
+  }
+`;
+
+export const workPageProjectsQuery = groq`
+  *[_type == "project"] | order(_createdAt desc) {
+    _id,
+    _createdAt,
+    title,
+    slug,
+    client,
+    projectType,
+    tags,
+    date,
     coverImage,
     "galleryThumbs": gallery[]{
       "image": coalesce(image, thumbnail)

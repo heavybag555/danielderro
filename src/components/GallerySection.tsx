@@ -36,7 +36,7 @@ const HOVER_LABEL_DELAY_MS = 220;
 function HoverLabel({ item }: { item: HomeGalleryStill }) {
   return (
     <div
-      className="page-grid items-start"
+      className="layout-grid items-start"
       style={{
         position: "fixed",
         top: "50%",
@@ -47,7 +47,7 @@ function HoverLabel({ item }: { item: HomeGalleryStill }) {
         pointerEvents: "none",
       }}
     >
-      <div className="col-span-2 flex flex-col gap-0.5 md:col-span-1 md:col-start-4 lg:col-start-2 lg:col-span-3 xl:col-start-4 xl:col-span-2">
+      <div className="content-compact col-span-full flex flex-col gap-0.5">
         <div
           style={{
             display: "flex",
@@ -57,12 +57,12 @@ function HoverLabel({ item }: { item: HomeGalleryStill }) {
             gap: 8,
           }}
         >
-          <span className="text-micro-tight" style={{ color: "var(--color-black)" }}>
+          <span className="text-caption-tight" style={{ color: "var(--color-black)" }}>
             {item.title}
           </span>
           {item.client?.trim() && (
             <span
-              className="text-micro-tight"
+              className="text-caption-tight"
               style={{ color: "var(--color-black)", opacity: 0.5 }}
             >
               {item.client.trim()}
@@ -71,7 +71,7 @@ function HoverLabel({ item }: { item: HomeGalleryStill }) {
         </div>
         {item.tags.length > 0 && (
           <span
-            className="text-micro-tight"
+            className="text-caption-tight"
             style={{ display: "block", color: "var(--color-primary)" }}
           >
             {item.tags.map(formatSanityTag).join(", ")}
@@ -129,10 +129,9 @@ export default function GallerySection({
 
   return (
     <section>
-      <div className="page-grid items-start">
-        <div className="hidden xl:col-span-2 xl:block" aria-hidden />
+      <div className="layout-grid items-start">
         <motion.div
-          className="col-span-2 grid grid-cols-2 items-start md:col-span-4 md:grid-cols-4 lg:col-span-6 lg:col-start-1 lg:grid-cols-5 xl:col-start-3 xl:grid-cols-6"
+          className="col-span-full grid grid-cols-2 items-start md:grid-cols-4 lg:grid-cols-8"
           style={{ gap: "var(--spacing-gutter)" }}
           variants={reduceMotion ? undefined : GRID_VARIANTS}
           initial={reduceMotion ? false : "hidden"}
@@ -161,7 +160,7 @@ export default function GallerySection({
                       alt={item.alt}
                       width={600}
                       height={750}
-                      sizes="(max-width: 767px) 50vw, (max-width: 1023px) 25vw, 10vw"
+                      sizes="(max-width: 767px) 50vw, (max-width: 1023px) 25vw, 12.5vw"
                       quality={90}
                       style={{ width: "100%", height: "auto", display: "block" }}
                     />
@@ -171,7 +170,6 @@ export default function GallerySection({
             );
           })}
         </motion.div>
-        <div className="hidden xl:col-span-2 xl:block" aria-hidden />
       </div>
 
       {/* Single persistent overlay — content swaps without exit/enter remounts. */}

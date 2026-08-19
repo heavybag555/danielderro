@@ -43,7 +43,7 @@ export type HomeGalleryStill = {
   alt: string;
 };
 
-const GALLERY_COLUMNS = 6;
+const GALLERY_COLUMNS = 8;
 const GALLERY_ROWS = 10;
 const MAX_IMAGES = GALLERY_COLUMNS * GALLERY_ROWS;
 
@@ -97,7 +97,7 @@ function projectStills(project: HomeGalleryProject): HomeGalleryStill[] {
 /**
  * Deterministic round-robin across projects so adjacent tiles tend to come from
  * different work. Stable across reloads (no randomness, no client storage),
- * capped to whole rows of six and at most {@link MAX_IMAGES} images.
+ * capped to whole rows of eight and at most {@link MAX_IMAGES} images.
  */
 export function buildHomeGallery(
   projects: HomeGalleryProject[],

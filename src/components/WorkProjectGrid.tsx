@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
@@ -8,9 +8,39 @@ import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
 import SitePageFooter from "@/components/SitePageFooter";
 import { MOTION } from "@/lib/motion";
 import {
-  countFittingThumbnails,
-  getThumbWidth,
+  getThumbAspect,
+  THUMB_FALLBACK_ASPECT,
 } from "@/lib/work-strip-fit";
+import {
+  resetWorkFilter,
+  useWorkFilter,
+  WORK_FILTERS,
+  type WorkFilterId,
+} from "@/lib/work-filters";
+
+/** Standing headline; swaps to the hovered project title. */
+const WORK_HEADING = "Work";
+
+/** Pointer must stay on a row this long before dim / title swap fire. */
+const HOVER_HOLD_MS = 600;
+
+function matchesFilter(project: WorkProject, filter: WorkFilterId): boolean {
+  switch (filter) {
+    case "all":
+    case "a-z":
+      return true;
+    case "photo":
+      return project.projectType === "photography";
+    case "video":
+      return project.projectType === "video";
+    case "no-school":
+      return project.tags?.includes("no-school-studio") ?? false;
+  }
+}
+
+function byTitle(a: WorkProject, b: WorkProject): number {
+  return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+}
 
 /** Staggered enter: opacity + blur cascade down the list (no slide). */
 const LIST_VARIANTS: Variants = {
@@ -32,19 +62,30 @@ type SanityImageField = {
   hotspot?: { x: number; y: number };
 };
 
+type ExternalCover = {
+  src: string;
+  width: number;
+  height: number;
+};
+
 export type WorkProject = {
   _id: string;
+  /** Sanity upload stamp — drives the default (non A-Z) ordering. */
+  _createdAt?: string;
   title: string;
   slug: { current: string };
   client?: string;
   projectType: string;
   tags?: string[];
+  date?: string;
   coverImage?: SanityImageField;
   galleryThumbs?: { image?: SanityImageField }[];
+  /** Vimeo / remote stills for No School catalog rows (no Sanity asset). */
+  externalCover?: ExternalCover;
 };
 
-/** Most thumbnails considered per row; visible count is trimmed to fit width. */
-const THUMB_MAX = 12;
+/** Most thumbnails in a strip; denser rows scale down until they fill the row width. */
+const THUMB_MAX = 24;
 
 /** Cover image first, then gallery thumbnails — deduped by asset ref. */
 function getStripImages(project: WorkProject): SanityImageField[] {
@@ -63,148 +104,169 @@ function getStripImages(project: WorkProject): SanityImageField[] {
   return out.slice(0, THUMB_MAX);
 }
 
-/**
- * Normalized category: commissioned work (has a client) reads as "Commercial",
- * everything else (or an explicit `personal` tag) reads as "Personal".
- */
-function categoryLabel(project: WorkProject): string {
-  if (project.tags?.includes("personal")) return "Personal";
-  if (project.client?.trim()) return "Commercial";
+const TAG_LABELS: Record<string, string> = {
+  editorial: "Editorial",
+  campaign: "Campaign",
+};
+
+function typeLabel(projectType: string): string {
+  if (!projectType) return "";
+  return projectType.charAt(0).toUpperCase() + projectType.slice(1);
+}
+
+/** Left caption column: the commissioning client, or the body of work it belongs to. */
+function clientLabel(project: WorkProject): string {
+  const client = project.client?.trim();
+  if (client) return client;
+  if (project.tags?.includes("no-school-studio")) return "No School Studio";
   return "Personal";
 }
 
-function formatNumber(index: number): string {
-  return String(index + 1).padStart(3, "0");
+/** Right caption column: tag labels then medium, comma separated. */
+function categoryLabel(project: WorkProject): string {
+  const labels: string[] = [];
+  for (const tag of project.tags ?? []) {
+    const label = TAG_LABELS[tag];
+    if (label) labels.push(label);
+  }
+  const medium = typeLabel(project.projectType);
+  if (medium) labels.push(medium);
+  return labels.join(", ");
 }
 
-function ThumbnailStrip({
-  images,
-  stripHeight,
-}: {
-  images: SanityImageField[];
-  stripHeight: number;
-}) {
-  if (images.length === 0) return null;
+function yearLabel(project: WorkProject): string {
+  return project.date?.slice(0, 4) ?? "";
+}
+
+type StripThumb = {
+  key: string;
+  src: string;
+  aspect: number;
+  remote: boolean;
+};
+
+function getStripThumbs(project: WorkProject): StripThumb[] {
+  const cover = project.externalCover;
+  if (cover) {
+    return [
+      {
+        key: cover.src,
+        src: cover.src,
+        aspect:
+          cover.width && cover.height
+            ? cover.width / cover.height
+            : THUMB_FALLBACK_ASPECT,
+        remote: true,
+      },
+    ];
+  }
+
+  return getStripImages(project).map((image, index) => ({
+    key: image.asset._ref ?? String(index),
+    src: sanityImageUrl(image),
+    aspect: getThumbAspect(image),
+    remote: false,
+  }));
+}
+
+function ThumbnailStrip({ thumbs }: { thumbs: StripThumb[] }) {
+  if (thumbs.length === 0) return null;
 
   return (
-    <div className="work-row-strip-inner">
-      {images.map((img, i) => {
-        const width = getThumbWidth(img, stripHeight);
-        return (
+    <div className="work-row-strip">
+      <div className="work-row-strip-inner">
+        {thumbs.map((thumb) => (
           <div
-            key={img.asset._ref ?? i}
+            key={thumb.key}
             className="work-row-strip-thumb"
-            style={{ width }}
+            style={{ aspectRatio: thumb.aspect }}
           >
             <Image
-              loader={sanityLoader}
-              src={sanityImageUrl(img)}
+              {...(thumb.remote ? {} : { loader: sanityLoader })}
+              src={thumb.src}
               alt=""
               fill
-              sizes={`${width}px`}
-              quality={80}
-              style={{ objectFit: "contain", objectPosition: "left top" }}
+              sizes={`${Math.round(160 * thumb.aspect)}px`}
+              quality={85}
+              style={{ objectFit: "cover" }}
             />
           </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 }
 
-function useFittingThumbnailCount(
-  images: SanityImageField[],
-  stripRef: React.RefObject<HTMLDivElement | null>,
-) {
-  const [visibleCount, setVisibleCount] = useState(images.length);
-  const [stripHeight, setStripHeight] = useState(80);
+function WorkHeaderFilters() {
+  const [filter, setFilter] = useWorkFilter();
 
-  useLayoutEffect(() => {
-    const strip = stripRef.current;
-    if (!strip) return;
-
-    let frame = 0;
-
-    const measure = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const height = strip.clientHeight;
-        const width = strip.clientWidth;
-        if (!height) return;
-        setStripHeight(height);
-        if (!width) return;
-        setVisibleCount(countFittingThumbnails(images, height, width));
-      });
-    };
-
-    const ro = new ResizeObserver(measure);
-    ro.observe(strip);
-    measure();
-
-    return () => {
-      ro.disconnect();
-      cancelAnimationFrame(frame);
-    };
-  }, [images, stripRef]);
-
-  return { visibleCount, stripHeight };
+  return (
+    <nav className="work-header-filters text-small" aria-label="Filter projects">
+      {WORK_FILTERS.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          className={
+            filter === item.id
+              ? "work-header-filters-btn is-active hover-smooth"
+              : "work-header-filters-btn hover-smooth"
+          }
+          aria-pressed={filter === item.id}
+          onClick={() => setFilter(item.id)}
+        >
+          {item.label}
+        </button>
+      ))}
+    </nav>
+  );
 }
 
 function ProjectRow({
   project,
-  index,
+  hovered,
+  onPointerHover,
+  onFocusHover,
   variants,
 }: {
   project: WorkProject;
-  index: number;
+  hovered: boolean;
+  onPointerHover: (id: string | null) => void;
+  onFocusHover: (id: string | null) => void;
   variants?: Variants;
 }) {
-  const stripRef = useRef<HTMLDivElement>(null);
-  const number = formatNumber(index);
-  const category = categoryLabel(project);
-  const images = getStripImages(project);
-  const { visibleCount, stripHeight } = useFittingThumbnailCount(images, stripRef);
-  const visibleImages = images.slice(0, visibleCount);
+  const thumbs = getStripThumbs(project);
 
   return (
-    <motion.li variants={variants} style={{ listStyle: "none" }}>
-      <div className="work-row page-grid items-start">
-        <Link
-          href={`/work/${project.slug.current}`}
-          aria-label={project.title}
-          className="work-row-link"
-        >
-          <div
-            className="work-row-meta"
-            style={{
-              minHeight: stripHeight,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-            }}
-          >
-            <span
-              className="text-caption work-row-text-muted"
-              style={{ flexShrink: 0 }}
-            >
-              {number}
-            </span>
-            <div className="work-row-text-stack">
-              <span className="text-caption work-row-text-title block">
-                {project.title}
-              </span>
-              <span className="text-caption work-row-text-muted block">
-                {category}
-              </span>
-            </div>
-          </div>
+    <motion.li
+      variants={variants}
+      className="work-row"
+      data-hovered={hovered}
+      style={{ listStyle: "none" }}
+      onPointerEnter={() => onPointerHover(project._id)}
+      onPointerLeave={() => onPointerHover(null)}
+    >
+      <Link
+        href={`/work/${project.slug.current}`}
+        aria-label={project.title}
+        className="work-row-link"
+        onFocus={() => onFocusHover(project._id)}
+        onBlur={() => onFocusHover(null)}
+      >
+        <ThumbnailStrip thumbs={thumbs} />
 
-          <div ref={stripRef} className="work-row-strip">
-            <ThumbnailStrip images={visibleImages} stripHeight={stripHeight} />
-          </div>
-        </Link>
-      </div>
+        <div className="work-row-caption layout-grid text-small">
+          <span className="work-row-caption-client work-row-caption-muted">
+            {clientLabel(project)}
+          </span>
+          <span className="work-row-caption-title">{project.title}</span>
+          <span className="work-row-caption-category work-row-caption-muted">
+            {categoryLabel(project)}
+          </span>
+          <span className="work-row-caption-year work-row-caption-muted">
+            {yearLabel(project)}
+          </span>
+        </div>
+      </Link>
     </motion.li>
   );
 }
@@ -216,36 +278,104 @@ export default function WorkProjectGrid({
 }) {
   const reduceMotion = useReducedMotion();
   const stagger = !reduceMotion;
+  const [filter] = useWorkFilter();
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const hoverTimer = useRef<number | null>(null);
+
+  const clearHoverTimer = () => {
+    if (hoverTimer.current !== null) {
+      window.clearTimeout(hoverTimer.current);
+      hoverTimer.current = null;
+    }
+  };
+
+  const commitHover = (id: string | null) => {
+    clearHoverTimer();
+    setHoveredId(id);
+  };
+
+  const requestHover = (id: string | null) => {
+    clearHoverTimer();
+    if (id === null) {
+      setHoveredId(null);
+      return;
+    }
+    hoverTimer.current = window.setTimeout(() => {
+      setHoveredId(id);
+      hoverTimer.current = null;
+    }, HOVER_HOLD_MS);
+  };
+
+  const filtered = projects.filter((project) => matchesFilter(project, filter));
+  const visibleProjects =
+    filter === "a-z" ? [...filtered].sort(byTitle) : filtered;
+
+  const hoveredTitle =
+    visibleProjects.find((project) => project._id === hoveredId)?.title ?? null;
+  /** Held through the fade-out so the headline never blanks mid-transition. */
+  const [lastHoveredTitle, setLastHoveredTitle] = useState("");
+
+  useEffect(() => {
+    if (hoveredTitle) setLastHoveredTitle(hoveredTitle);
+  }, [hoveredTitle]);
+
+  useEffect(() => {
+    clearHoverTimer();
+    setHoveredId(null);
+  }, [filter]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      clearHoverTimer();
+      setHoveredId(null);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      clearHoverTimer();
+      resetWorkFilter();
+    };
+  }, []);
 
   return (
     <main style={{ minHeight: "100dvh", background: "var(--color-black)" }}>
-      <div
-        className="site-page-content-offset site-page-bottom-padding"
-        style={{
-          paddingLeft: "var(--spacing-margin)",
-          paddingRight: "var(--spacing-margin)",
-          boxSizing: "border-box",
-        }}
-      >
+      <header className="work-page-header layout-full">
+        <div className="work-header-bar layout-grid">
+          <div className="work-heading">
+            <h1 className="text-heading work-heading-line" data-on={!hoveredTitle}>
+              {WORK_HEADING}
+            </h1>
+            <span
+              aria-hidden="true"
+              className="text-heading work-heading-line"
+              data-on={Boolean(hoveredTitle)}
+            >
+              {lastHoveredTitle}
+            </span>
+          </div>
+          <WorkHeaderFilters />
+        </div>
+      </header>
+
+      <div className="layout-full work-page-content site-page-bottom-padding">
         <motion.ol
           className="work-project-list"
+          data-hovering={Boolean(hoveredTitle)}
           variants={stagger ? LIST_VARIANTS : undefined}
           initial={stagger ? "hidden" : false}
           animate={stagger ? "show" : undefined}
-          style={{
-            listStyle: "none",
-            margin: 0,
-            padding: 0,
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--work-row-gap)",
-          }}
         >
-          {projects.map((project, index) => (
+          {visibleProjects.map((project) => (
             <ProjectRow
               key={project._id}
               project={project}
-              index={index}
+              hovered={project._id === hoveredId}
+              onPointerHover={requestHover}
+              onFocusHover={commitHover}
               variants={stagger ? ROW_VARIANTS : undefined}
             />
           ))}

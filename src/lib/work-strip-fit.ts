@@ -16,26 +16,17 @@ export function getSanityImageDims(
   return { width, height };
 }
 
-export function getThumbWidth(image: SanityImageField, height: number): number {
+export function getThumbAspect(image: SanityImageField): number {
   const dims = getSanityImageDims(image);
-  const aspect = dims ? dims.width / dims.height : THUMB_FALLBACK_ASPECT;
-  return Math.max(1, Math.round(height * aspect));
+  return dims ? dims.width / dims.height : THUMB_FALLBACK_ASPECT;
 }
 
-/** How many thumbnails fit in `availableWidth` without clipping. */
-export function countFittingThumbnails(
-  images: SanityImageField[],
-  height: number,
-  availableWidth: number,
-): number {
-  if (images.length === 0 || availableWidth <= 0) return 0;
-
-  let used = 0;
-  for (let i = 0; i < images.length; i++) {
-    const w = getThumbWidth(images[i], height);
-    if (i === 0 && w > availableWidth) return 1;
-    if (used + w > availableWidth) return i;
-    used += w;
-  }
-  return images.length;
+/**
+ * Total width of a strip whose thumbnails are one unit tall. Dividing the available
+ * row width by this sum gives the height at which the strip fills that width exactly.
+ */
+export function sumThumbAspects(images: SanityImageField[]): number {
+  let sum = 0;
+  for (const image of images) sum += getThumbAspect(image);
+  return sum > 0 ? sum : THUMB_FALLBACK_ASPECT;
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import RadioPlayer from "@/components/RadioPlayer";
+import SitePageFooter from "@/components/SitePageFooter";
 import { RADIO_INTRO_IMAGES, type RadioEpisode } from "@/lib/site-content";
 
 export type RadioEpisodeWithStream = RadioEpisode & {
@@ -28,18 +29,13 @@ export default function RadioPageClient({ intro, episodes }: RadioPageClientProp
 
   return (
     <main
-      className="radio-page min-h-dvh bg-white"
+      className="radio-page min-h-dvh bg-black"
       data-player-visible={playerVisible || undefined}
     >
       <div
-        className="site-page-content-offset radio-page-content"
-        style={{
-          paddingLeft: "var(--spacing-margin)",
-          paddingRight: "var(--spacing-margin)",
-          boxSizing: "border-box",
-        }}
+        className="layout-full site-page-content-offset radio-page-content"
       >
-        <div className="page-grid items-start">
+        <div className="layout-grid items-start">
           <section className="radio-center" aria-label="Radio">
             <header className="radio-intro text-left">
               <div className="radio-intro-images">
@@ -54,7 +50,7 @@ export default function RadioPageClient({ intro, episodes }: RadioPageClientProp
                   />
                 ))}
               </div>
-              <p className="radio-library-intro-description text-micro radio-library-intro-muted m-0">
+              <p className="radio-library-intro-description text-caption radio-library-intro-muted m-0">
                 {intro.description}
               </p>
             </header>
@@ -73,15 +69,15 @@ export default function RadioPageClient({ intro, episodes }: RadioPageClientProp
                         onClick={() => setSelectedId(episode.id)}
                       >
                         <div className="radio-episode-row-meta">
-                          <span className="text-caption radio-episode-row-muted">
+                          <span className="text-small radio-episode-row-muted">
                             {formatEpisodeNumber(index)}
                           </span>
                           <div className="radio-episode-row-text-stack">
-                            <span className="text-caption radio-episode-row-title block">
+                            <span className="text-small radio-episode-row-title block">
                               {episode.title}
                             </span>
                             {episode.durationLabel ? (
-                              <span className="text-caption radio-episode-row-muted block">
+                              <span className="text-small radio-episode-row-muted block">
                                 {episode.durationLabel}
                               </span>
                             ) : null}
@@ -97,24 +93,24 @@ export default function RadioPageClient({ intro, episodes }: RadioPageClientProp
 
           {selected ? (
             <aside
-              className="radio-tracklist-panel hidden col-span-2 xl:col-span-2 xl:col-start-8 xl:row-start-1 xl:block"
+              className="radio-tracklist-panel"
               aria-live="polite"
               aria-label="Tracklist"
             >
               <div className="radio-tracklist-box">
                 <p className="radio-tracklist-header m-0">
-                  <span className="text-caption radio-tracklist-header-label">IC</span>
-                  <span className="text-caption radio-tracklist-header-label">Tracklist</span>
+                  <span className="text-small radio-tracklist-header-label">IC</span>
+                  <span className="text-small radio-tracklist-header-label">Tracklist</span>
                 </p>
                 <ol className="radio-tracklist m-0 list-none p-0">
                   {selected.tracklist.map((track, index) => (
                     <li key={`${track.artist}-${track.title}`} className="radio-tracklist-item">
-                      <span className="text-caption radio-tracklist-number">
+                      <span className="text-small radio-tracklist-number">
                         {formatTrackNumber(index)}
                       </span>
                       <div className="radio-tracklist-copy">
-                        <span className="text-caption radio-tracklist-title">{track.title}</span>
-                        <span className="text-caption radio-tracklist-artist">{track.artist}</span>
+                        <span className="text-small radio-tracklist-title">{track.title}</span>
+                        <span className="text-small radio-tracklist-artist">{track.artist}</span>
                       </div>
                     </li>
                   ))}
@@ -124,11 +120,12 @@ export default function RadioPageClient({ intro, episodes }: RadioPageClientProp
           ) : null}
         </div>
 
+        <SitePageFooter />
       </div>
 
       {playerVisible && selected?.streamSrc ? (
         <div className="radio-fixed-player" data-visible>
-          <div className="radio-fixed-player-grid page-grid">
+          <div className="radio-fixed-player-grid layout-grid">
             <div className="radio-fixed-player-slot radio-center-columns">
               <div className="radio-fixed-player-fill" aria-hidden>
                 <img

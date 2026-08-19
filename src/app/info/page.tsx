@@ -1,98 +1,140 @@
-import type { Metadata } from "next";
-import Image from "next/image";
-
+import SiteBackgroundVideo from "@/components/SiteBackgroundVideo";
 import SitePageFooter from "@/components/SitePageFooter";
-import { HERO_STACK_PORTRAIT, SITE_CLIENTS_COPY } from "@/lib/site-content";
+import {
+  SITE_CONTACT_EMAIL,
+  SITE_CONTACT_MAILTO,
+  SITE_INSTAGRAM_DANIEL_DERRO,
+  SITE_INSTAGRAM_NO_SCHOOL_STUDIO_RECORDS,
+} from "@/lib/site-contact";
+import { INFO_ABOUT, INFO_SERVICES, SITE_CLIENTS } from "@/lib/site-content";
 
-export const metadata: Metadata = {
-  title: "Info",
-};
+const CLIENTS_SORTED = [...SITE_CLIENTS].sort((a, b) =>
+  a.localeCompare(b, undefined, { sensitivity: "base" }),
+);
+const CLIENTS_SPLIT = Math.ceil(CLIENTS_SORTED.length / 2);
+const CLIENTS_FIRST = CLIENTS_SORTED.slice(0, CLIENTS_SPLIT);
+const CLIENTS_NEXT = CLIENTS_SORTED.slice(CLIENTS_SPLIT);
+const SERVICE_ITEMS = INFO_SERVICES.flatMap((group) => group.items);
+
+const CONTACT_SECTIONS = [
+  {
+    title: "Contact",
+    lines: [
+      { href: SITE_CONTACT_MAILTO, value: SITE_CONTACT_EMAIL },
+    ],
+  },
+  {
+    title: "Based",
+    lines: [{ label: "New York and Los Angeles", value: "International project capabilities" }],
+  },
+  {
+    title: "Follow",
+    lines: [
+      { label: "Daniel Derro", href: SITE_INSTAGRAM_DANIEL_DERRO, value: "@danielderro_" },
+      {
+        label: "No School Studio Records",
+        href: SITE_INSTAGRAM_NO_SCHOOL_STUDIO_RECORDS,
+        value: "@noschoolstudiorecords",
+      },
+    ],
+  },
+] as const;
+
+function InfoSection({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="info-section">
+      <p className="text-small info-section-label">{label}</p>
+      <div className="info-section-body">{children}</div>
+    </section>
+  );
+}
 
 export default function InfoPage() {
   return (
-    <div
-      className="site-page-content-offset site-page-bottom-padding max-w-full min-w-0 overflow-x-hidden"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        paddingLeft: "var(--spacing-margin)",
-        paddingRight: "var(--spacing-margin)",
-        gap: 10,
-        background: "var(--color-white)",
-      }}
-    >
-      <div className="info-page">
-        <div className="info-page-images">
-          <div className="info-page-image">
-            <Image
-              src="/images/daniel-hero-new.jpg"
-              alt="Daniel Derro"
-              width={2000}
-              height={1470}
-              className="info-page-image-el"
-              priority
-            />
-          </div>
+    <div className="info-page-shell layout-full site-page-bottom-padding max-w-full min-w-0">
+      <SiteBackgroundVideo fixed dimmed />
 
-          <div className="info-page-image">
-            <Image
-              src={HERO_STACK_PORTRAIT.src}
-              alt={HERO_STACK_PORTRAIT.alt}
-              width={HERO_STACK_PORTRAIT.width}
-              height={HERO_STACK_PORTRAIT.height}
-              className="info-page-image-el"
-              priority
-            />
-          </div>
-        </div>
+      <div className="info-page-foreground">
+        <div className="info-page layout-grid">
+          <InfoSection label="About">
+            {INFO_ABOUT.map((paragraph, index) => (
+              <p key={paragraph} className="text-small info-about">
+                {index === 0 ? (
+                  <>
+                    <span className="info-lead-name">Daniel Derro</span>
+                    {paragraph.replace(/^Daniel Derro/, "")}
+                  </>
+                ) : (
+                  paragraph
+                )}
+              </p>
+            ))}
+          </InfoSection>
 
-        <div className="info-page-copy flex flex-col gap-[40px]">
-          <section className="flex flex-col gap-0" style={{ color: "var(--color-primary)" }}>
-            <h2 className="text-semantic-title pl-5">About</h2>
-            <div className="flex flex-col gap-5">
-              <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
-                Daniel Derro creates visual narratives for luxury fashion and cultural brands,
-                bringing authentic street perspective to premium campaigns. His work for Prada,
-                Dior, and Givenchy demonstrates his ability to translate genuine cultural moments
-                into compelling luxury brand stories.
+          <InfoSection label="Services">
+            {SERVICE_ITEMS.map((item) => (
+              <p key={item} className="text-small">
+                {item}
               </p>
-              <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
-                Recent campaigns span major fashion houses, international sportswear brands, and
-                music industry collaborations. Daniel has directed album visuals for
-                Grammy-nominated artist Giveon while maintaining ongoing relationships with Nike and
-                Adidas for culturally-driven campaigns.
-              </p>
-              <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
-                Published extensively in The New York Times, Vogue Italia, i-D, and Kaleidoscope
-                Magazine, Daniel&apos;s editorial work has been exhibited internationally from Dover
-                Street Market Paris to MOMA and MOCA museums. His visual language combines
-                documentary authenticity with luxury fashion aesthetics.
-              </p>
-              <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
-                Daniel&apos;s comprehensive services include photography, film direction, creative
-                direction, casting, location scouting, and brand consulting. Working primarily
-                with medium format film and high-end digital capture, he delivers complete creative
-                solutions from concept through final delivery.
-              </p>
-              <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
-                His artistic practice centers on social connection and community engagement,
-                including work within correctional facilities and youth mentorship programs. This
-                depth of human experience brings genuine authenticity to commercial work, creating
-                campaigns that resonate beyond surface aesthetics.
-              </p>
+            ))}
+          </InfoSection>
+
+          <InfoSection label="Clients">
+            <div className="info-clients">
+              <div className="info-clients-aisle">
+                {CLIENTS_FIRST.map((client) => (
+                  <p key={client} className="text-small">
+                    {client}
+                  </p>
+                ))}
+              </div>
+              <div className="info-clients-aisle">
+                {CLIENTS_NEXT.map((client) => (
+                  <p key={client} className="text-small">
+                    {client}
+                  </p>
+                ))}
+              </div>
             </div>
-          </section>
+          </InfoSection>
 
-          <section className="flex flex-col gap-0" style={{ color: "var(--color-primary)" }}>
-            <h2 className="text-semantic-title pl-5">Clients</h2>
-            <p className="text-body" style={{ color: "var(--color-primary)", margin: 0 }}>
-              {SITE_CLIENTS_COPY}
-            </p>
-          </section>
+          {CONTACT_SECTIONS.map((group) => (
+            <InfoSection key={group.title} label={group.title}>
+              {group.lines.map((line) => (
+                <p key={line.value} className="text-small info-section-pair">
+                  {"label" in line && line.label ? (
+                    <>
+                      {line.label}
+                      <br />
+                    </>
+                  ) : null}
+                  {"href" in line && line.href ? (
+                    <a
+                      href={line.href}
+                      className="hover-smooth no-underline"
+                      {...(line.href.startsWith("http")
+                        ? { target: "_blank", rel: "noopener noreferrer" }
+                        : {})}
+                    >
+                      {line.value}
+                    </a>
+                  ) : (
+                    <span>{line.value}</span>
+                  )}
+                </p>
+              ))}
+            </InfoSection>
+          ))}
         </div>
-      </div>
 
-      <SitePageFooter />
+        <SitePageFooter onDark />
+      </div>
     </div>
   );
 }

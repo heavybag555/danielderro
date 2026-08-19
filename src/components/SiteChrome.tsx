@@ -4,8 +4,9 @@ import { usePathname } from "next/navigation";
 import SiteBrandStrip from "@/components/SiteBrandStrip";
 
 function useHeaderBlend(pathname: string): boolean {
-  // Home and project detail (full-bleed slides) use exclusion blend over photography.
+  // Home, info, and project detail use exclusion blend over photography / video.
   if (pathname === "/") return true;
+  if (pathname === "/info") return true;
   if (pathname.startsWith("/work/") && pathname.length > "/work/".length) return true;
   return false;
 }

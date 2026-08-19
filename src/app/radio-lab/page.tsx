@@ -22,8 +22,11 @@ export default async function RadioLabPage() {
   ];
 
   return (
-    <main style={{ minHeight: "100dvh", background: "#000", color: "#fff", padding: "48px 24px" }}>
-      <div style={{ maxWidth: 720, margin: "0 auto", display: "grid", gap: 56 }}>
+    <main
+      className="layout-full"
+      style={{ minHeight: "100dvh", background: "#000", color: "#fff", paddingBlock: 48 }}
+    >
+      <div className="content-wide" style={{ display: "grid", gap: 56 }}>
         <header style={{ display: "grid", gap: 8 }}>
           <h1 style={{ font: "600 20px/1.2 var(--font-sans)", margin: 0 }}>Radio Player Lab</h1>
           <p style={{ font: "400 13px/1.5 var(--font-sans)", opacity: 0.6, margin: 0 }}>

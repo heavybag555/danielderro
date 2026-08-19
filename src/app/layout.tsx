@@ -1,4 +1,3 @@
-import SmoothScroll from "@/components/SmoothScroll";
 import SiteChrome from "@/components/SiteChrome";
 import { rootSiteMetadata } from "@/lib/site-metadata";
 import "./globals.css";
@@ -16,9 +15,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
       </head>
       <body>
-        <SmoothScroll>
-          <SiteChrome>{children}</SiteChrome>
-        </SmoothScroll>
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );

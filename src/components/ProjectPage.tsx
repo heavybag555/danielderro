@@ -2,10 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { formatSanityTag } from "@/lib/format-sanity-tag";
-import { projectMediaItems, type ProjectMediaItem, type ProjectSlideImageSource } from "@/lib/project-media";
+import {
+  projectMediaItems,
+  type ProjectMediaItem,
+  type ProjectSlideImageSource,
+} from "@/lib/project-media";
 import { projectSlideImageUrl } from "@/sanity/lib/image";
 import SiteFooter from "@/components/SiteFooter";
 import ProjectSlideImage from "@/components/ProjectSlideImage";
+import SimpleVideoPlayer from "@/components/SimpleVideoPlayer";
 
 type SanityImageField = ProjectSlideImageSource;
 
@@ -20,6 +25,8 @@ type GalleryImage = {
 type GalleryVideo = {
   _type: "videoAsset";
   _key: string;
+  videoUrl?: string;
+  videoFileUrl?: string;
   thumbnail?: SanityImageField;
   caption?: string;
   title?: string;
@@ -52,10 +59,54 @@ function prefetchSlideWidth(): number {
   return Math.min(Math.max(window.innerWidth - margin, 640), 1920);
 }
 
-export default function ProjectPage({ project }: { project: Project }) {
+function ProjectSlideVideo({
+  item,
+}: {
+  item: Extract<ProjectMediaItem, { kind: "video" }>;
+}) {
+  if (item.src) {
+    return (
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div className="project-video-frame">
+          <SimpleVideoPlayer
+            src={item.src}
+            aspectRatio={item.aspectRatio ?? "16 / 9"}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (item.poster) {
+    return <ProjectSlideImage image={item.poster} alt={item.alt} eager />;
+  }
+
+  return null;
+}
+
+export default function ProjectPage({
+  project,
+  resolvedVideoSrcByKey = {},
+}: {
+  project: Project;
+  /** Server-resolved Vimeo/direct URLs keyed by gallery `_key`. */
+  resolvedVideoSrcByKey?: Record<string, string>;
+}) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const mediaItems: ProjectMediaItem[] = projectMediaItems(project);
+  const mediaItems: ProjectMediaItem[] = projectMediaItems(project).map((item) => {
+    if (item.kind !== "video") return item;
+    const resolved = resolvedVideoSrcByKey[item._key];
+    return resolved ? { ...item, src: resolved } : item;
+  });
   const total = mediaItems.length;
 
   useEffect(() => {
@@ -79,7 +130,7 @@ export default function ProjectPage({ project }: { project: Project }) {
     return () => observer.disconnect();
   }, [total]);
 
-  // After first paint, prefetch remaining slides at capped width without blocking eager slides.
+  // After first paint, prefetch remaining image slides at capped width without blocking eager slides.
   useEffect(() => {
     if (total <= EAGER_SLIDE_COUNT) return;
 
@@ -89,8 +140,13 @@ export default function ProjectPage({ project }: { project: Project }) {
     const prefetchOne = () => {
       if (index >= total) return;
       const item = mediaItems[index];
-      const img = new window.Image();
-      img.src = projectSlideImageUrl(item.image, width);
+      if (item?.kind === "image") {
+        const img = new window.Image();
+        img.src = projectSlideImageUrl(item.image, width);
+      } else if (item?.kind === "video" && item.poster) {
+        const img = new window.Image();
+        img.src = projectSlideImageUrl(item.poster, width);
+      }
       index += 1;
       if (index < total) scheduleNext();
     };
@@ -129,7 +185,7 @@ export default function ProjectPage({ project }: { project: Project }) {
 
   const tagsContent =
     project.tags && project.tags.length > 0 ? (
-      <span className="text-caption" style={{ color: "var(--color-primary)" }}>
+      <span className="text-small" style={{ color: "var(--color-primary)" }}>
         {project.tags.map(formatSanityTag).join(", ")}
       </span>
     ) : null;
@@ -137,13 +193,13 @@ export default function ProjectPage({ project }: { project: Project }) {
   const slideCounter =
     total > 0 ? (
       <span
-        className="text-caption"
+        className="text-small"
         style={{ display: "flex", gap: 4, fontVariantNumeric: "tabular-nums" }}
       >
-        <span className="text-caption" style={{ color: "var(--color-black)", opacity: 0.5 }}>
+        <span className="text-small" style={{ color: "var(--color-black)", opacity: 0.5 }}>
           {pad(activeIndex + 1)}
         </span>
-        <span className="text-caption" style={{ color: "var(--color-black)" }}>
+        <span className="text-small" style={{ color: "var(--color-black)" }}>
           {pad(total)}
         </span>
       </span>
@@ -151,16 +207,16 @@ export default function ProjectPage({ project }: { project: Project }) {
 
   return (
     <div
+      data-work-surface
       style={{
         position: "fixed",
         inset: 0,
-        background: "var(--color-white)",
+        background: "var(--color-black)",
         overflow: "hidden",
       }}
     >
       <div
         ref={scrollRef}
-        data-lenis-prevent
         className="project-scroll"
         style={{
           position: "absolute",
@@ -175,22 +231,24 @@ export default function ProjectPage({ project }: { project: Project }) {
           <section
             key={item._key}
             data-slide-index={index}
-            className="project-scroll-slide"
+            className="project-scroll-slide layout-full"
             style={{
               height: "100dvh",
               boxSizing: "border-box",
               paddingTop: PROJECT_IMAGE_PAD_Y,
               paddingBottom: PROJECT_IMAGE_PAD_Y,
-              paddingLeft: "var(--spacing-margin)",
-              paddingRight: "var(--spacing-margin)",
             }}
           >
-            <ProjectSlideImage
-              image={item.image}
-              alt={item.alt}
-              priority={index === 0}
-              eager={index < EAGER_SLIDE_COUNT}
-            />
+            {item.kind === "video" ? (
+              <ProjectSlideVideo item={item} />
+            ) : (
+              <ProjectSlideImage
+                image={item.image}
+                alt={item.alt}
+                priority={index === 0}
+                eager={index < EAGER_SLIDE_COUNT}
+              />
+            )}
           </section>
         ))}
       </div>

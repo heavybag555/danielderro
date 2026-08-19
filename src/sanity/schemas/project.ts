@@ -77,7 +77,7 @@ export const projectType = defineType({
       type: "array",
       of: [{ type: "imageAsset" }, { type: "videoAsset" }],
       description:
-        "Grid stills on the site: photos as-is; videos use the thumbnail only (preview) until playback is added.",
+        "Photos as-is; videos play with SimplePlayer (prefer Video File upload, or Vimeo URL + VIMEO_ACCESS_TOKEN).",
     }),
     defineField({
       name: "order",
