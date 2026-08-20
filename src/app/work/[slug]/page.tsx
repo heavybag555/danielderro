@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProjectPage, { type Project } from "@/components/ProjectPage";
-import NoSchoolVideoPage from "@/components/NoSchoolVideoPage";
-import { getNoSchoolVideoBySlug } from "@/lib/no-school-videos";
 import { projectMediaItems } from "@/lib/project-media";
 import { resolveVimeoStreamUrl } from "@/lib/vimeo-stream";
 import { projectOgImageUrl, projectSlideImageUrl } from "@/sanity/lib/image";
@@ -49,35 +47,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: project.title,
         description,
         ...(image ? { images: [image] } : {}),
-      },
-    };
-  }
-
-  const noSchool = getNoSchoolVideoBySlug(slug);
-  if (noSchool) {
-    const description = `${noSchool.title} — a No School Studio film.`;
-    return {
-      title: noSchool.title,
-      description,
-      alternates: { canonical: `/work/${slug}` },
-      openGraph: {
-        title: noSchool.title,
-        description,
-        url: `/work/${slug}`,
-        images: [
-          {
-            url: noSchool.thumbnail,
-            width: noSchool.width,
-            height: noSchool.height,
-            alt: noSchool.title,
-          },
-        ],
-      },
-      twitter: {
-        card: "summary_large_image",
-        title: noSchool.title,
-        description,
-        images: [noSchool.thumbnail],
       },
     };
   }
@@ -131,17 +100,5 @@ export default async function WorkProjectPage({ params }: Props) {
     );
   }
 
-  const noSchool = getNoSchoolVideoBySlug(slug);
-  if (!noSchool) {
-    notFound();
-  }
-
-  const playbackSrc = await resolveVimeoStreamUrl(noSchool.vimeoUrl);
-
-  return (
-    <>
-      <link rel="preload" as="image" href={noSchool.thumbnail} />
-      <NoSchoolVideoPage video={noSchool} playbackSrc={playbackSrc} />
-    </>
-  );
+  notFound();
 }

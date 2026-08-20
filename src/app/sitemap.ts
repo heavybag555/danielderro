@@ -1,5 +1,4 @@
 import type { MetadataRoute } from "next";
-import { NO_SCHOOL_VIDEOS } from "@/lib/no-school-videos";
 import { SITE_URL } from "@/lib/site-metadata";
 import { sanityFetchOrDefault } from "@/sanity/lib/fetch-safe";
 import { sitemapProjectsQuery } from "@/sanity/lib/queries";
@@ -36,14 +35,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
-  const noSchoolRoutes: MetadataRoute.Sitemap = NO_SCHOOL_VIDEOS.map((video) => ({
-    url: `${SITE_URL}/work/${video.slug}`,
-    lastModified: now,
-    priority: 0.7,
-  }));
-
   const seen = new Set<string>();
-  return [...routes, ...projectRoutes, ...noSchoolRoutes].filter((entry) => {
+  return [...routes, ...projectRoutes].filter((entry) => {
     if (seen.has(entry.url)) return false;
     seen.add(entry.url);
     return true;

@@ -9,6 +9,7 @@ import SitePageFooter from "@/components/SitePageFooter";
 import { mediaEnterTransition, MOTION } from "@/lib/motion";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { useDismissOnScroll } from "@/lib/use-dismiss-on-scroll";
+import { markUnmutedAutoplay } from "@/lib/autoplay-sound";
 import type { GalleryStill } from "@/lib/gallery-stills";
 
 const HOVER_HOLD_MS = 150;
@@ -89,6 +90,7 @@ export default function GalleryIndex({
                   href={`/work/${still.slug}`}
                   aria-label={still.title}
                   className="gallery-index-link"
+                  onPointerDown={markUnmutedAutoplay}
                   onPointerEnter={() => requestHover(still.key)}
                   onPointerLeave={() => requestHover(null)}
                 >

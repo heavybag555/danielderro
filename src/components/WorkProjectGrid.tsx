@@ -13,6 +13,7 @@ import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
 import SitePageFooter from "@/components/SitePageFooter";
 import { mediaEnterTransition, MOTION } from "@/lib/motion";
 import { useDismissOnScroll } from "@/lib/use-dismiss-on-scroll";
+import { markUnmutedAutoplay } from "@/lib/autoplay-sound";
 import {
   getThumbAspect,
   THUMB_FALLBACK_ASPECT,
@@ -45,6 +46,81 @@ function matchesFilter(project: WorkProject, filter: WorkFilterId): boolean {
 
 function byTitle(a: WorkProject, b: WorkProject): number {
   return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+}
+
+function byUploadedAt(a: WorkProject, b: WorkProject): number {
+  const left = a._createdAt ?? "";
+  const right = b._createdAt ?? "";
+  if (left && right) return right.localeCompare(left);
+  if (left) return -1;
+  if (right) return 1;
+  return 0;
+}
+
+/** Stable scramble — same order on every refresh; new IDs slot in without reshuffling. */
+function scrambleKey(id: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < id.length; i += 1) {
+    hash ^= id.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function byStableScramble(a: WorkProject, b: WorkProject): number {
+  const left = scrambleKey(a._id);
+  const right = scrambleKey(b._id);
+  if (left !== right) return left - right;
+  return a._id.localeCompare(b._id);
+}
+
+/** Editorial pins for All. Everything else keeps the stable scramble. */
+const ALL_PIN_FRONT = [
+  "sideshow-hardtokill",
+  "systemarosa-for-t-magazine",
+  "hidden-ny-x-asics",
+  "committed-escape-introduction-to-lid",
+  "stussy-x-our-legacy",
+] as const;
+
+const ALL_PIN_BACK = ["hailee-bieber-x-ysl"] as const;
+
+function sortAll(projects: WorkProject[]): WorkProject[] {
+  const bySlug = new Map(
+    projects.map((project) => [project.slug.current, project]),
+  );
+  const used = new Set<string>();
+  const take = (slugs: readonly string[]): WorkProject[] => {
+    const out: WorkProject[] = [];
+    for (const slug of slugs) {
+      const project = bySlug.get(slug);
+      if (!project) continue;
+      out.push(project);
+      used.add(slug);
+    }
+    return out;
+  };
+
+  const front = take(ALL_PIN_FRONT);
+  const pinBack = new Set<string>(ALL_PIN_BACK);
+  const middle = projects
+    .filter(
+      (project) =>
+        !used.has(project.slug.current) && !pinBack.has(project.slug.current),
+    )
+    .sort(byStableScramble);
+
+  return [...front, ...middle, ...take(ALL_PIN_BACK)];
+}
+
+function sortForFilter(
+  projects: WorkProject[],
+  filter: WorkFilterId,
+): WorkProject[] {
+  const next = [...projects];
+  if (filter === "a-z") return next.sort(byTitle);
+  if (filter === "all") return sortAll(next);
+  return next.sort(byUploadedAt);
 }
 
 /** Crossfade on filter change: outgoing list dissolves while the incoming list
@@ -80,7 +156,7 @@ type ExternalCover = {
 
 export type WorkProject = {
   _id: string;
-  /** Sanity upload stamp — drives the default (non A-Z) ordering. */
+  /** Sanity upload stamp — drives Stills / Motion / No School ordering. */
   _createdAt?: string;
   title: string;
   slug: { current: string };
@@ -264,6 +340,7 @@ function ProjectRow({
         href={`/work/${project.slug.current}`}
         aria-label={project.title}
         className="work-row-link"
+        onPointerDown={markUnmutedAutoplay}
         onFocus={() => onFocusHover(project._id)}
         onBlur={() => onFocusHover(null)}
       >
@@ -321,9 +398,10 @@ export default function WorkProjectGrid({
     }, HOVER_HOLD_MS);
   };
 
-  const filtered = projects.filter((project) => matchesFilter(project, filter));
-  const visibleProjects =
-    filter === "a-z" ? [...filtered].sort(byTitle) : filtered;
+  const visibleProjects = sortForFilter(
+    projects.filter((project) => matchesFilter(project, filter)),
+    filter,
+  );
 
   const hoveredTitle =
     visibleProjects.find((project) => project._id === hoveredId)?.title ?? null;

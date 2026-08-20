@@ -7,10 +7,10 @@ declare module "react" {
         src?: string;
         "aspect-ratio"?: string;
         "preload-margin"?: string;
-        controls?: boolean;
-        "disable-autoplay"?: boolean;
-        "pause-on-overlay-click"?: boolean;
-        "show-time"?: boolean;
+        controls?: boolean | string;
+        "disable-autoplay"?: boolean | string;
+        "pause-on-overlay-click"?: boolean | string;
+        "show-time"?: boolean | string;
       };
     }
   }

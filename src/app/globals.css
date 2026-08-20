@@ -645,7 +645,8 @@ html::-webkit-scrollbar-thumb:hover,
   scroll-snap-stop: always;
 }
 
-.project-slide-image {
+.project-slide-image,
+.project-slide-video {
   position: relative;
   width: 100%;
   height: 100%;
@@ -672,25 +673,25 @@ html::-webkit-scrollbar-thumb:hover,
   inset: 0;
 }
 
-/* Project video sits on two layout-grid tracks (full width on 2-col mobile). */
-.project-slide-media {
-  height: 100%;
-  align-items: center;
-}
-
 .project-slide-video {
+  container-type: size;
   display: flex;
-  grid-column: span 2;
   align-items: center;
-  min-width: 0;
-  min-height: 0;
-  height: 100%;
+  justify-content: center;
 }
 
 .project-video-frame {
-  width: 100%;
-  max-height: 100%;
   position: relative;
+  aspect-ratio: var(--project-video-ar, 16 / 9);
+  width: min(100%, calc(100cqh * var(--project-video-ar, 16 / 9)));
+  height: auto;
+  max-height: 100%;
+}
+
+.project-video-frame simple-player {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 /* Work index: a standing headline that swaps to the hovered project, then one
@@ -737,8 +738,9 @@ html::-webkit-scrollbar-thumb:hover,
   transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
 }
 
-/* Outranks `.text-heading` (30/28) so descenders stay inside overflow:hidden. */
+/* Same 20px as mobile — outranks `.text-heading` (30/28). */
 .text-heading.work-heading-line {
+  font-size: 20px;
   line-height: var(--work-heading-line-height);
 }
 
@@ -1038,8 +1040,8 @@ html::-webkit-scrollbar-thumb:hover,
     env(safe-area-inset-top, 0px) + var(--spacing-margin) * 2 + 16px
   );
   --site-mobile-nav-shift: 0px;
-  /* Taller than .text-heading so overflow:hidden does not clip descenders. */
-  --work-heading-line-height: 36px;
+  /* Taller than the 20px work title so overflow:hidden does not clip descenders. */
+  --work-heading-line-height: 24px;
   --work-header-height: calc(
     var(--site-fixed-brand-strip-height)
     + var(--work-heading-line-height)
@@ -1062,12 +1064,6 @@ html::-webkit-scrollbar-thumb:hover,
       + var(--work-row-gap)
       + var(--site-mobile-nav-shift)
     );
-  }
-
-  /* Compound selector so it outranks `.text-heading` further down the file. */
-  .text-heading.work-heading-line {
-    font-size: 20px;
-    line-height: var(--work-heading-line-height);
   }
 
   /* Title and tags share one line: title takes the slack, tags keep their

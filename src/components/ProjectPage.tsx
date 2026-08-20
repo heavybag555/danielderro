@@ -61,12 +61,13 @@ function ProjectSlideVideo({
   item: Extract<ProjectMediaItem, { kind: "video" }>;
 }) {
   if (item.src) {
+    const aspectRatio = item.aspectRatio ?? "16 / 9";
     return (
-      <div className="project-video-frame">
-        <SimpleVideoPlayer
-          src={item.src}
-          aspectRatio={item.aspectRatio ?? "16 / 9"}
-        />
+      <div
+        className="project-video-frame"
+        style={{ ["--project-video-ar" as string]: aspectRatio }}
+      >
+        <SimpleVideoPlayer src={item.src} aspectRatio={aspectRatio} />
       </div>
     );
   }
@@ -186,10 +187,8 @@ export default function ProjectPage({
             }}
           >
             {item.kind === "video" ? (
-              <div className="layout-grid project-slide-media">
-                <div className="project-slide-video">
-                  <ProjectSlideVideo item={item} />
-                </div>
+              <div className="project-slide-video">
+                <ProjectSlideVideo item={item} />
               </div>
             ) : (
               <ProjectSlideImage
