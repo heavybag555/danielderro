@@ -4,8 +4,10 @@ import SiteBackgroundVideo from "@/components/SiteBackgroundVideo";
 
 export default function HomeHero() {
   return (
-    <section data-home-hero className="overflow-hidden" aria-label="Hero">
+    <main id="main-content" data-home-hero className="overflow-hidden">
       <SiteBackgroundVideo />
+
+      <h1 className="visually-hidden">No School Studios — Daniel Derro</h1>
 
       <div className="home-hero-center">
         <p className="home-hero-center-titles content-compact text-small">
@@ -16,6 +18,6 @@ export default function HomeHero() {
           Based in Venice.
         </p>
       </div>
-    </section>
+    </main>
   );
 }

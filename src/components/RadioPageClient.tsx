@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer-motion";
 import RadioPlayer from "@/components/RadioPlayer";
 import RadioTracklistDropdown from "@/components/RadioTracklistDropdown";
@@ -12,6 +13,9 @@ import { useMediaQuery } from "@/lib/use-media-query";
 export type RadioEpisodeWithStream = RadioEpisode & {
   streamSrc?: string;
 };
+
+/** Query param carrying the selected episode, e.g. `/radio?ep=…`. */
+const RADIO_EPISODE_PARAM = "ep";
 
 type RadioPageClientProps = {
   episodes: RadioEpisodeWithStream[];
@@ -33,43 +37,46 @@ const CELL_VARIANTS: Variants = {
 
 const RADIO_MAIN_IMAGE = RADIO_INTRO_IMAGES[1];
 
-function formatEpisodeNumber(id: string): string {
-  return id.replace(/\D/g, "").padStart(3, "0");
-}
-
 function EpisodeCell({
   episode,
   selected,
   playing,
   onSelect,
   variants,
+  typeClass,
 }: {
   episode: RadioEpisodeWithStream;
   selected: boolean;
   playing: boolean;
   onSelect: () => void;
   variants?: Variants;
+  typeClass: string;
 }) {
   const status = playing ? "Pause" : "Play";
 
   return (
-    <motion.li
-      variants={variants}
-      className="radio-episode"
-      style={{ listStyle: "none" }}
-    >
+    <motion.li variants={variants} className="radio-episode">
       <button
         type="button"
-        className="radio-episode-card"
+        className="radio-episode-row"
         data-active={selected || undefined}
         aria-current={selected ? "true" : undefined}
         aria-label={`${episode.title}, ${status}`}
         onClick={onSelect}
       >
-        <span className="text-small radio-episode-index">
-          {formatEpisodeNumber(episode.id)}
-          <span aria-hidden="true"> / </span>
-          <span className="radio-episode-status">
+        <span className="radio-episode-copy">
+          <span className={`${typeClass} radio-episode-headline`}>
+            <span className="radio-episode-title">{episode.title}</span>
+            {episode.durationLabel ? (
+              <>
+                <span className="radio-episode-slash" aria-hidden="true">
+                  {" / "}
+                </span>
+                <span className="radio-episode-runtime">{episode.durationLabel}</span>
+              </>
+            ) : null}
+          </span>
+          <span className={`${typeClass} radio-episode-status`}>
             <span className="radio-episode-play-label" data-on={playing ? "false" : "true"}>
               Play
             </span>
@@ -77,14 +84,6 @@ function EpisodeCell({
               Pause
             </span>
           </span>
-        </span>
-        <span className="radio-episode-meta">
-          <span className="text-small radio-episode-title">{episode.title}</span>
-          {episode.durationLabel ? (
-            <span className="text-small radio-episode-runtime">
-              {episode.durationLabel}
-            </span>
-          ) : null}
         </span>
       </button>
     </motion.li>
@@ -95,9 +94,20 @@ export default function RadioPageClient({ episodes }: RadioPageClientProps) {
   const reduceMotion = useReducedMotion();
   const stagger = !reduceMotion;
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const latest = episodes.at(-1);
   const ordered = [...episodes].reverse();
-  const [selectedId, setSelectedId] = useState(() => latest?.id ?? "");
+
+  // The chosen episode lives in the URL (`/radio?ep=…`) so a specific show can
+  // be shared. An unknown or missing id falls back to the newest episode.
+  const requestedId = searchParams.get(RADIO_EPISODE_PARAM);
+  const selectedId =
+    episodes.find((episode) => episode.id === requestedId)?.id ??
+    latest?.id ??
+    "";
+
   const [playNonce, setPlayNonce] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [tracklistOpen, setTracklistOpen] = useState(false);
@@ -111,16 +121,58 @@ export default function RadioPageClient({ episodes }: RadioPageClientProps) {
       return;
     }
     setIsPlaying(false);
-    setSelectedId(id);
+    const next = new URLSearchParams(searchParams.toString());
+    next.set(RADIO_EPISODE_PARAM, id);
+    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
   };
 
   return (
     <main
+      id="main-content"
       className="radio-page"
       data-player-visible={playerVisible || undefined}
     >
+      <h1 className="visually-hidden">Radio</h1>
+
       <div className="layout-full site-page-content-offset site-page-bottom-padding radio-page-content">
         <div className="layout-grid radio-page-grid">
+          <motion.section
+            className="radio-episodes"
+            aria-label="Episodes"
+            variants={stagger ? LIST_VARIANTS : undefined}
+            initial={stagger ? "hidden" : false}
+            animate={stagger ? "show" : undefined}
+          >
+            <motion.div
+              className="radio-featured-image"
+              variants={stagger ? CELL_VARIANTS : undefined}
+            >
+              <Image
+                src={RADIO_MAIN_IMAGE.src}
+                alt={RADIO_MAIN_IMAGE.alt}
+                width={RADIO_MAIN_IMAGE.width}
+                height={RADIO_MAIN_IMAGE.height}
+                sizes="(max-width: 767px) 100vw, 50vw"
+                quality={90}
+                priority
+                className="radio-intro-image"
+              />
+            </motion.div>
+            <motion.ol className="radio-gallery" aria-label="Episodes">
+              {ordered.map((episode) => (
+                <EpisodeCell
+                  key={episode.id}
+                  episode={episode}
+                  selected={episode.id === selectedId}
+                  playing={episode.id === selectedId && isPlaying}
+                  onSelect={() => selectEpisode(episode.id)}
+                  variants={stagger ? CELL_VARIANTS : undefined}
+                  typeClass={isDesktop ? "text-fine" : "text-body"}
+                />
+              ))}
+            </motion.ol>
+          </motion.section>
+
           <motion.section
             className="radio-featured"
             aria-label="Latest episode"
@@ -128,21 +180,14 @@ export default function RadioPageClient({ episodes }: RadioPageClientProps) {
             initial={stagger ? "hidden" : false}
             animate={stagger ? "show" : undefined}
           >
-            <motion.div variants={stagger ? CELL_VARIANTS : undefined} className="radio-featured-image">
-              <Image
-                src={RADIO_MAIN_IMAGE.src}
-                alt={RADIO_MAIN_IMAGE.alt}
-                width={RADIO_MAIN_IMAGE.width}
-                height={RADIO_MAIN_IMAGE.height}
-                className="radio-intro-image"
-              />
-            </motion.div>
-
             <motion.div
               className="radio-featured-tracklist"
               variants={stagger ? CELL_VARIANTS : undefined}
             >
-              <AnimatePresence mode="wait" initial={false}>
+              {/* `popLayout` rather than `wait`: the outgoing tracklist leaves
+                  layout immediately so a second episode click lands right away
+                  instead of queueing behind the exit fade. */}
+              <AnimatePresence mode="popLayout" initial={false}>
                 {selected ? (
                   <motion.div
                     key={selected.id}
@@ -174,25 +219,6 @@ export default function RadioPageClient({ episodes }: RadioPageClientProps) {
               </AnimatePresence>
             </motion.div>
           </motion.section>
-
-          <motion.ol
-            className="radio-gallery"
-            variants={stagger ? LIST_VARIANTS : undefined}
-            initial={stagger ? "hidden" : false}
-            animate={stagger ? "show" : undefined}
-            aria-label="Episodes"
-          >
-            {ordered.map((episode) => (
-              <EpisodeCell
-                key={episode.id}
-                episode={episode}
-                selected={episode.id === selectedId}
-                playing={episode.id === selectedId && isPlaying}
-                onSelect={() => selectEpisode(episode.id)}
-                variants={stagger ? CELL_VARIANTS : undefined}
-              />
-            ))}
-          </motion.ol>
         </div>
       </div>
 

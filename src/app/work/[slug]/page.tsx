@@ -8,6 +8,7 @@ import { resolveVimeoStreamUrl } from "@/lib/vimeo-stream";
 import { projectSlideImageUrl } from "@/sanity/lib/image";
 import { sanityFetchOrDefault } from "@/sanity/lib/fetch-safe";
 import { projectBySlugQuery } from "@/sanity/lib/queries";
+import { SITE_NAME } from "@/lib/site-metadata";
 
 export const dynamic = "force-dynamic";
 
@@ -24,12 +25,49 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   );
 
   if (project) {
-    return { title: project.title };
+    const description = `${project.title} — a project by ${SITE_NAME}.`;
+    const cover = projectMediaItems(project).find(
+      (item) => item.kind === "image",
+    );
+    const image = cover ? projectSlideImageUrl(cover.image, 1200) : undefined;
+
+    return {
+      title: project.title,
+      description,
+      alternates: { canonical: `/work/${slug}` },
+      openGraph: {
+        title: project.title,
+        description,
+        url: `/work/${slug}`,
+        ...(image ? { images: [{ url: image }] } : {}),
+      },
+      twitter: {
+        title: project.title,
+        description,
+        ...(image ? { images: [image] } : {}),
+      },
+    };
   }
 
   const noSchool = getNoSchoolVideoBySlug(slug);
   if (noSchool) {
-    return { title: noSchool.title };
+    const description = `${noSchool.title} — a No School Studio film.`;
+    return {
+      title: noSchool.title,
+      description,
+      alternates: { canonical: `/work/${slug}` },
+      openGraph: {
+        title: noSchool.title,
+        description,
+        url: `/work/${slug}`,
+        images: [{ url: noSchool.thumbnail }],
+      },
+      twitter: {
+        title: noSchool.title,
+        description,
+        images: [noSchool.thumbnail],
+      },
+    };
   }
 
   return { title: "Work" };

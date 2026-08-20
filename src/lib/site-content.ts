@@ -4,8 +4,8 @@ export const SITE_ABOUT_COPY =
 export const INFO_ABOUT = [
   SITE_ABOUT_COPY,
   "Recent campaigns span major fashion houses, international sportswear brands, and music industry collaborations. Daniel has directed album visuals for Grammy-nominated artist Giveon while maintaining ongoing relationships with Nike and Adidas for culturally-driven campaigns.",
-  "Published extensively in The New York Times, Vogue Italia, i-D, and Kaleidoscope Magazine, Daniel's editorial work has been exhibited internationally from Dover Street Market Paris to MOMA and MOCA museums. His visual language combines documentary authenticity with luxury fashion aesthetics.",
-  "Daniel's comprehensive services include photography, film direction, creative direction, casting, location scouting, and brand consulting. Working primarily with medium format film and high-end digital capture, he delivers complete creative solutions from concept through final delivery.",
+  "Published extensively in The New York Times, Vogue Italia, i-D, and Kaleidoscope Magazine, Daniel’s editorial work has been exhibited internationally from Dover Street Market Paris to MOMA and MOCA museums. His visual language combines documentary authenticity with luxury fashion aesthetics.",
+  "Daniel’s comprehensive services include photography, film direction, creative direction, casting, location scouting, and brand consulting. Working primarily with medium format film and high-end digital capture, he delivers complete creative solutions from concept through final delivery.",
   "His artistic practice centers on social connection and community engagement, including work within correctional facilities and youth mentorship programs. This depth of human experience brings genuine authenticity to commercial work, creating campaigns that resonate beyond surface aesthetics.",
 ] as const;
 
@@ -177,6 +177,6 @@ export const HERO_LOGOS = [
     width: 453,
     height: 1024,
   },
-  { src: "/images/hero/logo-no-cry-babys.png", alt: "No Cry Baby's", width: 650, height: 138 },
+  { src: "/images/hero/logo-no-cry-babys.png", alt: "No Cry Baby’s", width: 650, height: 138 },
   { src: "/images/hero/logo-radio.png", alt: "Radio", width: 851, height: 1024 },
 ] as const;

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import {
+  PROJECT_SLIDE_MAX_WIDTH,
+  PROJECT_SLIDE_QUALITY,
   projectSlideLoader,
   sanityImageBlurUrl,
   sanityImageUrl,
@@ -48,7 +50,13 @@ export default function ProjectSlideImage({
       {showPlaceholder ? (
         <div aria-hidden className="project-slide-placeholder">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={placeholderSrc} alt="" decoding="async" />
+          <img
+            src={placeholderSrc}
+            alt=""
+            width={image.dimensions?.width}
+            height={image.dimensions?.height}
+            decoding="async"
+          />
         </div>
       ) : null}
 
@@ -67,8 +75,8 @@ export default function ProjectSlideImage({
           src={mainSrc}
           alt={alt}
           fill
-          sizes="(max-width: 1920px) 100vw, 1920px"
-          quality={75}
+          sizes={`(max-width: ${PROJECT_SLIDE_MAX_WIDTH}px) 100vw, ${PROJECT_SLIDE_MAX_WIDTH}px`}
+          quality={PROJECT_SLIDE_QUALITY}
           priority={priority}
           loading={priority || eager ? "eager" : "lazy"}
           fetchPriority={priority ? "high" : eager ? "auto" : "low"}

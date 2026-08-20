@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import RadioPageClient from "@/components/RadioPageClient";
+import SiteBackgroundVideo from "@/components/SiteBackgroundVideo";
 import { resolveMixcloudStreamUrl } from "@/lib/mixcloud-stream";
 import { RADIO_EPISODES } from "@/lib/site-content";
 
@@ -10,5 +12,13 @@ export default async function RadioPage() {
     })),
   );
 
-  return <RadioPageClient episodes={episodes} />;
+  return (
+    <>
+      <SiteBackgroundVideo fixed dimmed />
+      {/* The client reads the selected episode from the query string. */}
+      <Suspense fallback={null}>
+        <RadioPageClient episodes={episodes} />
+      </Suspense>
+    </>
+  );
 }

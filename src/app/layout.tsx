@@ -1,8 +1,9 @@
 import SiteChrome from "@/components/SiteChrome";
-import { rootSiteMetadata } from "@/lib/site-metadata";
+import { rootSiteMetadata, rootSiteViewport } from "@/lib/site-metadata";
 import "./globals.css";
 
 export const metadata = rootSiteMetadata;
+export const viewport = rootSiteViewport;
 
 /**
  * 2u4u.studio site-source credit, rendered as a raw HTML comment so it shows up
@@ -21,9 +22,18 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://i.vimeocdn.com" crossOrigin="anonymous" />
+        <link
+          rel="preconnect"
+          href="https://thumbnailer.mixcloud.com"
+          crossOrigin="anonymous"
+        />
       </head>
       <body>
         <div hidden dangerouslySetInnerHTML={{ __html: SITE_CREDIT_COMMENT }} />
+        <a href="#main-content" className="visually-hidden skip-link text-small">
+          Skip to content
+        </a>
         <SiteChrome>{children}</SiteChrome>
       </body>
     </html>

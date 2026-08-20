@@ -186,17 +186,25 @@ export default function ProjectPage({
         className="text-small"
         style={{ display: "flex", gap: 4, fontVariantNumeric: "tabular-nums" }}
       >
-        <span className="text-small" style={{ color: "var(--color-black)", opacity: 0.5 }}>
+        <span
+          aria-hidden="true"
+          className="text-small"
+          style={{ color: "var(--color-black)", opacity: 0.5 }}
+        >
           {pad(activeIndex + 1)}
         </span>
-        <span className="text-small" style={{ color: "var(--color-black)" }}>
+        <span aria-hidden="true" className="text-small" style={{ color: "var(--color-black)" }}>
           {pad(total)}
+        </span>
+        <span className="visually-hidden" aria-live="polite">
+          {`Slide ${activeIndex + 1} of ${total}`}
         </span>
       </span>
     ) : null;
 
   return (
-    <div
+    <main
+      id="main-content"
       data-work-surface
       style={{
         position: "fixed",
@@ -205,6 +213,8 @@ export default function ProjectPage({
         overflow: "hidden",
       }}
     >
+      <h1 className="visually-hidden">{project.title}</h1>
+
       <div
         ref={scrollRef}
         className="project-scroll"
@@ -265,6 +275,6 @@ export default function ProjectPage({
         middleContent={tagsContent}
         rightContent={slideCounter}
       />
-    </div>
+    </main>
   );
 }

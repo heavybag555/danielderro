@@ -1,11 +1,12 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { MOTION } from "@/lib/motion";
 
 export default function Template({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const reduceMotion = useReducedMotion();
 
   if (pathname.startsWith("/studio")) {
     return <>{children}</>;
@@ -16,7 +17,8 @@ export default function Template({ children }: { children: React.ReactNode }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{
-        duration: MOTION.duration.page,
+        // Reduced motion should not also mean a delay before content shows.
+        duration: reduceMotion ? 0 : MOTION.duration.page,
         ease: MOTION.ease.heavy,
       }}
     >

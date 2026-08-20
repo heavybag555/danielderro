@@ -230,6 +230,59 @@ export default function RadioPlayer({
     [scrubbing],
   );
 
+  /** Seek by a relative amount, so the scrubber works without a pointer. */
+  const seekBy = useCallback((seconds: number) => {
+    const audio = audioRef.current;
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
+    const time = Math.min(audio.duration, Math.max(0, audio.currentTime + seconds));
+    setCurrent(time);
+    audio.currentTime = time;
+  }, []);
+
+  const seekTo = useCallback((ratio: number) => {
+    const audio = audioRef.current;
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
+    const time = Math.min(1, Math.max(0, ratio)) * audio.duration;
+    setCurrent(time);
+    audio.currentTime = time;
+  }, []);
+
+  const onTrackKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      switch (event.key) {
+        case "ArrowRight":
+        case "ArrowUp":
+          event.preventDefault();
+          seekBy(event.shiftKey ? 30 : 5);
+          break;
+        case "ArrowLeft":
+        case "ArrowDown":
+          event.preventDefault();
+          seekBy(event.shiftKey ? -30 : -5);
+          break;
+        case "PageUp":
+          event.preventDefault();
+          seekBy(60);
+          break;
+        case "PageDown":
+          event.preventDefault();
+          seekBy(-60);
+          break;
+        case "Home":
+          event.preventDefault();
+          seekTo(0);
+          break;
+        case "End":
+          event.preventDefault();
+          seekTo(1);
+          break;
+        default:
+          break;
+      }
+    },
+    [seekBy, seekTo],
+  );
+
   const toggleMute = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -262,10 +315,13 @@ export default function RadioPlayer({
         ref={trackRef}
         className="radio-player__track"
         role="slider"
+        tabIndex={0}
         aria-label="Seek"
         aria-valuemin={0}
         aria-valuemax={Math.floor(duration) || 0}
         aria-valuenow={Math.floor(current)}
+        aria-valuetext={`${formatTime(current)} of ${formatTime(duration)}`}
+        onKeyDown={onTrackKeyDown}
         onPointerDown={onTrackPointerDown}
         onPointerMove={onTrackPointerMove}
         onPointerUp={onTrackPointerUp}
@@ -278,7 +334,15 @@ export default function RadioPlayer({
         />
       </div>
 
-      <span className="radio-player__time">{formatTime(current)}</span>
+      {/* Ticks several times a second, so it is announced through the slider's
+          `aria-valuetext` on demand rather than read aloud continuously. */}
+      <span className="radio-player__time" aria-hidden="true">
+        {formatTime(current)}
+      </span>
+
+      <span className="visually-hidden" aria-live="polite">
+        {ready ? (playing ? "Playing" : "Paused") : ""}
+      </span>
 
       <button
         type="button"

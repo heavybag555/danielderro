@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export const WORK_FILTERS = [
   { id: "all", label: "All" },
@@ -12,34 +13,47 @@ export const WORK_FILTERS = [
 
 export type WorkFilterId = (typeof WORK_FILTERS)[number]["id"];
 
-type Listener = (id: WorkFilterId) => void;
+export const DEFAULT_WORK_FILTER: WorkFilterId = "all";
 
-let filter: WorkFilterId = "all";
-const listeners = new Set<Listener>();
+/** Query param carrying the active filter, e.g. `/work?filter=stills`. */
+export const WORK_FILTER_PARAM = "filter";
 
-export function getWorkFilter(): WorkFilterId {
-  return filter;
+function isWorkFilterId(value: string | null): value is WorkFilterId {
+  return WORK_FILTERS.some((item) => item.id === value);
 }
 
-export function setWorkFilter(id: WorkFilterId) {
-  if (filter === id) return;
-  filter = id;
-  for (const listener of listeners) listener(filter);
+export function parseWorkFilter(value: string | null | undefined): WorkFilterId {
+  return isWorkFilterId(value ?? null) ? (value as WorkFilterId) : DEFAULT_WORK_FILTER;
 }
 
-export function resetWorkFilter() {
-  setWorkFilter("all");
-}
-
-export function subscribeWorkFilter(listener: Listener) {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-}
-
+/**
+ * Active work filter, read from and written to the URL so a filtered index can
+ * be linked, bookmarked, and walked with the back button. The default filter is
+ * left out of the query string to keep `/work` clean.
+ */
 export function useWorkFilter(): [WorkFilterId, (id: WorkFilterId) => void] {
-  const [value, setValue] = useState(getWorkFilter);
-  useEffect(() => subscribeWorkFilter(setValue), []);
-  return [value, setWorkFilter];
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const value = parseWorkFilter(searchParams.get(WORK_FILTER_PARAM));
+
+  const setValue = useCallback(
+    (id: WorkFilterId) => {
+      const next = new URLSearchParams(searchParams.toString());
+      if (id === DEFAULT_WORK_FILTER) {
+        next.delete(WORK_FILTER_PARAM);
+      } else {
+        next.set(WORK_FILTER_PARAM, id);
+      }
+      const query = next.toString();
+      // `replace` keeps filter changes out of history so Back leaves the index
+      // rather than stepping through every filter the visitor tried.
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false,
+      });
+    },
+    [pathname, router, searchParams],
+  );
+
+  return [value, setValue];
 }

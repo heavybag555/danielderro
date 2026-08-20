@@ -49,7 +49,7 @@ function InfoSection({
 }) {
   return (
     <section className="info-section">
-      <p className="text-caption info-section-label">{label}</p>
+      <h2 className="text-caption info-section-label">{label}</h2>
       <div className="info-section-body">{children}</div>
     </section>
   );
@@ -61,6 +61,8 @@ export default function InfoPage() {
       <SiteBackgroundVideo fixed dimmed />
 
       <div className="info-page-foreground">
+        <h1 className="visually-hidden">Info</h1>
+
         <div className="info-page layout-grid">
           <InfoSection label="About">
             {INFO_ABOUT.map((paragraph, index) => (
@@ -133,7 +135,7 @@ export default function InfoPage() {
           ))}
         </div>
 
-        <SitePageFooter onDark />
+        <SitePageFooter />
       </div>
     </div>
   );

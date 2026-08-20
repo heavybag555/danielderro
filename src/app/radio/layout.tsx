@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
 
+const description =
+  "No School Studio Records — radio episodes and tracklists selected by Daniel Derro.";
+
 export const metadata: Metadata = {
   title: "Radio",
+  description,
+  alternates: { canonical: "/radio" },
+  openGraph: { title: "Radio", description, url: "/radio" },
+  twitter: { title: "Radio", description },
 };
 
 export default function RadioLayout({

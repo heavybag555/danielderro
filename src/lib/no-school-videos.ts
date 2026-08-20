@@ -31,7 +31,7 @@ const RAW = [
   },
   {
     id: "1069114242",
-    title: "Salomon Faye - Noah's Arc",
+    title: "Salomon Faye - Noah’s Arc",
     duration: 178,
     thumbnail:
       "https://i.vimeocdn.com/video/1997381535-7331fd5b1e2df322fee35117e165d32069ab07c2c1a26c6adbb85336def5b30e-d_640?region=us",
@@ -76,7 +76,7 @@ const RAW = [
   },
   {
     id: "759952895",
-    title: "'Committed Escape' introduction to LID",
+    title: "‘Committed Escape’ introduction to LID",
     duration: 100,
     thumbnail:
       "https://i.vimeocdn.com/video/1526291014-e14a5874c5185e74a44f62c7bed4df5a67ba3f984bd47257bbcfbc370e2b88da-d_640?region=us",
@@ -94,7 +94,7 @@ const RAW = [
   },
   {
     id: "719206361",
-    title: "Stussy Surf (Director's Cut)",
+    title: "Stussy Surf (Director’s Cut)",
     duration: 314,
     thumbnail:
       "https://i.vimeocdn.com/video/1583528227-3eb99b465edd15cc5d17eb8217d1661189be389e392b04e6027cdd0c95934f32-d_640?region=us",

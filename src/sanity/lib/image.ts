@@ -24,11 +24,14 @@ export function sanityImageBlurUrl(source: ImageSource): string {
   return builder.image(source).width(32).blur(50).auto("format").fit("max").url();
 }
 
-/** Max CDN width for project detail slides (object-fit contain in padded viewport). */
-export const PROJECT_SLIDE_MAX_WIDTH = 1920;
+/**
+ * Max CDN width for project detail slides (object-fit contain in padded viewport).
+ * Sized for retina desktops — `fit("max")` still prevents upscaling past the master.
+ */
+export const PROJECT_SLIDE_MAX_WIDTH = 2560;
 
-/** Default quality for project slides — tuned for speed over gallery thumbs. */
-export const PROJECT_SLIDE_QUALITY = 75;
+/** Project slides are the portfolio artwork, so they carry the site's highest quality. */
+export const PROJECT_SLIDE_QUALITY = 90;
 
 /**
  * Custom loader for next/image — lets Sanity CDN handle all image

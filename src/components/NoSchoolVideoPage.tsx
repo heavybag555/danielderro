@@ -23,7 +23,8 @@ export default function NoSchoolVideoPage({
   const aspectRatio = noSchoolAspectRatio(video);
 
   return (
-    <div
+    <main
+      id="main-content"
       data-work-surface
       style={{
         position: "fixed",
@@ -32,6 +33,8 @@ export default function NoSchoolVideoPage({
         overflow: "hidden",
       }}
     >
+      <h1 className="visually-hidden">{video.title}</h1>
+
       <div
         className="project-scroll"
         style={{
@@ -63,7 +66,7 @@ export default function NoSchoolVideoPage({
                     alt={video.title}
                     fill
                     sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 25vw"
-                    quality={85}
+                    quality={90}
                     style={{ objectFit: "contain" }}
                     priority
                   />
@@ -100,6 +103,6 @@ export default function NoSchoolVideoPage({
           </span>
         }
       />
-    </div>
+    </main>
   );
 }

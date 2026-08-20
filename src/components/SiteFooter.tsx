@@ -23,7 +23,9 @@ const footerBar = {
   paddingLeft: "var(--spacing-margin)",
   paddingRight: "var(--spacing-margin)",
   paddingTop: "var(--spacing-margin)",
-  paddingBottom: "var(--spacing-margin)",
+  // Clears the home indicator on notched phones; the other fixed bars already do.
+  paddingBottom:
+    "calc(var(--spacing-margin) + env(safe-area-inset-bottom, 0px))",
   boxSizing: "border-box" as const,
 };
 

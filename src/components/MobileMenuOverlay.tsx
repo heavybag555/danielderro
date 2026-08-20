@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation";
 import { useMediaQuery } from "@/lib/use-media-query";
 
 const NAV_ITEMS = [
-  { label: "Home", href: "/" },
-  { label: "Info", href: "/info" },
   { label: "Work", href: "/work" },
+  { label: "Gallery", href: "/gallery" },
+  { label: "Info", href: "/info" },
   { label: "Radio", href: "/radio" },
 ] as const;
 

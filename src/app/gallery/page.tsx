@@ -1,10 +1,9 @@
-import { Suspense } from "react";
 import { NO_SCHOOL_VIDEOS } from "@/lib/no-school-videos";
 import { sanityFetchOrDefault } from "@/sanity/lib/fetch-safe";
 import { workPageProjectsQuery } from "@/sanity/lib/queries";
-import WorkProjectGrid, {
-  type WorkProject,
-} from "@/components/WorkProjectGrid";
+import GalleryIndex from "@/components/GalleryIndex";
+import { buildGalleryStills } from "@/lib/gallery-stills";
+import type { WorkProject } from "@/components/WorkProjectGrid";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +22,6 @@ function noSchoolWorkProjects(): WorkProject[] {
   }));
 }
 
-/** Newest upload first; the Vimeo catalog has no upload stamp so it trails in feed order. */
 function byUploadedAt(a: WorkProject, b: WorkProject): number {
   const left = a._createdAt ?? "";
   const right = b._createdAt ?? "";
@@ -33,7 +31,7 @@ function byUploadedAt(a: WorkProject, b: WorkProject): number {
   return 0;
 }
 
-export default async function WorkPage() {
+export default async function GalleryPage() {
   const projects = await sanityFetchOrDefault<WorkProject[]>(
     workPageProjectsQuery,
     [],
@@ -41,10 +39,5 @@ export default async function WorkPage() {
 
   const ordered = [...projects, ...noSchoolWorkProjects()].sort(byUploadedAt);
 
-  return (
-    // The grid reads the active filter from the query string.
-    <Suspense fallback={null}>
-      <WorkProjectGrid projects={ordered} />
-    </Suspense>
-  );
+  return <GalleryIndex stills={buildGalleryStills(ordered)} />;
 }

@@ -12,12 +12,12 @@ import {
 import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
 import SitePageFooter from "@/components/SitePageFooter";
 import { MOTION } from "@/lib/motion";
+import { useDismissOnScroll } from "@/lib/use-dismiss-on-scroll";
 import {
   getThumbAspect,
   THUMB_FALLBACK_ASPECT,
 } from "@/lib/work-strip-fit";
 import {
-  resetWorkFilter,
   useWorkFilter,
   WORK_FILTERS,
   type WorkFilterId,
@@ -27,7 +27,7 @@ import {
 const WORK_HEADING = "Selected Projects";
 
 /** Pointer must stay on a row this long before dim / title swap fire. */
-const HOVER_HOLD_MS = 600;
+const HOVER_HOLD_MS = 150;
 
 function matchesFilter(project: WorkProject, filter: WorkFilterId): boolean {
   switch (filter) {
@@ -201,7 +201,7 @@ function ThumbnailStrip({ thumbs }: { thumbs: StripThumb[] }) {
               alt=""
               fill
               sizes={`${Math.round(160 * thumb.aspect)}px`}
-              quality={85}
+              quality={90}
               style={{ objectFit: "cover" }}
             />
           </div>
@@ -338,25 +338,18 @@ export default function WorkProjectGrid({
     setHoveredId(null);
   }, [filter]);
 
-  useEffect(() => {
-    const onScroll = () => {
-      clearHoverTimer();
-      setHoveredId(null);
-    };
+  useDismissOnScroll(() => {
+    clearHoverTimer();
+    setHoveredId(null);
+  });
 
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      clearHoverTimer();
-      resetWorkFilter();
-    };
-  }, []);
+  useEffect(() => clearHoverTimer, []);
 
   return (
-    <main style={{ minHeight: "100dvh", background: "var(--color-black)" }}>
+    <main
+      id="main-content"
+      style={{ minHeight: "100dvh", background: "var(--color-black)" }}
+    >
       <header className="work-page-header layout-full">
         <div className="work-header-bar layout-grid">
           <div className="work-heading">
@@ -376,6 +369,12 @@ export default function WorkProjectGrid({
       </header>
 
       <div className="layout-full work-page-content site-page-bottom-padding">
+        <p className="visually-hidden" aria-live="polite">
+          {`${visibleProjects.length} projects, ${
+            WORK_FILTERS.find((item) => item.id === filter)?.label ?? "All"
+          }`}
+        </p>
+
         <div className="work-list-swap">
           <AnimatePresence initial={false}>
             <motion.ol
@@ -402,7 +401,7 @@ export default function WorkProjectGrid({
           </AnimatePresence>
         </div>
 
-        <SitePageFooter onDark />
+        <SitePageFooter />
       </div>
     </main>
   );

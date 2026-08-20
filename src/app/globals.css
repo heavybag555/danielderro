@@ -38,6 +38,128 @@ img:not([data-ui] *) {
   -webkit-user-drag: none;
 }
 
+/* Heading tags carry document structure only — every type scale on this site
+   comes from the Typography block's .text-* classes. Neutralising the UA
+   defaults means adding an <h1>/<h2> for semantics can never change a size. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font: inherit;
+  margin: 0;
+}
+
+/* Available to assistive tech, absent from the page. Not `display: none`,
+   which would hide it from screen readers too. */
+.visually-hidden:not(:focus):not(:active) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Skip link: off-screen until focused, then pinned to the top-left. */
+.skip-link {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  padding: 8px 12px;
+  background: var(--color-black);
+  color: var(--color-white);
+  text-decoration: none;
+  transform: translateY(-150%);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/* Heading tags exist for document structure only. Typography stays wherever the
+   `.text-*` class puts it, so a heading never introduces a size of its own —
+   see the Typography block for the actual scale. */
+:where(h1, h2, h3, h4, h5, h6):not([data-ui] *) {
+  font: inherit;
+  margin: 0;
+}
+
+/* Screen-reader-only. Clipped rather than `display: none` so it is still
+   announced, and still focusable when it needs to be (the skip link). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link:focus-visible {
+  position: fixed;
+  top: calc(var(--spacing-margin) + env(safe-area-inset-top, 0px));
+  left: var(--spacing-margin);
+  z-index: 1000;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 8px 12px;
+  overflow: visible;
+  clip-path: none;
+  background: var(--color-white);
+  color: var(--color-black);
+  text-decoration: none;
+}
+
+/* Touch behaviour for anything tappable: drop the 300ms double-tap zoom delay
+   and pick the tap flash deliberately rather than inheriting Safari's blue. */
+:where(a[href], button, [role="button"], summary, label):not([data-ui] *) {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Keyboard focus ring.
+   `outline` rather than a shadow, because box shadows are stripped site-wide
+   above. `:focus-visible` so the ring answers the keyboard and never flashes on
+   a pointer click. Scoped off Sanity Studio, which ships its own focus styles. */
+html {
+  /* 2px is the minimum perimeter thickness WCAG 2.2 asks for; 1px reads as a
+     hairline against the photography and is easy to lose. */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-color: #ffffff;
+}
+
+:where(
+  a[href],
+  button,
+  input,
+  select,
+  textarea,
+  summary,
+  [role="button"],
+  [role="slider"],
+  [tabindex]:not([tabindex="-1"])
+):not([data-ui] *):focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Keep a focused element clear of the fixed brand strip when tabbing. */
+:where(a[href], button, [tabindex]:not([tabindex="-1"])):not([data-ui] *) {
+  scroll-margin-top: calc(var(--site-fixed-brand-strip-height, 48px) + 12px);
+  scroll-margin-bottom: 12px;
+}
+
 /* Shared hover transition for nav cells and interactive text */
 .hover-smooth {
   transition:
@@ -196,6 +318,129 @@ html::-webkit-scrollbar-thumb:hover,
   filter: grayscale(100%);
 }
 
+/* Gallery index: .layout-grid 2/4/8. Each still keeps its aspect-ratio. */
+.gallery-page-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--color-black);
+}
+
+.gallery-page-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.gallery-index.layout-grid {
+  align-items: start;
+  column-gap: 80px;
+  row-gap: 80px;
+}
+
+.gallery-index-tile {
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-width: 0;
+  /* The index packs 64–96 tiles. Skip rendering the ones off-screen; `auto`
+     reuses each tile's last measured height so the scrollbar stays steady. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
+}
+
+.gallery-index-link {
+  display: block;
+  width: 100%;
+  height: auto;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gallery-index-media {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: hidden;
+  outline: 1px solid rgba(255, 255, 255, 0.1);
+  outline-offset: -1px;
+  transition-property: opacity, filter;
+  transition-duration: 0.32s;
+  transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.gallery-index-media[data-dimmed="true"] {
+  opacity: 0.18;
+}
+
+.gallery-hover-meta {
+  position: fixed;
+  top: 50%;
+  right: var(--spacing-margin);
+  left: var(--spacing-margin);
+  z-index: 50;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.gallery-hover-meta-row {
+  margin: 0;
+  align-items: baseline;
+}
+
+.gallery-hover-meta-row > * {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gallery-hover-meta-client {
+  grid-column: 1;
+  color: #808080;
+}
+
+.gallery-hover-meta-title {
+  grid-column: 2;
+  /* Literal white — `var(--color-white)` becomes black under exclusion and vanishes. */
+  color: #ffffff;
+}
+
+.gallery-hover-meta-tags {
+  display: none;
+  color: #808080;
+}
+
+@media (min-width: 768px) {
+  .gallery-hover-meta-tags {
+    display: block;
+    grid-column: 3 / -1;
+    text-align: end;
+  }
+}
+
+@media (min-width: 1024px) {
+  .gallery-hover-meta-client {
+    grid-column: 1 / 3;
+  }
+
+  .gallery-hover-meta-title {
+    grid-column: 3 / 5;
+  }
+
+  .gallery-hover-meta-tags {
+    grid-column: 5 / 9;
+  }
+}
+
+@media (max-width: 767px) {
+  .gallery-hover-meta {
+    display: none;
+  }
+}
+
 /* Info — same 2/4/8 tracks as /work; each block spans two columns. */
 .info-page-shell {
   position: relative;
@@ -348,6 +593,8 @@ html::-webkit-scrollbar-thumb:hover,
 /* Project detail (/work/[slug]): vertical scroll with viewport snapping per image. */
 .project-scroll {
   scroll-snap-type: y mandatory;
+  /* The slide deck owns the whole viewport; do not chain overscroll to the page. */
+  overscroll-behavior: contain;
 }
 
 .project-scroll-slide {
@@ -443,7 +690,7 @@ html::-webkit-scrollbar-thumb:hover,
   white-space: nowrap;
   color: var(--color-white);
   transition-property: opacity, filter;
-  transition-duration: 0.6s;
+  transition-duration: 0.32s;
   transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
 }
 
@@ -543,6 +790,10 @@ html::-webkit-scrollbar-thumb:hover,
 .work-row {
   position: relative;
   min-width: 0;
+  /* Each row carries up to 24 thumbnails, so the index can mount hundreds of
+     images. Rows below the fold stay unrendered until they approach view. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto var(--work-thumb-height);
 }
 
 .work-row-link {
@@ -552,7 +803,6 @@ html::-webkit-scrollbar-thumb:hover,
   min-width: 0;
   color: inherit;
   text-decoration: none;
-  outline: none;
 }
 
 /* The scroller breaks out of the page margin so scrolled thumbnails run to the
@@ -693,7 +943,7 @@ html::-webkit-scrollbar-thumb:hover,
    dim lives on the link because the row carries Framer's inline enter opacity. */
 @media (min-width: 768px) and (hover: hover) and (pointer: fine) {
   .work-row-link {
-    transition: opacity 0.6s cubic-bezier(0.76, 0, 0.24, 1);
+    transition: opacity 0.32s cubic-bezier(0.76, 0, 0.24, 1);
   }
 
   .work-project-list[data-hovering="true"] .work-row-link {
@@ -783,6 +1033,7 @@ html::-webkit-scrollbar-thumb:hover,
   --site-footer-padding: 200px;
   --radio-player-bar-height: 36px;
   --radio-player-bottom-offset: 12px;
+  --radio-tracklist-bar-height: 24px;
   --site-fixed-brand-strip-height: calc(
     env(safe-area-inset-top, 0px) + var(--spacing-margin) * 2 + 16px
   );
@@ -886,7 +1137,7 @@ html::-webkit-scrollbar-thumb:hover,
   font-weight: 500;
   font-size: 16px;
   line-height: 20px;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.005em;
 }
 
 .text-heading {
@@ -1393,15 +1644,16 @@ html:not([data-mobile-menu-open])[data-hero-bg-visible="false"] .site-header-not
   mix-blend-mode: exclusion;
 }
 
-/* Radio: 4-col split — featured episode (2) + boxed gallery (2). */
+/* Radio: 4-col split — image / episodes (1) + tracklist (2). */
 
 .radio-page {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   height: 100dvh;
   max-height: 100dvh;
   overflow: hidden;
-  background: var(--color-black);
 }
 
 .radio-page-content {
@@ -1418,6 +1670,15 @@ html:not([data-mobile-menu-open])[data-hero-bg-visible="false"] .site-header-not
   );
 }
 
+@media (max-width: 767px) {
+  .radio-page[data-player-visible] .radio-page-content {
+    padding-bottom: calc(
+      var(--radio-player-bar-height) + var(--radio-player-bottom-offset) +
+        var(--radio-tracklist-bar-height) + env(safe-area-inset-bottom, 0px)
+    );
+  }
+}
+
 .radio-page-grid {
   flex: 1 1 auto;
   align-items: stretch;
@@ -1427,7 +1688,7 @@ html:not([data-mobile-menu-open])[data-hero-bg-visible="false"] .site-header-not
 
 @media (max-width: 767px) {
   .radio-page-grid {
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
   }
 }
 
@@ -1451,6 +1712,18 @@ html:not([data-mobile-menu-open])[data-hero-bg-visible="false"] .site-header-not
 .radio-featured-image {
   flex: 0 0 auto;
   width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .radio-page-grid {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .radio-featured {
+    grid-column: 2 / span 2;
+    grid-row: 1;
+  }
 }
 
 .radio-featured-tracklist {
@@ -1459,18 +1732,36 @@ html:not([data-mobile-menu-open])[data-hero-bg-visible="false"] .site-header-not
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.radio-featured-tracklist::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 @media (max-width: 767px) {
-  /* Featured block is fully static: image and bar never move, and the list
-     panel overlays downward, so opening it reflows nothing on the page. */
+  /* Tracklist docks flush above the player and expands upward. */
   .radio-featured {
-    position: relative;
-    z-index: 2;
+    position: fixed;
+    z-index: 41;
+    right: var(--spacing-margin);
+    bottom: env(safe-area-inset-bottom, 0px);
+    left: var(--spacing-margin);
     justify-content: flex-start;
+    width: auto;
     height: auto;
-    max-height: 100%;
+    max-height: none;
     overflow: visible;
+  }
+
+  .radio-page[data-player-visible] .radio-featured {
+    bottom: calc(
+      var(--radio-player-bar-height) + var(--radio-player-bottom-offset) +
+        env(safe-area-inset-bottom, 0px)
+    );
   }
 
   .radio-featured-image {
@@ -1544,66 +1835,105 @@ html:not([data-mobile-menu-open])[data-hero-bg-visible="false"] .site-header-not
   text-wrap: pretty;
 }
 
-.radio-gallery {
-  display: grid;
+.radio-episodes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--work-row-gap);
   grid-column: span 2;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: var(--spacing-gutter);
-  row-gap: var(--work-row-gap);
-  align-items: start;
-  align-content: start;
   min-width: 0;
   min-height: 0;
-  height: 100%;
+}
+
+.radio-gallery {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   list-style: none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.radio-gallery::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+@media (min-width: 768px) {
+  .radio-episodes {
+    grid-column: 1;
+    grid-row: 1;
+    height: 100%;
+    overflow: hidden;
+  }
 }
 
 .radio-episode {
   min-width: 0;
 }
 
-.radio-episode-card {
-  aspect-ratio: 1;
+.radio-episode + .radio-episode {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgb(255 255 255 / 0.2);
+}
+
+.radio-episode-row {
+  position: relative;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-start;
+  display: block;
   width: 100%;
   min-width: 0;
-  min-height: 44px;
-  padding: 12px;
-  border: 1px solid rgb(255 255 255 / 0.2);
+  padding: 0;
+  border: 0;
   background: transparent;
-  color: inherit;
+  color: #ffffff;
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition-property: border-color;
-  transition-duration: 0.6s;
-  transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
 }
 
-.radio-episode-card[data-active] {
-  border-color: rgb(255 255 255 / 0.35);
+.radio-episode-row::before {
+  content: "";
+  position: absolute;
+  inset: auto 0;
+  top: 50%;
+  height: 44px;
+  transform: translateY(-50%);
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .radio-episode-card:hover {
-    border-color: rgb(255 255 255 / 0.45);
-  }
-
-  .radio-episode-card:hover .radio-episode-play-label[data-on="true"] {
-    color: var(--color-white);
-  }
+.radio-episode-copy {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
 }
 
-.radio-episode-index {
+.radio-episode-headline {
+  display: block;
+  min-width: 0;
+  color: #ffffff;
+}
+
+.radio-episode-title,
+.radio-episode-row[data-active] .radio-episode-title {
+  color: #ffffff;
+}
+
+.radio-episode-slash {
+  color: #808080;
+  opacity: 0.2;
+}
+
+.radio-episode-runtime,
+.radio-episode-row[data-active] .radio-episode-runtime {
   color: #808080;
   font-variant-numeric: tabular-nums;
 }
@@ -1621,17 +1951,6 @@ html:not([data-mobile-menu-open])[data-hero-bg-visible="false"] .site-header-not
   transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
 }
 
-.radio-episode-now {
-  color: var(--color-primary);
-  opacity: 0;
-  filter: blur(4px);
-}
-
-.radio-episode-now[data-on="true"] {
-  opacity: 1;
-  filter: blur(0);
-}
-
 .radio-episode-play-label {
   color: #808080;
   opacity: 0;
@@ -1643,20 +1962,21 @@ html:not([data-mobile-menu-open])[data-hero-bg-visible="false"] .site-header-not
   filter: blur(0);
 }
 
-.radio-episode-meta {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+.radio-episode-now {
+  color: #ce0000;
+  opacity: 0;
+  filter: blur(4px);
 }
 
-.radio-episode-title {
-  color: var(--color-white);
-  text-wrap: pretty;
+.radio-episode-now[data-on="true"] {
+  opacity: 1;
+  filter: blur(0);
 }
 
-.radio-episode-runtime {
-  color: #808080;
-  font-variant-numeric: tabular-nums;
+@media (hover: hover) and (pointer: fine) {
+  .radio-episode-row:hover .radio-episode-play-label[data-on="true"] {
+    color: var(--color-white);
+  }
 }
 
 .radio-tracklist-dropdown {
@@ -1794,14 +2114,20 @@ button.radio-tracklist-bar::before {
   }
 
   .radio-tracklist-dropdown:not(.radio-tracklist-dropdown--static)
+    .radio-tracklist-bar {
+    background: #000000;
+    color: #ffffff;
+  }
+
+  .radio-tracklist-dropdown:not(.radio-tracklist-dropdown--static)
     .radio-tracklist-dropdown-clip {
     position: absolute;
-    top: 100%;
     right: 0;
+    bottom: 100%;
     left: 0;
     height: 0;
     overflow: hidden;
-    background: var(--color-black);
+    background: #000000;
     transition-property: height;
     transition-duration: 0.6s;
     transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
@@ -1812,12 +2138,22 @@ button.radio-tracklist-bar::before {
     height: 44vh;
     overflow: auto;
     overscroll-behavior: contain;
+    background: #000000;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .radio-tracklist-dropdown[data-open="true"]:not(.radio-tracklist-dropdown--static)
+    .radio-tracklist-dropdown-clip::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 
   .radio-tracklist-dropdown:not(.radio-tracklist-dropdown--static)
     .radio-tracklist-dropdown-inner {
     max-height: none;
-    padding: 4px 0 0;
+    padding: 0 0 4px;
   }
 }
 
@@ -1854,6 +2190,15 @@ button.radio-tracklist-bar::before {
   .radio-tracklist-dropdown-clip {
   overflow: auto;
   overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.radio-tracklist-dropdown[data-open="true"]:not(.radio-tracklist-dropdown--static)
+  .radio-tracklist-dropdown-clip::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .radio-tracklist-dropdown-item {
@@ -1896,7 +2241,7 @@ button.radio-tracklist-bar::before {
   .radio-tracklist-dropdown-clip,
   .radio-tracklist-bar-label,
   .radio-tracklist-dropdown-inner,
-  .radio-episode-card,
+  .radio-episode-row,
   .radio-episode-now,
   .radio-episode-play-label,
   .radio-player__icon-slot {
@@ -1916,6 +2261,12 @@ button.radio-tracklist-bar::before {
     var(--radio-player-bottom-offset) + env(safe-area-inset-bottom, 0px)
   );
   background: #000000;
+}
+
+@media (max-width: 767px) {
+  .radio-fixed-player {
+    padding-top: 0;
+  }
 }
 
 /* Native-audio radio player — flat inline bar: play · progress · time · volume. */
@@ -2048,5 +2399,35 @@ button.radio-tracklist-bar::before {
   background: transparent;
   color: #fff;
   cursor: pointer;
+}
+
+/* ==========================================================================
+   Reduced motion
+   Last block in the file so it wins over every transition declared above.
+   The site's motion is opacity/filter crossfades, so collapsing durations to
+   zero lands on the correct end state rather than removing any styling.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *:not([data-ui] *),
+  *:not([data-ui] *)::before,
+  *:not([data-ui] *)::after {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* The mobile sheet slides rather than fades, so it needs an end state, not
+     just a zeroed duration. */
+  .site-mobile-sheet {
+    transition: none !important;
+  }
+
+  /* Snap scrolling fights assistive scrolling when motion is reduced. */
+  .project-scroll {
+    scroll-snap-type: none;
+  }
 }
 

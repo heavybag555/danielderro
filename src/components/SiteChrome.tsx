@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { MotionConfig } from "framer-motion";
 import SiteBrandStrip from "@/components/SiteBrandStrip";
 
 function useHeaderBlend(pathname: string): boolean {
@@ -17,9 +18,11 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
   const showBrandStrip = !pathname.startsWith("/studio");
   const blendOverlay = useHeaderBlend(pathname);
   return (
-    <>
+    // `reducedMotion="user"` makes every motion component below honour the OS
+    // setting, instead of each one wiring up useReducedMotion by hand.
+    <MotionConfig reducedMotion="user">
       {showBrandStrip ? <SiteBrandStrip blendOverlay={blendOverlay} /> : null}
       {children}
-    </>
+    </MotionConfig>
   );
 }

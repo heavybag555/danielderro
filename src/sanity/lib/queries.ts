@@ -113,6 +113,14 @@ export const workPageProjectsQuery = groq`
   }
 `;
 
+/** Slugs and modified stamps for the sitemap. */
+export const sitemapProjectsQuery = groq`
+  *[_type == "project" && defined(slug.current)] | order(_updatedAt desc) {
+    "slug": slug.current,
+    _updatedAt,
+  }
+`;
+
 export const noSchoolStudioQuery = groq`
   *[_type == "project" && "no-school-studio" in tags] | order(order asc, date desc) {
     _id,
