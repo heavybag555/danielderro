@@ -65,3 +65,15 @@ export function projectSlideImageUrl(
     quality: PROJECT_SLIDE_QUALITY,
   });
 }
+
+/** 1200×630 crop for link previews — iMessage / Slack / Twitter expect a photo. */
+export function projectOgImageUrl(source: ImageSource): string {
+  return builder
+    .image(source)
+    .width(1200)
+    .height(630)
+    .fit("crop")
+    .auto("format")
+    .quality(PROJECT_SLIDE_QUALITY)
+    .url();
+}

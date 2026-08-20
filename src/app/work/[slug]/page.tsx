@@ -5,7 +5,7 @@ import NoSchoolVideoPage from "@/components/NoSchoolVideoPage";
 import { getNoSchoolVideoBySlug } from "@/lib/no-school-videos";
 import { projectMediaItems } from "@/lib/project-media";
 import { resolveVimeoStreamUrl } from "@/lib/vimeo-stream";
-import { projectSlideImageUrl } from "@/sanity/lib/image";
+import { projectOgImageUrl, projectSlideImageUrl } from "@/sanity/lib/image";
 import { sanityFetchOrDefault } from "@/sanity/lib/fetch-safe";
 import { projectBySlugQuery } from "@/sanity/lib/queries";
 import { SITE_NAME } from "@/lib/site-metadata";
@@ -26,10 +26,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (project) {
     const description = `${project.title} — a project by ${SITE_NAME}.`;
-    const cover = projectMediaItems(project).find(
-      (item) => item.kind === "image",
-    );
-    const image = cover ? projectSlideImageUrl(cover.image, 1200) : undefined;
+    const media = projectMediaItems(project);
+    const coverImage =
+      media.find((item) => item.kind === "image")?.image ??
+      media.find((item) => item.kind === "video")?.poster;
+    const image = coverImage ? projectOgImageUrl(coverImage) : undefined;
 
     return {
       title: project.title,
@@ -39,9 +40,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: project.title,
         description,
         url: `/work/${slug}`,
-        ...(image ? { images: [{ url: image }] } : {}),
+        ...(image
+          ? { images: [{ url: image, width: 1200, height: 630, alt: project.title }] }
+          : {}),
       },
       twitter: {
+        card: "summary_large_image",
         title: project.title,
         description,
         ...(image ? { images: [image] } : {}),
@@ -60,9 +64,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: noSchool.title,
         description,
         url: `/work/${slug}`,
-        images: [{ url: noSchool.thumbnail }],
+        images: [
+          {
+            url: noSchool.thumbnail,
+            width: noSchool.width,
+            height: noSchool.height,
+            alt: noSchool.title,
+          },
+        ],
       },
       twitter: {
+        card: "summary_large_image",
         title: noSchool.title,
         description,
         images: [noSchool.thumbnail],
