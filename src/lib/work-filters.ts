@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 export const WORK_FILTERS = [
   { id: "all", label: "All" },
   { id: "a-z", label: "A-Z" },
-  { id: "photo", label: "Photo" },
-  { id: "video", label: "Video" },
+  { id: "stills", label: "Stills" },
+  { id: "motion", label: "Motion" },
   { id: "no-school", label: "No School" },
 ] as const;
 

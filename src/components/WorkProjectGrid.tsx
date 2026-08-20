@@ -3,7 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+  type Variants,
+} from "framer-motion";
 import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
 import SitePageFooter from "@/components/SitePageFooter";
 import { MOTION } from "@/lib/motion";
@@ -19,7 +24,7 @@ import {
 } from "@/lib/work-filters";
 
 /** Standing headline; swaps to the hovered project title. */
-const WORK_HEADING = "Work";
+const WORK_HEADING = "Selected Projects";
 
 /** Pointer must stay on a row this long before dim / title swap fire. */
 const HOVER_HOLD_MS = 600;
@@ -29,9 +34,9 @@ function matchesFilter(project: WorkProject, filter: WorkFilterId): boolean {
     case "all":
     case "a-z":
       return true;
-    case "photo":
+    case "stills":
       return project.projectType === "photography";
-    case "video":
+    case "motion":
       return project.projectType === "video";
     case "no-school":
       return project.tags?.includes("no-school-studio") ?? false;
@@ -42,10 +47,17 @@ function byTitle(a: WorkProject, b: WorkProject): number {
   return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
 }
 
-/** Staggered enter: opacity + blur cascade down the list (no slide). */
+/** Crossfade on filter change: outgoing list dissolves while the incoming list
+   cascades in over the same cell. No wait-gap — that emptied the page. */
 const LIST_VARIANTS: Variants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.06, delayChildren: 0.08 } },
+  show: { transition: { staggerChildren: 0.04 } },
+  exit: {
+    opacity: 0,
+    filter: "blur(8px)",
+    pointerEvents: "none",
+    transition: { duration: MOTION.duration.fade, ease: MOTION.ease.heavy },
+  },
 };
 
 const ROW_VARIANTS: Variants = {
@@ -53,7 +65,7 @@ const ROW_VARIANTS: Variants = {
   show: {
     opacity: 1,
     filter: "blur(0px)",
-    transition: { duration: 0.7, ease: MOTION.ease.heavy },
+    transition: { duration: MOTION.duration.fade, ease: MOTION.ease.heavy },
   },
 };
 
@@ -110,6 +122,8 @@ const TAG_LABELS: Record<string, string> = {
 };
 
 function typeLabel(projectType: string): string {
+  if (projectType === "photography") return "Stills";
+  if (projectType === "video") return "Motion";
   if (!projectType) return "";
   return projectType.charAt(0).toUpperCase() + projectType.slice(1);
 }
@@ -254,7 +268,7 @@ function ProjectRow({
       >
         <ThumbnailStrip thumbs={thumbs} />
 
-        <div className="work-row-caption layout-grid text-small">
+        <div className="work-row-caption layout-grid text-caption">
           <span className="work-row-caption-client work-row-caption-muted">
             {clientLabel(project)}
           </span>
@@ -362,24 +376,31 @@ export default function WorkProjectGrid({
       </header>
 
       <div className="layout-full work-page-content site-page-bottom-padding">
-        <motion.ol
-          className="work-project-list"
-          data-hovering={Boolean(hoveredTitle)}
-          variants={stagger ? LIST_VARIANTS : undefined}
-          initial={stagger ? "hidden" : false}
-          animate={stagger ? "show" : undefined}
-        >
-          {visibleProjects.map((project) => (
-            <ProjectRow
-              key={project._id}
-              project={project}
-              hovered={project._id === hoveredId}
-              onPointerHover={requestHover}
-              onFocusHover={commitHover}
-              variants={stagger ? ROW_VARIANTS : undefined}
-            />
-          ))}
-        </motion.ol>
+        <div className="work-list-swap">
+          <AnimatePresence initial={false}>
+            <motion.ol
+              key={filter}
+              className="work-project-list"
+              data-hovering={Boolean(hoveredTitle)}
+              variants={stagger ? LIST_VARIANTS : undefined}
+              initial={stagger ? "hidden" : false}
+              animate={stagger ? "show" : undefined}
+              exit={stagger ? "exit" : undefined}
+              style={{ zIndex: 1 }}
+            >
+              {visibleProjects.map((project) => (
+                <ProjectRow
+                  key={project._id}
+                  project={project}
+                  hovered={project._id === hoveredId}
+                  onPointerHover={requestHover}
+                  onFocusHover={commitHover}
+                  variants={stagger ? ROW_VARIANTS : undefined}
+                />
+              ))}
+            </motion.ol>
+          </AnimatePresence>
+        </div>
 
         <SitePageFooter onDark />
       </div>

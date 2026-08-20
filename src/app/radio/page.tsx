@@ -1,6 +1,6 @@
 import RadioPageClient from "@/components/RadioPageClient";
 import { resolveMixcloudStreamUrl } from "@/lib/mixcloud-stream";
-import { RADIO_EPISODES, RADIO_INTRO } from "@/lib/site-content";
+import { RADIO_EPISODES } from "@/lib/site-content";
 
 export default async function RadioPage() {
   const episodes = await Promise.all(
@@ -10,5 +10,5 @@ export default async function RadioPage() {
     })),
   );
 
-  return <RadioPageClient intro={RADIO_INTRO} episodes={episodes} />;
+  return <RadioPageClient episodes={episodes} />;
 }

@@ -49,7 +49,7 @@ function InfoSection({
 }) {
   return (
     <section className="info-section">
-      <p className="text-small info-section-label">{label}</p>
+      <p className="text-caption info-section-label">{label}</p>
       <div className="info-section-body">{children}</div>
     </section>
   );

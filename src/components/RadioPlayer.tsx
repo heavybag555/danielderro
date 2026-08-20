@@ -4,6 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 type RadioPlayerProps = {
   src: string;
+  /** Bumped on the already-selected episode to toggle playback. */
+  playNonce?: number;
+  onPlayingChange?: (playing: boolean) => void;
 };
 
 function formatTime(seconds: number): string {
@@ -19,7 +22,7 @@ function formatTime(seconds: number): string {
 
 function PlayIcon() {
   return (
-    <svg className="radio-player__icon" viewBox="0 0 18 20" aria-hidden="true">
+    <svg className="radio-player__icon radio-player__icon--play" viewBox="0 0 18 20" aria-hidden="true">
       <path
         d="M3 3.5L15 10L3 16.5Z"
         fill="currentColor"
@@ -78,7 +81,11 @@ function VolumeIcon({ muted }: { muted: boolean }) {
   );
 }
 
-export default function RadioPlayer({ src }: RadioPlayerProps) {
+export default function RadioPlayer({
+  src,
+  playNonce = 0,
+  onPlayingChange,
+}: RadioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const prevSrcRef = useRef<string | null>(null);
@@ -153,6 +160,25 @@ export default function RadioPlayer({ src }: RadioPlayerProps) {
     return () => audio.removeEventListener("canplay", playWhenReady);
   }, [src]);
 
+  useEffect(() => {
+    onPlayingChange?.(playing);
+  }, [playing, onPlayingChange]);
+
+  useEffect(() => {
+    return () => onPlayingChange?.(false);
+  }, [onPlayingChange]);
+
+  useEffect(() => {
+    if (playNonce === 0) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audio.paused) {
+      void audio.play().catch(() => setPlaying(false));
+    } else {
+      audio.pause();
+    }
+  }, [playNonce]);
+
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -222,7 +248,14 @@ export default function RadioPlayer({ src }: RadioPlayerProps) {
         onClick={togglePlay}
         aria-label={playing ? "Pause" : "Play"}
       >
-        {playing ? <PauseIcon /> : <PlayIcon />}
+        <span className="radio-player__icon-swap">
+          <span className="radio-player__icon-slot" data-on={playing ? "false" : "true"}>
+            <PlayIcon />
+          </span>
+          <span className="radio-player__icon-slot" data-on={playing ? "true" : "false"}>
+            <PauseIcon />
+          </span>
+        </span>
       </button>
 
       <div
@@ -241,7 +274,7 @@ export default function RadioPlayer({ src }: RadioPlayerProps) {
         <span
           className="radio-player__fill"
           aria-hidden="true"
-          style={{ width: `${progress * 100}%` }}
+          style={{ ["--radio-progress" as string]: String(progress) }}
         />
       </div>
 
@@ -253,7 +286,14 @@ export default function RadioPlayer({ src }: RadioPlayerProps) {
         onClick={toggleMute}
         aria-label={muted ? "Unmute" : "Mute"}
       >
-        <VolumeIcon muted={muted} />
+        <span className="radio-player__icon-swap">
+          <span className="radio-player__icon-slot" data-on={muted ? "false" : "true"}>
+            <VolumeIcon muted={false} />
+          </span>
+          <span className="radio-player__icon-slot" data-on={muted ? "true" : "false"}>
+            <VolumeIcon muted={true} />
+          </span>
+        </span>
       </button>
     </div>
   );

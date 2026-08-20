@@ -58,9 +58,7 @@ export default function SiteBrandStrip({ blendOverlay = false }: SiteBrandStripP
         </div>
       </div>
 
-      <div className="site-header-notch-cell">
-        <MobileMenuTrigger />
-      </div>
+      <MobileMenuTrigger blendOverlay={blendOverlay} />
     </>
   );
 }

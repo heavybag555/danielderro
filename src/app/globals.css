@@ -19,6 +19,7 @@
   --spacing-section: 120px;
   --spacing-stack: 20px;
   --work-row-gap: 12px;
+  --work-list-gap: calc(var(--work-row-gap) * 4);
   --content-compact-width: 300px;
   --content-wide-width: 800px;
 }
@@ -45,9 +46,25 @@ img:not([data-ui] *) {
     border-color 0.2s cubic-bezier(0.76, 0, 0.24, 1);
 }
 
+@property --site-mobile-nav-shift {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
 html {
+  --scrollbar-size: 3px;
+  --scrollbar-thumb: rgba(255, 255, 255, 0.14);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.26);
   background: var(--color-black);
   color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Always take the root bar’s width. `scrollbar-gutter` is ignored on the
+     Safari viewport, so Work (scrolls) vs Radio (locked) used to jump. */
+  overflow-x: hidden;
+  overflow-y: scroll;
+  transition: --site-mobile-nav-shift 0.6s cubic-bezier(0.76, 0, 0.24, 1);
 }
 
 body {
@@ -97,38 +114,57 @@ body {
   }
 }
 
-/* Minimal scrollbar (Firefox + WebKit; scoped off Sanity Studio) */
-html,
-body,
-*:not([data-ui] *) {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
-}
-
+/* Minimal scrollbar for every scroller on the site (scoped off Sanity Studio).
+   WebKit/Chromium ignore ::-webkit-scrollbar as soon as scrollbar-width or
+   scrollbar-color is set, so the standard properties are kept in the Firefox-only
+   @supports block below and the hairline size is left to the pseudo-elements.
+   html is listed first — Safari’s viewport bar ignores the `*` rule. */
+html::-webkit-scrollbar,
 *:not([data-ui] *)::-webkit-scrollbar {
-  width: 3px;
-  height: 3px;
-}
-
-*:not([data-ui] *)::-webkit-scrollbar-track {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
   background: transparent;
 }
 
-*:not([data-ui] *)::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.22);
-}
-
-*:not([data-ui] *)::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.38);
-}
-
+html::-webkit-scrollbar-track,
+html::-webkit-scrollbar-track-piece,
+html::-webkit-scrollbar-corner,
+*:not([data-ui] *)::-webkit-scrollbar-track,
+*:not([data-ui] *)::-webkit-scrollbar-track-piece,
 *:not([data-ui] *)::-webkit-scrollbar-corner {
   background: transparent;
 }
 
+html::-webkit-scrollbar-button,
+*:not([data-ui] *)::-webkit-scrollbar-button {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+html::-webkit-scrollbar-thumb,
+*:not([data-ui] *)::-webkit-scrollbar-thumb {
+  border: 0;
+  background: var(--scrollbar-thumb);
+}
+
+html::-webkit-scrollbar-thumb:hover,
+*:not([data-ui] *)::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Firefox only (-moz-appearance is unsupported in WebKit/Chromium): it has no
+   scrollbar part pseudo-elements, so the standard properties are the only lever. */
+@supports (-moz-appearance: none) {
+  *:not([data-ui] *) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+}
+
 .site-page-footer {
   margin-top: auto;
-  padding-top: var(--work-row-gap);
+  padding-top: var(--work-list-gap);
   padding-bottom: 0;
 }
 
@@ -182,7 +218,10 @@ body,
 .info-page.layout-grid {
   --info-row-gap: calc(var(--work-row-gap) * 2);
   row-gap: var(--info-row-gap);
-  padding-top: calc(var(--site-fixed-brand-strip-height) + var(--info-row-gap));
+  padding-top: calc(
+    var(--site-fixed-brand-strip-height) + var(--info-row-gap) +
+      var(--site-mobile-nav-shift)
+  );
   color: #ffffff;
 }
 
@@ -343,10 +382,23 @@ body,
   inset: 0;
 }
 
-/* Project video uses the 800px wide-content rule. */
+/* Project video sits on two layout-grid tracks (full width on 2-col mobile). */
+.project-slide-media {
+  height: 100%;
+  align-items: center;
+}
+
+.project-slide-video {
+  display: flex;
+  grid-column: span 2;
+  align-items: center;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
 .project-video-frame {
   width: 100%;
-  max-width: var(--content-wide-width);
   max-height: 100%;
   position: relative;
 }
@@ -361,35 +413,43 @@ body,
   z-index: 190;
   box-sizing: border-box;
   background: #000000;
-  /* Brand strip already has 12px under the nav — same air as title → tags. */
-  padding-top: var(--site-fixed-brand-strip-height);
+  /* Brand strip already has 12px under the nav — same air as title → first project. */
+  padding-top: calc(
+    var(--site-fixed-brand-strip-height) + var(--site-mobile-nav-shift)
+  );
   padding-bottom: var(--work-row-gap);
 }
 
 .work-header-bar {
   align-items: baseline;
-  row-gap: var(--work-row-gap);
+  row-gap: 0;
 }
 
-.work-heading {
+.work-header-bar.layout-grid .work-heading {
   display: grid;
-  grid-column: 1 / -1;
-  justify-self: end;
-  width: max-content;
+  grid-column: 1;
+  justify-self: stretch;
+  width: auto;
+  min-width: 0;
   margin: 0;
-  text-align: right;
+  text-align: left;
 }
 
 .work-heading-line {
   grid-area: 1 / 1;
   margin: 0;
-  overflow: visible;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
-  line-height: 56px;
   color: var(--color-white);
   transition-property: opacity, filter;
   transition-duration: 0.6s;
   transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+/* Outranks `.text-heading` (30/28) so descenders stay inside overflow:hidden. */
+.text-heading.work-heading-line {
+  line-height: var(--work-heading-line-height);
 }
 
 .work-heading-line[data-on="false"] {
@@ -403,24 +463,44 @@ body,
   filter: blur(0px);
 }
 
-.work-header-filters {
+.work-header-bar.layout-grid .work-header-filters {
   display: flex;
-  grid-column: 1 / -1;
-  justify-self: end;
+  grid-column: 2 / -1;
+  justify-self: stretch;
   justify-content: flex-end;
   align-items: baseline;
   gap: 12px;
-  width: max-content;
+  width: auto;
   min-width: 0;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .work-header-bar.layout-grid .work-header-filters {
+    justify-content: flex-start;
+  }
+}
+
+@media (min-width: 1024px) {
+  .work-header-bar.layout-grid .work-heading {
+    grid-column: 1 / 3;
+  }
+
+  .work-header-bar.layout-grid .work-header-filters {
+    grid-column: 3 / -1;
+  }
 }
 
 .work-header-filters-btn {
+  flex: 0 0 auto;
   margin: 0;
   padding: 0;
   border: 0;
   background: none;
   color: #808080;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .work-header-filters-btn.is-active,
@@ -437,11 +517,24 @@ body,
   padding-top: var(--work-header-height);
 }
 
+.work-list-swap {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+}
+
+.work-list-swap > .work-project-list {
+  grid-area: 1 / 1;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
 .work-project-list {
   --work-thumb-height: clamp(120px, 22vw, 160px);
   display: flex;
   flex-direction: column;
-  gap: var(--work-row-gap);
+  gap: var(--work-list-gap);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -462,13 +555,20 @@ body,
   outline: none;
 }
 
+/* The scroller breaks out of the page margin so scrolled thumbnails run to the
+   viewport edges; the margin is re-applied inside as padding, keeping the
+   resting first/last thumb aligned with the caption grid. */
 .work-row-strip {
-  width: 100%;
+  width: auto;
+  max-width: none;
   min-width: 0;
+  margin-inline: calc(var(--spacing-margin) * -1);
   height: var(--work-thumb-height);
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -484,6 +584,7 @@ body,
   gap: 0;
   height: 100%;
   width: max-content;
+  padding-inline: var(--spacing-margin);
 }
 
 .work-row-strip-thumb {
@@ -496,35 +597,34 @@ body,
   padding-top: 4px;
 }
 
-.work-row-caption > * {
+.work-row-caption.layout-grid > * {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  line-height: 16px;
 }
 
-.work-row-caption-title {
+.work-row-caption.layout-grid .work-row-caption-title {
   grid-column: 1;
   grid-row: 1;
+  text-align: start;
   color: var(--color-white);
 }
 
-.work-row-caption-year {
+.work-row-caption.layout-grid .work-row-caption-client {
   grid-column: 2;
   grid-row: 1;
-  justify-self: end;
+  text-align: end;
 }
 
-.work-row-caption-client {
-  grid-column: 1;
-  grid-row: 2;
+.work-row-caption.layout-grid .work-row-caption-category,
+.work-row-caption.layout-grid .work-row-caption-year {
+  display: none;
 }
 
-.work-row-caption-category {
+.work-row-caption.layout-grid:has(.work-row-caption-year:empty)
+  .work-row-caption-category {
   grid-column: 2;
-  grid-row: 2;
-  justify-self: end;
 }
 
 .work-row-caption-muted {
@@ -533,46 +633,58 @@ body,
 }
 
 @media (min-width: 768px) {
-  .work-row-caption-client,
-  .work-row-caption-title,
-  .work-row-caption-category,
-  .work-row-caption-year {
+  .work-row-caption.layout-grid > * {
     grid-row: 1;
-    justify-self: start;
   }
 
-  .work-row-caption-client {
+  .work-row-caption.layout-grid .work-row-caption-client {
     grid-column: 1;
   }
 
-  .work-row-caption-title {
+  .work-row-caption.layout-grid .work-row-caption-title {
     grid-column: 2;
   }
 
-  .work-row-caption-category {
-    grid-column: 3;
+  .work-row-caption.layout-grid .work-row-caption-category,
+  .work-row-caption.layout-grid .work-row-caption-year {
+    display: block;
   }
 
-  .work-row-caption-year {
+  .work-row-caption.layout-grid .work-row-caption-category {
+    grid-column: 3;
+    text-align: end;
+  }
+
+  .work-row-caption.layout-grid .work-row-caption-year {
     grid-column: 4;
-    justify-self: end;
+    text-align: end;
+  }
+
+  .work-row-caption.layout-grid:has(.work-row-caption-year:empty)
+    .work-row-caption-category {
+    grid-column: 4;
   }
 }
 
 @media (min-width: 1024px) {
-  .work-row-caption-client {
+  .work-row-caption.layout-grid .work-row-caption-client {
     grid-column: 1 / 3;
   }
 
-  .work-row-caption-title {
+  .work-row-caption.layout-grid .work-row-caption-title {
     grid-column: 3 / 5;
   }
 
-  .work-row-caption-category {
+  .work-row-caption.layout-grid .work-row-caption-category {
     grid-column: 5 / 7;
   }
 
-  .work-row-caption-year {
+  .work-row-caption.layout-grid .work-row-caption-year {
+    grid-column: 7 / 9;
+  }
+
+  .work-row-caption.layout-grid:has(.work-row-caption-year:empty)
+    .work-row-caption-category {
     grid-column: 7 / 9;
   }
 }
@@ -625,6 +737,9 @@ body,
 
 .project-footer-tags {
   grid-row: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .project-footer-counter {
@@ -655,7 +770,8 @@ body,
 /* Pages whose in-flow content sits one row-gap below the fixed header. */
 .site-page-content-offset {
   padding-top: calc(
-    var(--site-fixed-brand-strip-height) + var(--work-row-gap)
+    var(--site-fixed-brand-strip-height) + var(--work-row-gap) +
+      var(--site-mobile-nav-shift)
   );
 }
 
@@ -665,29 +781,71 @@ body,
     var(--spacing-margin) * 2 + 16px + var(--work-row-gap)
   );
   --site-footer-padding: 200px;
-  --radio-player-bar-height: 44px;
-  --radio-player-bottom-offset: 20px;
+  --radio-player-bar-height: 36px;
+  --radio-player-bottom-offset: 12px;
   --site-fixed-brand-strip-height: calc(
     env(safe-area-inset-top, 0px) + var(--spacing-margin) * 2 + 16px
   );
+  --site-mobile-nav-shift: 0px;
+  /* Taller than .text-heading so overflow:hidden does not clip descenders. */
+  --work-heading-line-height: 36px;
   --work-header-height: calc(
     var(--site-fixed-brand-strip-height)
-    + 56px
+    + var(--work-heading-line-height)
     + var(--work-row-gap)
-    + 16px
-    + var(--work-row-gap)
+    + var(--site-mobile-nav-shift)
   );
 }
 
 @media (max-width: 767px) {
   :root {
+    /* Columns sit on the same rhythm as the page edge on small screens. */
+    --spacing-gutter: var(--spacing-margin);
     --site-fixed-brand-strip-height: calc(
       env(safe-area-inset-top, 0px) + var(--spacing-margin) * 2 + 16px
     );
+    --work-heading-line-height: 24px;
+    --work-header-height: calc(
+      var(--site-fixed-brand-strip-height)
+      + var(--work-heading-line-height)
+      + var(--work-row-gap)
+      + var(--site-mobile-nav-shift)
+    );
+  }
+
+  /* Compound selector so it outranks `.text-heading` further down the file. */
+  .text-heading.work-heading-line {
+    font-size: 20px;
+    line-height: var(--work-heading-line-height);
+  }
+
+  /* Title and tags share one line: title takes the slack, tags keep their
+     intrinsic width so they never wrap. */
+  .work-header-bar.layout-grid {
+    grid-template-columns: minmax(0, 1fr) max-content;
+  }
+
+  .work-header-bar.layout-grid .work-heading {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .work-header-bar.layout-grid .work-header-filters {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  /* Matches NAV_ITEMS length × flush heading size. */
+  html[data-mobile-menu-open] {
+    --site-mobile-nav-shift: 0px;
   }
 }
 
-/* Layout tokens: --spacing-margin stays 12px at all breakpoints; gutter is 20px at all breakpoints */
+/* Layout tokens: --spacing-margin stays 12px at all breakpoints; gutter is 20px
+   from 768px up and matches the 12px margin below it. */
 
 /* ── Typography — all site text styles (smallest → largest) ── */
 
@@ -734,8 +892,8 @@ body,
 .text-heading {
   font-family: var(--font-sans);
   font-weight: 600;
-  font-size: 48px;
-  line-height: 56px;
+  font-size: 30px;
+  line-height: 28px;
   letter-spacing: -0.025em;
 }
 
@@ -771,8 +929,12 @@ body,
   background-size: 180px 180px;
 }
 
-/* Home is a locked hero viewport — no page scroll beneath the brand strip. */
-html:has([data-home-hero]),
+/* Home is a locked hero viewport — no page scroll beneath the brand strip.
+   Keep html’s overflow-y: scroll so the root gutter stays (body clips). */
+html:has([data-home-hero]) {
+  height: 100dvh;
+}
+
 html:has([data-home-hero]) body {
   overflow: hidden;
   height: 100dvh;
@@ -831,7 +993,10 @@ html:has([data-home-hero]) body {
 
 .home-hero-center {
   position: absolute;
-  inset: 0;
+  top: var(--site-mobile-nav-shift);
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 2;
   display: flex;
   align-items: center;
@@ -971,22 +1136,19 @@ html:not(:has([data-work-surface])):not(:has([data-home-hero]))
   color: #000000;
 }
 
-/* Mobile menu — frosted panel pinned to the top-right edge. The 4px padding
-   grows outward so the label still sits on the page margin. */
+/* Mobile menu — text trigger on the top-right; accordion below the brand
+   strip pushes in-flow page content by --site-mobile-nav-shift. */
 .site-header-notch-cell {
-  --site-notch-pad: 4px;
-  --site-notch-width: 140px;
   position: fixed;
-  top: calc(var(--spacing-margin) + env(safe-area-inset-top, 0px) - var(--site-notch-pad));
-  right: calc(var(--spacing-margin) - var(--site-notch-pad));
+  top: calc(var(--spacing-margin) + env(safe-area-inset-top, 0px));
+  right: var(--spacing-margin);
   z-index: 201;
   box-sizing: border-box;
-  width: calc(var(--site-notch-width) + (2 * var(--site-notch-pad)));
-  max-width: calc(100vw - (2 * var(--spacing-margin)) + (2 * var(--site-notch-pad)));
-  padding: var(--site-notch-pad);
-  background: rgba(255, 255, 255, 0.18);
-  -webkit-backdrop-filter: blur(40px) saturate(1.8);
-  backdrop-filter: blur(40px) saturate(1.8);
+  width: max-content;
+  max-width: calc(100vw - (2 * var(--spacing-margin)));
+  /* White source + exclusion so Menu / Close invert over video and the sheet. */
+  color: #ffffff;
+  mix-blend-mode: exclusion;
 }
 
 @media (min-width: 768px) {
@@ -994,7 +1156,8 @@ html:not(:has([data-work-surface])):not(:has([data-home-hero]))
     display: block;
   }
 
-  .site-header-notch-cell {
+  .site-header-notch-cell,
+  .site-mobile-sheet {
     display: none;
   }
 }
@@ -1008,10 +1171,19 @@ html:not(:has([data-work-surface])):not(:has([data-home-hero]))
 }
 
 .site-header-brand,
-.site-header-nav-cell,
-.site-header-notch-cell {
+.site-header-nav-cell {
   color: var(--color-white);
   overflow: visible;
+  transition-property: color, opacity;
+  transition-duration: 0.6s;
+  transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.site-header-notch-cell {
+  overflow: visible;
+  transition-property: opacity;
+  transition-duration: 0.6s;
+  transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
 }
 
 /* Exclusion remaps --color-black to white; keep that token so blended
@@ -1034,11 +1206,9 @@ html:not(:has([data-work-surface])):not(:has([data-home-hero]))
 }
 
 .site-notch-trigger {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  width: 100%;
+  position: relative;
+  display: block;
+  width: auto;
   min-height: 0;
   margin: 0;
   padding: 0;
@@ -1048,107 +1218,149 @@ html:not(:has([data-work-surface])):not(:has([data-home-hero]))
   cursor: pointer;
 }
 
+.site-notch-trigger::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -12px;
+  left: -12px;
+  height: 44px;
+  transform: translateY(-50%);
+}
+
+/* Menu / Close swap in place — both labels stacked, opacity + blur only.
+   Block-level grid, not inline-grid: an inline box here would add a line-box
+   strut and drop the label a couple of px below the brand wordmark. */
+.site-notch-swap {
+  display: grid;
+  justify-items: end;
+}
+
 .site-notch-label {
+  grid-area: 1 / 1;
   display: block;
   min-width: 0;
   white-space: nowrap;
   pointer-events: none;
   user-select: none;
+  opacity: 0;
+  filter: blur(4px);
   transition-property: opacity, filter;
   transition-duration: 0.32s;
   transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
 }
 
-.site-notch-label[data-phase="out"] {
-  opacity: 0;
-  filter: blur(4px);
-}
-
-.site-notch-label[data-phase="in"] {
+.site-notch-label[data-on="true"] {
   opacity: 1;
   filter: blur(0);
 }
 
-.site-notch-plus {
-  display: block;
-  flex-shrink: 0;
-  margin-left: auto;
-  overflow: visible;
-}
-
-.site-notch-plus-h,
-.site-notch-plus-v {
-  transform-box: view-box;
-  transform-origin: 12px 12px;
-  transition-property: transform, opacity;
+/* White sheet slides down from behind the fixed brand strip; the strip itself
+   never moves, so Daniel Derro and Menu stay put while the panel travels. */
+.site-mobile-sheet {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 195;
+  box-sizing: border-box;
+  isolation: isolate;
+  mix-blend-mode: normal;
+  padding-top: var(--site-fixed-brand-strip-height);
+  padding-bottom: var(--spacing-margin);
+  background: #ffffff;
+  color: #000000;
+  pointer-events: none;
+  transform: translateY(-100%);
+  transition-property: transform;
   transition-duration: 0.6s;
   transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
 }
 
-.site-notch[data-open="true"] .site-notch-plus-v {
-  transform: rotate(90deg);
-  opacity: 0;
+.site-mobile-sheet[data-open="true"] {
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
-.site-notch-dropdown {
-  display: grid;
-  grid-template-rows: 0fr;
-  width: 100%;
-  margin-top: 0;
-  transition-property: grid-template-rows, margin-top;
-  transition-duration: 0.6s;
-  transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
-}
-
-.site-notch[data-open="true"] .site-notch-dropdown {
-  grid-template-rows: 1fr;
-  margin-top: 20px;
-}
-
-.site-notch-dropdown-inner {
+.site-mobile-sheet-nav {
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: 0;
-  min-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition-property: opacity;
-  transition-duration: 0.6s;
-  transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+  padding-top: var(--work-row-gap);
 }
 
-.site-notch[data-open="true"] .site-notch-dropdown-inner {
-  opacity: 1;
-}
-
-.site-notch-link {
+.site-mobile-nav-link {
   display: block;
   min-height: 0;
   margin: 0;
   padding: 0;
-  color: #808080;
+  color: #000000;
+  mix-blend-mode: normal;
+  text-align: right;
   text-decoration: none;
-  opacity: 1;
+  text-wrap: balance;
+  line-height: 1;
+  opacity: 0;
+  filter: blur(4px);
   pointer-events: none;
-  transition-property: color;
-  transition-duration: 0.2s;
+  /* Entrance rides opacity/filter (staggered below); touch + hover feedback
+     rides colour so it never inherits the entrance delay. */
+  transition-property: opacity, filter, color;
+  transition-duration: 0.5s, 0.5s, 0.15s;
   transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
 }
 
-.site-notch[data-open="true"] .site-notch-link {
+/* Links resolve in place while the sheet is still travelling down. */
+.site-mobile-sheet[data-open="true"] .site-mobile-nav-link {
+  opacity: 1;
+  filter: blur(0);
   pointer-events: auto;
 }
 
-.site-notch-link:hover,
-.site-notch-link:focus-visible,
-.site-notch[data-open="true"] .site-notch-link[data-current="true"] {
-  color: #ffffff;
-  opacity: 1;
+.site-mobile-sheet[data-open="true"] .site-mobile-nav-link:nth-child(1) {
+  transition-delay: 0.2s, 0.2s, 0s;
 }
 
-html:has([data-work-surface]) .site-header-notch-cell,
-html[data-hero-bg-visible="true"] .site-header-notch-cell {
-  color: var(--color-white);
+.site-mobile-sheet[data-open="true"] .site-mobile-nav-link:nth-child(2) {
+  transition-delay: 0.3s, 0.3s, 0s;
+}
+
+.site-mobile-sheet[data-open="true"] .site-mobile-nav-link:nth-child(3) {
+  transition-delay: 0.4s, 0.4s, 0s;
+}
+
+.site-mobile-sheet[data-open="true"] .site-mobile-nav-link:nth-child(4) {
+  transition-delay: 0.5s, 0.5s, 0s;
+}
+
+.site-mobile-sheet[data-open="true"] .site-mobile-nav-link:active,
+.site-mobile-sheet[data-open="true"] .site-mobile-nav-link:focus-visible {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .site-mobile-sheet[data-open="true"] .site-mobile-nav-link:hover {
+    color: rgba(0, 0, 0, 0.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-mobile-sheet,
+  .site-mobile-nav-link,
+  .site-notch-label {
+    transition-duration: 0s;
+  }
+}
+
+/* Open sheet is flat white — drop exclusion so Daniel Derro and Close stay black. */
+html[data-mobile-menu-open] .site-header-brand,
+html[data-mobile-menu-open] .site-header-notch-cell {
+  color: #000000;
+  mix-blend-mode: normal;
+  --color-black: #000000;
+  --color-white: #ffffff;
+  transition-delay: 0.15s;
 }
 
 .site-brand-strip .site-header-meta {
@@ -1175,346 +1387,538 @@ html[data-hero-bg-visible="false"] .blend-overlay {
   --color-primary: #ce0000;
 }
 
-/* Radio: intro 2 cols · episodes 4 cols · tracklist 2 cols on the 8-column grid. */
-
-/* Stacked intro + episodes — mobile and tablet only */
-.radio-center {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  width: 100%;
-  min-width: 0;
-  align-self: start;
-  grid-column: span 2;
+/* Menu / Close invert against the page — even after the hero blend drops. */
+html:not([data-mobile-menu-open])[data-hero-bg-visible="false"] .site-header-notch-cell {
+  color: #ffffff;
+  mix-blend-mode: exclusion;
 }
 
-@media (min-width: 768px) and (max-width: 1023px) {
-  .radio-center {
-    grid-column: 2 / span 2;
-  }
-}
-
-@media (min-width: 1024px) {
-  .radio-center {
-    display: contents;
-  }
-
-  .radio-center .radio-intro {
-    grid-column: 1 / span 2;
-    grid-row: 1;
-    align-self: start;
-  }
-
-  .radio-center .radio-episodes {
-    grid-column: 3 / span 4;
-    grid-row: 1;
-    align-self: start;
-  }
-}
-
-/* Player — always aligned to middle episode columns */
-.radio-center-columns {
-  grid-column: span 2;
-}
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .radio-center-columns {
-    grid-column: 2 / span 2;
-  }
-}
-
-@media (min-width: 1024px) {
-  .radio-center-columns {
-    grid-column: 3 / span 4;
-  }
-}
+/* Radio: 4-col split — featured episode (2) + boxed gallery (2). */
 
 .radio-page {
   display: flex;
   flex-direction: column;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  background: var(--color-black);
 }
 
 .radio-page-content {
-  box-sizing: border-box;
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
-  flex: 1;
-  min-height: 100dvh;
-  padding-bottom: 0;
+  min-height: 0;
 }
 
 .radio-page[data-player-visible] .radio-page-content {
   padding-bottom: calc(
-    var(--radio-player-bar-height) + var(--radio-player-bottom-offset) +
+    var(--radio-player-bar-height) + (2 * var(--radio-player-bottom-offset)) +
       env(safe-area-inset-bottom, 0px)
   );
 }
 
-.radio-intro {
-  width: var(--layout-span-2-width);
-  max-width: 100%;
-  align-self: start;
+.radio-page-grid {
+  flex: 1 1 auto;
+  align-items: stretch;
+  min-height: 0;
+  row-gap: var(--work-row-gap);
 }
 
-.radio-intro-images {
+@media (max-width: 767px) {
+  .radio-page-grid {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .radio-page-grid.layout-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.radio-featured {
   display: flex;
   flex-direction: column;
+  gap: 0;
+  grid-column: span 2;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.radio-featured-image {
+  flex: 0 0 auto;
   width: 100%;
+}
+
+.radio-featured-tracklist {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 767px) {
+  /* Featured block is fully static: image and bar never move, and the list
+     panel overlays downward, so opening it reflows nothing on the page. */
+  .radio-featured {
+    position: relative;
+    z-index: 2;
+    justify-content: flex-start;
+    height: auto;
+    max-height: 100%;
+    overflow: visible;
+  }
+
+  .radio-featured-image {
+    display: block;
+    flex: 0 0 auto;
+    min-height: 0;
+    max-height: none;
+    overflow: hidden;
+  }
+
+  .radio-featured-image .radio-intro-image {
+    width: 100%;
+    height: auto;
+    max-height: none;
+    object-fit: contain;
+    object-position: left top;
+  }
+
+  .radio-featured-tracklist {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .radio-featured-tracklist > * {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
 }
 
 .radio-intro-image {
   display: block;
-  box-sizing: border-box;
   width: 100%;
   height: auto;
-  border: 0.5px solid rgb(255 255 255 / 0.1);
+  object-fit: contain;
+  object-position: left top;
+  outline: 1px solid rgba(255, 255, 255, 0.1);
+  outline-offset: -1px;
 }
 
-.radio-library-intro-description {
-  margin-top: 20px;
-  width: 100%;
-  max-width: 100%;
-  text-align: center;
-}
-
-@media (max-width: 767px) {
-  .radio-center {
-    gap: 80px;
-  }
-
-  .radio-intro-image:first-child {
-    display: none;
-  }
-
-  .radio-intro {
-    width: 100%;
-    align-self: stretch;
-  }
-
-  .radio-library-intro-description {
-    width: min(100%, var(--content-compact-width));
-    text-align: left;
-    margin-inline: auto;
-  }
-}
-
-.radio-library-intro-muted {
-  color: #808080;
-}
-
-.radio-episode-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.radio-featured-play {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  align-items: flex-start;
+  gap: 0;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
-.radio-episode-item {
+.radio-featured-title {
+  color: var(--color-white);
+  text-wrap: balance;
+}
+
+.radio-intro-copy {
+  margin: 0;
+  color: #808080;
+  text-wrap: pretty;
+}
+
+.radio-gallery {
+  display: grid;
+  grid-column: span 2;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--spacing-gutter);
+  row-gap: var(--work-row-gap);
+  align-items: start;
+  align-content: start;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   list-style: none;
 }
 
-/* Episode row — mirrors work index meta (number, title, muted runtime). */
-.radio-episode-row {
-  position: relative;
-  display: block;
-  width: 100%;
+.radio-episode {
+  min-width: 0;
+}
+
+.radio-episode-card {
+  aspect-ratio: 1;
   box-sizing: border-box;
-  padding: 4px;
-  border: 0;
-  border-top: 1px solid rgb(255 255 255 / 0.1);
-  border-left: 1px solid rgb(255 255 255 / 0.1);
-  background: transparent;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  outline: none;
-}
-
-.radio-episode-row::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--color-gray-light);
-  transform: scale(0);
-  transform-origin: top left;
-  transition: transform 0.28s cubic-bezier(0.76, 0, 0.24, 1);
-  z-index: 0;
-}
-
-.radio-episode-row:hover::before,
-.radio-episode-row:focus-visible::before,
-.radio-episode-row[data-active]::before {
-  transform: scale(1);
-}
-
-.radio-episode-row-meta {
-  position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: flex-start;
+  width: 100%;
   min-width: 0;
-  min-height: 60px;
+  min-height: 44px;
+  padding: 12px;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition-property: border-color;
+  transition-duration: 0.6s;
+  transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
 }
 
-@media (min-width: 768px) {
-  .radio-episode-row-meta {
-    width: 100%;
+.radio-episode-card[data-active] {
+  border-color: rgb(255 255 255 / 0.35);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .radio-episode-card:hover {
+    border-color: rgb(255 255 255 / 0.45);
+  }
+
+  .radio-episode-card:hover .radio-episode-play-label[data-on="true"] {
+    color: var(--color-white);
   }
 }
 
-.radio-episode-row-text-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  min-width: 0;
-}
-
-.radio-episode-row-text-stack .text-small {
-  line-height: 16px;
-}
-
-.radio-episode-row-title {
-  color: var(--color-white);
-  transition: color 0.28s cubic-bezier(0.76, 0, 0.24, 1);
-}
-
-.radio-episode-row-muted {
+.radio-episode-index {
   color: #808080;
   font-variant-numeric: tabular-nums;
 }
 
-.radio-episode-row:hover .radio-episode-row-title,
-.radio-episode-row:focus-visible .radio-episode-row-title,
-.radio-episode-row[data-active] .radio-episode-row-title {
+.radio-episode-status {
+  display: inline-grid;
+  justify-items: start;
+}
+
+.radio-episode-now,
+.radio-episode-play-label {
+  grid-area: 1 / 1;
+  transition-property: opacity, filter, color;
+  transition-duration: 0.5s;
+  transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.radio-episode-now {
+  color: var(--color-primary);
+  opacity: 0;
+  filter: blur(4px);
+}
+
+.radio-episode-now[data-on="true"] {
+  opacity: 1;
+  filter: blur(0);
+}
+
+.radio-episode-play-label {
+  color: #808080;
+  opacity: 0;
+  filter: blur(4px);
+}
+
+.radio-episode-play-label[data-on="true"] {
+  opacity: 1;
+  filter: blur(0);
+}
+
+.radio-episode-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.radio-episode-title {
+  color: var(--color-white);
+  text-wrap: pretty;
+}
+
+.radio-episode-runtime {
+  color: #808080;
+  font-variant-numeric: tabular-nums;
+}
+
+.radio-tracklist-dropdown {
+  display: grid;
+  grid-template-rows: auto 0fr;
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid transparent;
+  border-top: 0;
+  background: transparent;
+}
+
+.radio-tracklist-dropdown[data-open="true"] {
+  grid-template-rows: auto 1fr;
+  border-color: rgb(255 255 255 / 0.2);
+}
+
+.radio-tracklist-dropdown-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.radio-tracklist-dropdown--static,
+.radio-tracklist-dropdown--static[data-open="true"] {
+  display: block;
+  border: 0;
+}
+
+.radio-tracklist-dropdown--static .radio-tracklist-dropdown-clip {
+  overflow: visible;
+}
+
+.radio-tracklist-dropdown--static .radio-tracklist-dropdown-inner {
+  max-height: none;
+  overflow: visible;
+  opacity: 1;
+}
+
+.radio-tracklist-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+  margin: 0;
+  padding: 4px;
+  background: var(--color-white);
   color: var(--color-black);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .radio-episode-row::before,
-  .radio-episode-row-title {
-    transition: none;
-  }
-}
-
-.radio-episodes {
-  width: 100%;
+/* Episode name leads the bar; Tracklist / Close sit after the slash. */
+.radio-tracklist-bar-prefix {
+  display: flex;
+  align-items: baseline;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
-.radio-tracklist-panel {
-  display: none;
-  width: 100%;
+.radio-tracklist-bar-episode {
   min-width: 0;
-  align-self: start;
+  overflow: hidden;
+  color: #808080;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-@media (min-width: 1024px) {
-  .radio-tracklist-panel {
-    display: block;
-    grid-column: 7 / span 2;
-    grid-row: 1;
-  }
-
-  .radio-page .layout-grid > .radio-center .radio-intro,
-  .radio-page .layout-grid > .radio-center .radio-episodes,
-  .radio-page .layout-grid > .radio-tracklist-panel {
-    grid-row: 1;
-  }
+.radio-tracklist-bar-slash {
+  flex: 0 0 auto;
+  margin-inline: 0.35em;
+  color: #808080;
+  opacity: 0.2;
 }
 
-.radio-tracklist-box {
+/* No font shorthand reset here — it outranks the type class and drops the
+   12px / medium weight back to the UA button default. */
+button.radio-tracklist-bar {
+  position: relative;
   box-sizing: border-box;
+  display: flex;
   width: 100%;
-  padding: 4px;
-  border-top: 1px solid rgb(255 255 255 / 0.1);
-  border-left: 1px solid rgb(255 255 255 / 0.1);
+  border: 0;
+  text-align: left;
+  cursor: pointer;
 }
 
-.radio-tracklist-header {
+button.radio-tracklist-bar::before {
+  content: "";
+  position: absolute;
+  inset: auto 0;
+  top: 50%;
+  height: 44px;
+  transform: translateY(-50%);
+}
+
+/* Tracklist / Close swap in place — stacked labels, opacity + blur only. */
+.radio-tracklist-bar-swap {
+  display: inline-grid;
+  flex: 0 0 auto;
+  justify-items: start;
+}
+
+.radio-tracklist-bar-label {
+  grid-area: 1 / 1;
+  display: block;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  filter: blur(4px);
+  transition-property: opacity, filter;
+  transition-duration: 0.32s;
+  transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.radio-tracklist-bar-label[data-on="true"] {
+  opacity: 1;
+  filter: blur(0);
+}
+
+.radio-tracklist-dropdown--static .radio-tracklist-bar-label {
+  grid-area: auto;
+  opacity: 1;
+  filter: none;
+  transition: none;
+}
+
+@media (max-width: 767px) {
+  /* Block, not grid: the bar keeps its own box and the panel hangs off it. */
+  .radio-tracklist-dropdown:not(.radio-tracklist-dropdown--static) {
+    display: block;
+    position: relative;
+    flex: 0 0 auto;
+    min-height: 0;
+    border: 0;
+  }
+
+  .radio-tracklist-dropdown:not(.radio-tracklist-dropdown--static)
+    .radio-tracklist-dropdown-clip {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    height: 0;
+    overflow: hidden;
+    background: var(--color-black);
+    transition-property: height;
+    transition-duration: 0.6s;
+    transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+  }
+
+  .radio-tracklist-dropdown[data-open="true"]:not(.radio-tracklist-dropdown--static)
+    .radio-tracklist-dropdown-clip {
+    height: 44vh;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  .radio-tracklist-dropdown:not(.radio-tracklist-dropdown--static)
+    .radio-tracklist-dropdown-inner {
+    max-height: none;
+    padding: 4px 0 0;
+  }
+}
+
+/* Desktop: open/close is instant when used — static desktop tracklist stays open. */
+@media (min-width: 768px) {
+  .radio-tracklist-dropdown:not(.radio-tracklist-dropdown--static),
+  .radio-tracklist-dropdown:not(.radio-tracklist-dropdown--static)
+    .radio-tracklist-dropdown-clip,
+  .radio-tracklist-dropdown:not(.radio-tracklist-dropdown--static)
+    .radio-tracklist-dropdown-inner,
+  .radio-tracklist-bar-label {
+    transition-duration: 0s;
+  }
+}
+
+.radio-tracklist-dropdown-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  max-height: none;
+  margin: 0;
+  padding: 4px 0 0;
+  overflow: hidden;
+  opacity: 0;
+  list-style: none;
+}
+
+.radio-tracklist-dropdown[data-open="true"] .radio-tracklist-dropdown-inner {
+  opacity: 1;
+}
+
+.radio-tracklist-dropdown[data-open="true"]:not(.radio-tracklist-dropdown--static)
+  .radio-tracklist-dropdown-clip {
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.radio-tracklist-dropdown-item {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  margin-bottom: 12px;
+  min-width: 0;
 }
 
-.radio-tracklist-header-label {
-  color: var(--color-primary);
+.radio-tracklist-dropdown-item + .radio-tracklist-dropdown-item {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgb(255 255 255 / 0.2);
+}
+
+.radio-tracklist-dropdown-number {
+  flex: 0 0 auto;
+  color: #808080;
+  font-variant-numeric: tabular-nums;
+}
+
+.radio-tracklist-dropdown-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.radio-tracklist-dropdown-title {
+  color: var(--color-white);
+  text-wrap: pretty;
+}
+
+.radio-tracklist-dropdown-artist {
+  color: #808080;
+  text-wrap: pretty;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radio-tracklist-dropdown,
+  .radio-tracklist-dropdown-clip,
+  .radio-tracklist-bar-label,
+  .radio-tracklist-dropdown-inner,
+  .radio-episode-card,
+  .radio-episode-now,
+  .radio-episode-play-label,
+  .radio-player__icon-slot {
+    transition-duration: 0s;
+  }
 }
 
 .radio-fixed-player {
   position: fixed;
-  bottom: calc(var(--radio-player-bottom-offset) + env(safe-area-inset-bottom, 0px));
+  bottom: 0;
   left: 0;
   z-index: 40;
   box-sizing: border-box;
   width: 100%;
-  padding: 0 var(--spacing-margin);
-  background: transparent;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.5s cubic-bezier(0.76, 0, 0.24, 1);
+  padding: var(--radio-player-bottom-offset) var(--spacing-margin);
+  padding-bottom: calc(
+    var(--radio-player-bottom-offset) + env(safe-area-inset-bottom, 0px)
+  );
+  background: #000000;
 }
 
-.radio-fixed-player-grid {
-  width: 100%;
-}
-
-.radio-fixed-player-slot {
-  position: relative;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  min-height: var(--radio-player-bar-height);
-  padding: 4px 12px;
-  border: 0.5px solid rgb(255 255 255 / 0.1);
-  border-radius: 0;
-}
-
-.radio-fixed-player-fill {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  border-radius: inherit;
-  pointer-events: none;
-}
-
-.radio-fixed-player-fill-image {
-  display: block;
-  height: 100%;
-  width: 100%;
-  object-fit: cover;
-  transform: scale(1.03);
-  filter: blur(8px);
-}
-
-.radio-fixed-player-slot .radio-player {
-  position: relative;
-  z-index: 2;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.radio-fixed-player[data-visible] {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .radio-fixed-player {
-    transition: none;
-  }
-}
-
-/* Native-audio radio player — flat inline bar: play · progress · time · volume,
-   20px gaps, no container fill/stroke. Icons sit on the same left/right rails
-   as the artwork above. */
+/* Native-audio radio player — flat inline bar: play · progress · time · volume. */
 .radio-player {
   display: flex;
   align-items: center;
@@ -1526,9 +1930,10 @@ html[data-hero-bg-visible="false"] .blend-overlay {
 }
 
 .radio-player__play {
+  position: relative;
   flex: 0 0 auto;
   display: grid;
-  place-items: center start;
+  place-items: center;
   width: 20px;
   height: 20px;
   padding: 0;
@@ -1538,11 +1943,51 @@ html[data-hero-bg-visible="false"] .blend-overlay {
   cursor: pointer;
 }
 
+.radio-player__play::before,
+.radio-player__volume-button::before {
+  content: "";
+  position: absolute;
+  inset: -12px;
+}
+
+.radio-player__volume-button::before {
+  inset: -13px;
+}
+
+.radio-player__icon-swap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.radio-player__icon-slot {
+  grid-area: 1 / 1;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  filter: blur(4px);
+  pointer-events: none;
+  transition-property: opacity, filter;
+  transition-duration: 0.5s;
+  transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.radio-player__icon-slot[data-on="true"] {
+  opacity: 1;
+  filter: blur(0);
+}
+
 .radio-player__icon {
   display: block;
   width: 20px;
   height: 20px;
   color: currentColor;
+}
+
+.radio-player__icon--play {
+  margin-left: 2px;
 }
 
 .radio-player__icon--control {
@@ -1576,18 +2021,23 @@ html[data-hero-bg-visible="false"] .blend-overlay {
 }
 
 .radio-player__fill {
+  width: 100%;
   background: #fff;
-  width: 0;
+  transform-origin: left center;
+  transform: translateY(-50%) scaleX(var(--radio-progress, 0));
 }
 
 .radio-player__time {
   flex: 0 0 auto;
+  min-width: 8ch;
   color: #fff;
   font: 600 13px/1 var(--font-sans);
   font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .radio-player__volume-button {
+  position: relative;
   flex: 0 0 auto;
   display: grid;
   place-items: center end;
@@ -1598,40 +2048,5 @@ html[data-hero-bg-visible="false"] .blend-overlay {
   background: transparent;
   color: #fff;
   cursor: pointer;
-}
-
-.radio-tracklist {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.radio-tracklist-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  min-width: 0;
-}
-
-.radio-tracklist-number {
-  flex: 0 0 auto;
-  color: #808080;
-  font-variant-numeric: tabular-nums;
-}
-
-.radio-tracklist-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  min-width: 0;
-}
-
-.radio-tracklist-artist {
-  color: #808080;
-}
-
-.radio-tracklist-title {
-  color: var(--color-white);
 }
 

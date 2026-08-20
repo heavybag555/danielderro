@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useMediaQuery } from "@/lib/use-media-query";
+
 const NAV_ITEMS = [
   { label: "Home", href: "/" },
   { label: "Info", href: "/info" },
@@ -10,75 +12,9 @@ const NAV_ITEMS = [
   { label: "Radio", href: "/radio" },
 ] as const;
 
-function pageLabel(pathname: string): string {
-  if (pathname === "/") return "Home";
-  if (pathname.startsWith("/info")) return "Info";
-  if (pathname.startsWith("/work")) return "Work";
-  if (pathname.startsWith("/radio")) return "Radio";
-  return "Menu";
-}
-
-const LABEL_FADE_MS = 320;
-
-function NotchTriggerLabel({ text }: { text: string }) {
-  const [displayed, setDisplayed] = useState(text);
-  const [phase, setPhase] = useState<"in" | "out">("in");
-  const displayedRef = useRef(text);
-
-  useEffect(() => {
-    displayedRef.current = displayed;
-  }, [displayed]);
-
-  useEffect(() => {
-    if (text === displayedRef.current) {
-      setPhase("in");
-      return;
-    }
-
-    setPhase("out");
-    const swap = window.setTimeout(() => {
-      setDisplayed(text);
-      setPhase("in");
-    }, LABEL_FADE_MS);
-
-    return () => window.clearTimeout(swap);
-  }, [text]);
-
-  return (
-    <span className="site-notch-label" data-phase={phase} aria-hidden="true">
-      {displayed}
-    </span>
-  );
-}
-
 function isCurrent(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-function PlusMinusIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      aria-hidden
-      className="site-notch-plus"
-    >
-      <path d="M0 0h24v24H0z" fill="none" />
-      <path
-        className="site-notch-plus-h"
-        fill="currentColor"
-        d="M18 12.998H6a1 1 0 0 1 0-2h12a1 1 0 0 1 0 2"
-      />
-      <path
-        className="site-notch-plus-v"
-        fill="currentColor"
-        d="M13 17.998v-12a1 1 0 0 0-2 0v12a1 1 0 0 0 2 0"
-      />
-    </svg>
-  );
 }
 
 /** Desktop nav: all pages side by side across the compact container. */
@@ -105,11 +41,15 @@ export function SiteNavLinks() {
   );
 }
 
-export function MobileMenuTrigger() {
+export function MobileMenuTrigger({
+  blendOverlay = false,
+}: {
+  blendOverlay?: boolean;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const currentLabel = pageLabel(pathname);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const blendClass = blendOverlay ? " blend-overlay" : "";
 
   const close = useCallback(() => setOpen(false), []);
   const toggle = useCallback(() => setOpen((prev) => !prev), []);
@@ -119,10 +59,21 @@ export function MobileMenuTrigger() {
   }, [pathname]);
 
   useEffect(() => {
+    if (isDesktop) setOpen(false);
+  }, [isDesktop]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (open) root.setAttribute("data-mobile-menu-open", "true");
+    else root.removeAttribute("data-mobile-menu-open");
+    return () => root.removeAttribute("data-mobile-menu-open");
+  }, [open]);
+
+  useEffect(() => {
     if (!open) return;
 
     const onPointerDown = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
+      if (!(event.target as Element | null)?.closest("[data-mobile-menu]")) {
         setOpen(false);
       }
     };
@@ -140,25 +91,40 @@ export function MobileMenuTrigger() {
   }, [open]);
 
   return (
-    <div
-      ref={containerRef}
-      className="site-notch"
-      data-open={open ? "true" : "false"}
-    >
-      <button
-        type="button"
-        onClick={toggle}
-        className="site-notch-trigger text-small"
-        aria-expanded={open}
-        aria-haspopup="true"
-        aria-label={open ? "Close menu" : "Open menu"}
-      >
-        <NotchTriggerLabel text={open ? "Menu" : currentLabel} />
-        <PlusMinusIcon />
-      </button>
+    <>
+      <div className={`site-header-notch-cell${blendClass}`} data-mobile-menu>
+        <div className="site-notch" data-open={open ? "true" : "false"}>
+          <button
+            type="button"
+            onClick={toggle}
+            className="site-notch-trigger text-small"
+            aria-expanded={open}
+            aria-controls="site-mobile-nav"
+            aria-label={open ? "Close" : "Menu"}
+          >
+            <span className="site-notch-swap">
+              <span className="site-notch-label" data-on={open ? "false" : "true"}>
+                Menu
+              </span>
+              <span className="site-notch-label" data-on={open ? "true" : "false"}>
+                Close
+              </span>
+            </span>
+          </button>
+        </div>
+      </div>
 
-      <nav className="site-notch-dropdown" aria-label="Site navigation" aria-hidden={!open}>
-        <div className="site-notch-dropdown-inner">
+      <div
+        className="site-mobile-sheet"
+        data-mobile-menu
+        data-open={open ? "true" : "false"}
+        aria-hidden={!open}
+      >
+        <nav
+          id="site-mobile-nav"
+          className="site-mobile-sheet-nav layout-full"
+          aria-label="Site navigation"
+        >
           {NAV_ITEMS.map((item) => {
             const current = isCurrent(pathname, item.href);
             return (
@@ -167,7 +133,7 @@ export function MobileMenuTrigger() {
                 href={item.href}
                 tabIndex={open ? 0 : -1}
                 onClick={close}
-                className="site-notch-link text-small"
+                className="site-mobile-nav-link text-heading"
                 data-current={current ? "true" : "false"}
                 aria-current={current ? "page" : undefined}
               >
@@ -175,8 +141,8 @@ export function MobileMenuTrigger() {
               </Link>
             );
           })}
-        </div>
-      </nav>
-    </div>
+        </nav>
+      </div>
+    </>
   );
 }

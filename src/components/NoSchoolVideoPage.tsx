@@ -50,25 +50,26 @@ export default function NoSchoolVideoPage({
             boxSizing: "border-box",
             paddingTop: PROJECT_IMAGE_PAD_Y,
             paddingBottom: PROJECT_IMAGE_PAD_Y,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
           }}
         >
-          <div className="project-video-frame" style={{ aspectRatio }}>
-            {playbackSrc ? (
-              <SimpleVideoPlayer src={playbackSrc} aspectRatio={aspectRatio} />
-            ) : (
-              <Image
-                src={video.thumbnail}
-                alt={video.title}
-                fill
-                sizes="(max-width: 800px) 100vw, 800px"
-                quality={85}
-                style={{ objectFit: "contain" }}
-                priority
-              />
-            )}
+          <div className="layout-grid project-slide-media">
+            <div className="project-slide-video">
+              <div className="project-video-frame" style={{ aspectRatio }}>
+                {playbackSrc ? (
+                  <SimpleVideoPlayer src={playbackSrc} aspectRatio={aspectRatio} />
+                ) : (
+                  <Image
+                    src={video.thumbnail}
+                    alt={video.title}
+                    fill
+                    sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 25vw"
+                    quality={85}
+                    style={{ objectFit: "contain" }}
+                    priority
+                  />
+                )}
+              </div>
+            </div>
           </div>
         </section>
       </div>

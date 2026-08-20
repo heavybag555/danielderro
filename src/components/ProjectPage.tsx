@@ -66,21 +66,11 @@ function ProjectSlideVideo({
 }) {
   if (item.src) {
     return (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div className="project-video-frame">
-          <SimpleVideoPlayer
-            src={item.src}
-            aspectRatio={item.aspectRatio ?? "16 / 9"}
-          />
-        </div>
+      <div className="project-video-frame">
+        <SimpleVideoPlayer
+          src={item.src}
+          aspectRatio={item.aspectRatio ?? "16 / 9"}
+        />
       </div>
     );
   }
@@ -240,7 +230,11 @@ export default function ProjectPage({
             }}
           >
             {item.kind === "video" ? (
-              <ProjectSlideVideo item={item} />
+              <div className="layout-grid project-slide-media">
+                <div className="project-slide-video">
+                  <ProjectSlideVideo item={item} />
+                </div>
+              </div>
             ) : (
               <ProjectSlideImage
                 image={item.image}

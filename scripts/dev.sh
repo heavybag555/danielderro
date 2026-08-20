@@ -22,4 +22,5 @@ if [ "$1" = "--clean" ]; then
   rm -rf .next
 fi
 
-exec next dev --turbopack --port "${PORT}"
+# Source maps stall hard on iCloud Desktop file-provider reads.
+exec next dev --turbopack --port "${PORT}" --disable-source-maps
