@@ -6,25 +6,19 @@ import Link from "next/link";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { sanityLoader } from "@/sanity/lib/image";
 import SitePageFooter from "@/components/SitePageFooter";
-import { MOTION } from "@/lib/motion";
+import { mediaEnterTransition, MOTION } from "@/lib/motion";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { useDismissOnScroll } from "@/lib/use-dismiss-on-scroll";
 import type { GalleryStill } from "@/lib/gallery-stills";
 
 const HOVER_HOLD_MS = 150;
 
-const LIST_VARIANTS: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.02, delayChildren: 0.04 } },
-};
-
 const TILE_VARIANTS: Variants = {
-  hidden: { opacity: 0, filter: "blur(6px)" },
-  show: {
+  hidden: { opacity: 0 },
+  show: (index: number) => ({
     opacity: 1,
-    filter: "blur(0px)",
-    transition: { duration: 0.7, ease: MOTION.ease.heavy },
-  },
+    transition: mediaEnterTransition(index),
+  }),
 };
 
 export default function GalleryIndex({
@@ -78,17 +72,17 @@ export default function GalleryIndex({
       <div className="layout-full site-page-content-offset gallery-page-content">
         <motion.div
           className="layout-grid gallery-index"
-          variants={stagger ? LIST_VARIANTS : undefined}
           initial={stagger ? "hidden" : false}
           animate={stagger ? "show" : undefined}
           onMouseLeave={() => requestHover(null)}
         >
-          {stills.map((still) => {
+          {stills.map((still, index) => {
             const dimmed = hoveredKey !== null && hoveredKey !== still.key;
             return (
               <motion.div
                 key={still.key}
                 className="gallery-index-tile"
+                custom={index}
                 variants={stagger ? TILE_VARIANTS : undefined}
               >
                 <Link

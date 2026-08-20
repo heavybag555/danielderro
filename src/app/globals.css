@@ -400,6 +400,10 @@ html::-webkit-scrollbar-thumb:hover,
   white-space: nowrap;
 }
 
+.site-meta-row > .site-meta-counter {
+  overflow: visible;
+}
+
 .site-meta-client {
   grid-column: 1;
   color: #808080;

@@ -11,7 +11,7 @@ import {
 } from "framer-motion";
 import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
 import SitePageFooter from "@/components/SitePageFooter";
-import { MOTION } from "@/lib/motion";
+import { mediaEnterTransition, MOTION } from "@/lib/motion";
 import { useDismissOnScroll } from "@/lib/use-dismiss-on-scroll";
 import {
   getThumbAspect,
@@ -24,7 +24,7 @@ import {
 } from "@/lib/work-filters";
 
 /** Standing headline; swaps to the hovered project title. */
-const WORK_HEADING = "Selected Projects";
+const WORK_HEADING = "Work";
 
 /** Pointer must stay on a row this long before dim / title swap fire. */
 const HOVER_HOLD_MS = 150;
@@ -51,22 +51,20 @@ function byTitle(a: WorkProject, b: WorkProject): number {
    cascades in over the same cell. No wait-gap — that emptied the page. */
 const LIST_VARIANTS: Variants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.04 } },
+  show: {},
   exit: {
     opacity: 0,
-    filter: "blur(8px)",
     pointerEvents: "none",
-    transition: { duration: MOTION.duration.fade, ease: MOTION.ease.heavy },
+    transition: { duration: 0.32, ease: MOTION.ease.heavy },
   },
 };
 
 const ROW_VARIANTS: Variants = {
-  hidden: { opacity: 0, filter: "blur(6px)" },
-  show: {
+  hidden: { opacity: 0 },
+  show: (index: number) => ({
     opacity: 1,
-    filter: "blur(0px)",
-    transition: { duration: MOTION.duration.fade, ease: MOTION.ease.heavy },
-  },
+    transition: mediaEnterTransition(index),
+  }),
 };
 
 type SanityImageField = {
@@ -241,17 +239,20 @@ function ProjectRow({
   onPointerHover,
   onFocusHover,
   variants,
+  index,
 }: {
   project: WorkProject;
   hovered: boolean;
   onPointerHover: (id: string | null) => void;
   onFocusHover: (id: string | null) => void;
   variants?: Variants;
+  index: number;
 }) {
   const thumbs = getStripThumbs(project);
 
   return (
     <motion.li
+      custom={index}
       variants={variants}
       className="work-row"
       data-hovered={hovered}
@@ -387,7 +388,7 @@ export default function WorkProjectGrid({
               exit={stagger ? "exit" : undefined}
               style={{ zIndex: 1 }}
             >
-              {visibleProjects.map((project) => (
+              {visibleProjects.map((project, index) => (
                 <ProjectRow
                   key={project._id}
                   project={project}
@@ -395,6 +396,7 @@ export default function WorkProjectGrid({
                   onPointerHover={requestHover}
                   onFocusHover={commitHover}
                   variants={stagger ? ROW_VARIANTS : undefined}
+                  index={index}
                 />
               ))}
             </motion.ol>
