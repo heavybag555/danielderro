@@ -133,10 +133,10 @@ export default function GalleryIndex({
         aria-hidden={!hovered}
       >
         {meta ? (
-          <p className="layout-grid gallery-hover-meta-row text-caption">
-            <span className="gallery-hover-meta-client">{meta.client}</span>
-            <span className="gallery-hover-meta-title">{meta.title}</span>
-            <span className="gallery-hover-meta-tags">{meta.tags}</span>
+          <p className="layout-grid site-meta-row text-caption">
+            <span className="site-meta-client">{meta.client}</span>
+            <span className="site-meta-title">{meta.title}</span>
+            <span className="site-meta-tags">{meta.tags}</span>
           </p>
         ) : null}
       </motion.div>

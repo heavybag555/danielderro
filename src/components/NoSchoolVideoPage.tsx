@@ -3,7 +3,6 @@
 import Image from "next/image";
 import SiteFooter from "@/components/SiteFooter";
 import SimpleVideoPlayer from "@/components/SimpleVideoPlayer";
-import { formatSanityTag } from "@/lib/format-sanity-tag";
 import {
   noSchoolAspectRatio,
   type NoSchoolVideo,
@@ -78,30 +77,10 @@ export default function NoSchoolVideoPage({
       </div>
 
       <SiteFooter
-        activePath="/work"
-        leftContent={
-          <span className="text-body" style={{ color: "var(--color-black)" }}>
-            {video.title}
-          </span>
-        }
-        middleContent={
-          <span className="text-small" style={{ color: "var(--color-primary)" }}>
-            {formatSanityTag("no-school-studio")}
-          </span>
-        }
-        rightContent={
-          <span
-            className="text-small"
-            style={{ display: "flex", gap: 4, fontVariantNumeric: "tabular-nums" }}
-          >
-            <span className="text-small" style={{ color: "var(--color-black)", opacity: 0.5 }}>
-              01
-            </span>
-            <span className="text-small" style={{ color: "var(--color-black)" }}>
-              01
-            </span>
-          </span>
-        }
+        client="No School Studio"
+        title={video.title}
+        tags="Motion"
+        slide={{ current: 1, total: 1 }}
       />
     </main>
   );

@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { formatSanityTag } from "@/lib/format-sanity-tag";
 import {
   projectMediaItems,
   type ProjectMediaItem,
   type ProjectSlideImageSource,
 } from "@/lib/project-media";
+import { projectClientLabel, projectTagsLabel } from "@/lib/project-meta";
 import { projectSlideImageUrl } from "@/sanity/lib/image";
 import SiteFooter from "@/components/SiteFooter";
 import ProjectSlideImage from "@/components/ProjectSlideImage";
@@ -49,10 +49,6 @@ export type Project = {
 
 const PROJECT_IMAGE_PAD_Y = 200;
 const EAGER_SLIDE_COUNT = 4;
-
-function pad(n: number): string {
-  return String(n).padStart(2, "0");
-}
 
 function prefetchSlideWidth(): number {
   const margin = 24;
@@ -152,56 +148,6 @@ export default function ProjectPage({
     scheduleNext();
   }, [mediaItems, total]);
 
-  const titleContent = (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        alignItems: "baseline",
-        columnGap: 8,
-        rowGap: 0,
-      }}
-    >
-      <span className="text-body" style={{ color: "var(--color-black)" }}>
-        {project.title}
-      </span>
-      {project.client ? (
-        <span className="text-body" style={{ color: "var(--color-black)", opacity: 0.5 }}>
-          {project.client}
-        </span>
-      ) : null}
-    </div>
-  );
-
-  const tagsContent =
-    project.tags && project.tags.length > 0 ? (
-      <span className="text-small" style={{ color: "var(--color-primary)" }}>
-        {project.tags.map(formatSanityTag).join(", ")}
-      </span>
-    ) : null;
-
-  const slideCounter =
-    total > 0 ? (
-      <span
-        className="text-small"
-        style={{ display: "flex", gap: 4, fontVariantNumeric: "tabular-nums" }}
-      >
-        <span
-          aria-hidden="true"
-          className="text-small"
-          style={{ color: "var(--color-black)", opacity: 0.5 }}
-        >
-          {pad(activeIndex + 1)}
-        </span>
-        <span aria-hidden="true" className="text-small" style={{ color: "var(--color-black)" }}>
-          {pad(total)}
-        </span>
-        <span className="visually-hidden" aria-live="polite">
-          {`Slide ${activeIndex + 1} of ${total}`}
-        </span>
-      </span>
-    ) : null;
-
   return (
     <main
       id="main-content"
@@ -258,22 +204,10 @@ export default function ProjectPage({
       </div>
 
       <SiteFooter
-        activePath="/work"
-        leftContent={
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              rowGap: 4,
-              minWidth: 0,
-            }}
-          >
-            {titleContent}
-          </div>
-        }
-        middleContent={tagsContent}
-        rightContent={slideCounter}
+        client={projectClientLabel(project)}
+        title={project.title}
+        tags={projectTagsLabel(project)}
+        slide={total > 0 ? { current: activeIndex + 1, total } : undefined}
       />
     </main>
   );

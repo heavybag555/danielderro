@@ -385,53 +385,92 @@ html::-webkit-scrollbar-thumb:hover,
   pointer-events: none;
 }
 
-.gallery-hover-meta-row {
+/* Shared caption row: gallery hover (viewport center) and project footer
+   (bottom edge). Client / title / tags on the 2/4/8 grid; project pages add a
+   slide counter in the last track. */
+.site-meta-row {
   margin: 0;
   align-items: baseline;
 }
 
-.gallery-hover-meta-row > * {
+.site-meta-row > * {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.gallery-hover-meta-client {
+.site-meta-client {
   grid-column: 1;
   color: #808080;
 }
 
-.gallery-hover-meta-title {
+.site-meta-title {
   grid-column: 2;
   /* Literal white — `var(--color-white)` becomes black under exclusion and vanishes. */
   color: #ffffff;
 }
 
-.gallery-hover-meta-tags {
+.site-meta-tags {
   display: none;
   color: #808080;
 }
 
+.site-meta-counter {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  gap: 4px;
+  color: #808080;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 767px) {
+  /* Project pages keep the counter on the first row; gallery hover is hidden. */
+  .site-meta-row:has(.site-meta-counter) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+}
+
+.site-meta-counter-total {
+  color: #ffffff;
+}
+
 @media (min-width: 768px) {
-  .gallery-hover-meta-tags {
+  .site-meta-tags {
     display: block;
     grid-column: 3 / -1;
     text-align: end;
   }
+
+  .site-meta-row:has(.site-meta-counter) .site-meta-tags {
+    grid-column: 3;
+  }
+
+  .site-meta-counter {
+    grid-column: 4;
+  }
 }
 
 @media (min-width: 1024px) {
-  .gallery-hover-meta-client {
+  .site-meta-client {
     grid-column: 1 / 3;
   }
 
-  .gallery-hover-meta-title {
+  .site-meta-title {
     grid-column: 3 / 5;
   }
 
-  .gallery-hover-meta-tags {
+  .site-meta-tags {
     grid-column: 5 / 9;
+  }
+
+  .site-meta-row:has(.site-meta-counter) .site-meta-tags {
+    grid-column: 5 / 8;
+  }
+
+  .site-meta-counter {
+    grid-column: 8;
   }
 }
 
@@ -964,57 +1003,14 @@ html::-webkit-scrollbar-thumb:hover,
   }
 }
 
-.project-footer-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-  gap: 4px var(--spacing-gutter);
-}
-
-.project-footer-title {
-  grid-column: 1;
-  grid-row: 1 / span 2;
-  min-width: 0;
-  align-self: end;
-}
-
-.project-footer-tags,
-.project-footer-counter {
-  grid-column: 2;
-  min-width: 0;
-  justify-self: end;
-}
-
-.project-footer-tags {
-  grid-row: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.project-footer-counter {
-  grid-row: 2;
-}
-
-@media (min-width: 768px) {
-  .project-footer-grid {
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto;
-  }
-
-  .project-footer-title,
-  .project-footer-tags,
-  .project-footer-counter {
-    grid-row: 1;
-  }
-
-  .project-footer-tags {
-    grid-column: 2;
-    justify-self: start;
-  }
-
-  .project-footer-counter {
-    grid-column: 3;
-  }
+/* Same caption row as the gallery hover, pinned to the bottom edge. */
+.project-footer-shell {
+  position: fixed;
+  right: var(--spacing-margin);
+  bottom: calc(var(--spacing-margin) + env(safe-area-inset-bottom, 0px));
+  left: var(--spacing-margin);
+  z-index: 200;
+  pointer-events: none;
 }
 
 /* Pages whose in-flow content sits one row-gap below the fixed header. */

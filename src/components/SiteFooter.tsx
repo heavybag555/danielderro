@@ -1,62 +1,47 @@
-import type { ReactNode } from "react";
-
 type SiteFooterProps = {
-  activePath?: string;
-  inverted?: boolean;
-  /**
-   * Below `lg`, hide Daniel Derro / No-School (e.g. when shown in `SiteBrandStrip`).
-   * Kept for API compatibility; no longer affects rendering since the default
-   * nav footer has been removed in favor of the top-right Menu button.
-   */
-  hideBrandBelowLg?: boolean;
-  leftContent?: ReactNode;
-  middleContent?: ReactNode;
-  rightContent?: ReactNode;
+  client: string;
+  title: string;
+  tags?: string;
+  slide?: {
+    current: number;
+    total: number;
+  };
 };
 
-const footerBar = {
-  position: "fixed" as const,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  zIndex: 200,
-  paddingLeft: "var(--spacing-margin)",
-  paddingRight: "var(--spacing-margin)",
-  paddingTop: "var(--spacing-margin)",
-  // Clears the home indicator on notched phones; the other fixed bars already do.
-  paddingBottom:
-    "calc(var(--spacing-margin) + env(safe-area-inset-bottom, 0px))",
-  boxSizing: "border-box" as const,
-};
+function pad(n: number): string {
+  return String(n).padStart(2, "0");
+}
 
 /**
- * Fixed bottom band, used only for project detail pages to carry
- * title / tags / slide counter. The default nav-row mode has been removed —
- * navigation lives inside the top-right Menu button (see `MobileMenuOverlay`).
+ * Project-detail caption row. Same client / title / tags measure as the
+ * gallery hover meta, pinned to the bottom edge instead of the viewport center.
  */
 export default function SiteFooter({
-  inverted = false,
-  leftContent,
-  middleContent,
-  rightContent,
+  client,
+  title,
+  tags,
+  slide,
 }: SiteFooterProps) {
-  const isProjectFooter = leftContent !== undefined;
-
-  if (!isProjectFooter) return null;
+  const showSlide = Boolean(slide && slide.total > 0);
 
   return (
-    <footer
-      className={`project-footer-shell ${inverted ? "" : "blend-overlay"}`}
-      style={{
-        ...footerBar,
-        alignItems: "end",
-      }}
-    >
-      <div className="content-wide project-footer-grid">
-        <div className="project-footer-title">{leftContent}</div>
-        <div className="project-footer-tags">{middleContent}</div>
-        <div className="project-footer-counter">{rightContent}</div>
-      </div>
+    <footer className="project-footer-shell blend-overlay">
+      <p className="layout-grid site-meta-row text-caption">
+        <span className="site-meta-client">{client}</span>
+        <span className="site-meta-title">{title}</span>
+        {tags ? <span className="site-meta-tags">{tags}</span> : null}
+        {showSlide && slide ? (
+          <span className="site-meta-counter">
+            <span aria-hidden="true">{pad(slide.current)}</span>
+            <span aria-hidden="true" className="site-meta-counter-total">
+              {pad(slide.total)}
+            </span>
+            <span className="visually-hidden" aria-live="polite">
+              {`Slide ${slide.current} of ${slide.total}`}
+            </span>
+          </span>
+        ) : null}
+      </p>
     </footer>
   );
 }
