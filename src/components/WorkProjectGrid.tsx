@@ -28,7 +28,7 @@ import {
 const WORK_HEADING = "Work";
 
 /** Pointer must stay on a row this long before dim / title swap fire. */
-const HOVER_HOLD_MS = 150;
+const HOVER_HOLD_MS = 450;
 
 function matchesFilter(project: WorkProject, filter: WorkFilterId): boolean {
   switch (filter) {
@@ -457,7 +457,7 @@ export default function WorkProjectGrid({
         </p>
 
         <div className="work-list-swap">
-          <AnimatePresence initial={false}>
+          <AnimatePresence>
             <motion.ol
               key={filter}
               className="work-project-list"

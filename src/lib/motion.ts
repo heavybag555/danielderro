@@ -33,6 +33,6 @@ export function mediaEnterTransition(index: number) {
   return {
     duration: mobile ? 0.45 : 0.6,
     ease: MOTION.ease.heavy,
-    delay: Math.min(index * (mobile ? 0.06 : 0.03), mobile ? 0.36 : 0.48),
+    delay: Math.min(index * (mobile ? 0.08 : 0.07), mobile ? 0.72 : 1.05),
   };
 }

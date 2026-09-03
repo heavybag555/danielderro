@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Keep the cache off iCloud File Provider (this repo lives on Desktop).
-  distDir: ".next.nosync",
+  // Local only: keep the cache off iCloud File Provider. Vercel always expects
+  // `.next/routes-manifest.json` and cannot see a custom distDir.
+  distDir: process.env.VERCEL ? ".next" : ".next.nosync",
   turbopack: {
     root: __dirname,
   },

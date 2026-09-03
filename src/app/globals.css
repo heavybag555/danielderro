@@ -782,7 +782,7 @@ html:has([data-gallery-canvas]) body {
   white-space: nowrap;
   color: var(--color-white);
   transition-property: opacity, filter;
-  transition-duration: 0.32s;
+  transition-duration: 0.9s;
   transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
 }
 
@@ -1036,7 +1036,7 @@ html:has([data-gallery-canvas]) body {
    dim lives on the link because the row carries Framer's inline enter opacity. */
 @media (min-width: 768px) and (hover: hover) and (pointer: fine) {
   .work-row-link {
-    transition: opacity 0.32s cubic-bezier(0.76, 0, 0.24, 1);
+    transition: opacity 0.9s cubic-bezier(0.76, 0, 0.24, 1);
   }
 
   .work-project-list[data-hovering="true"] .work-row-link {
