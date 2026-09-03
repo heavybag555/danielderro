@@ -39,7 +39,7 @@ export default function SiteBrandStrip({ blendOverlay = false }: SiteBrandStripP
   return (
     <>
       <div
-        className="site-brand-strip layout-full fixed top-0 right-0 left-0"
+        className={`site-brand-strip layout-full fixed top-0 right-0 left-0${blendClass}`}
         style={{
           paddingTop: "calc(var(--spacing-margin) + env(safe-area-inset-top, 0px))",
           paddingBottom: "var(--spacing-margin)",
@@ -47,12 +47,12 @@ export default function SiteBrandStrip({ blendOverlay = false }: SiteBrandStripP
       >
         <div className="site-brand-strip-bar layout-grid">
           <div className="site-header-brand-cell min-w-0">
-            <Link href="/" className={`${brandLink}${blendClass}`}>
+            <Link href="/" className={brandLink}>
               Daniel Derro
             </Link>
           </div>
 
-          <div className={`site-header-nav-cell${blendClass}`}>
+          <div className="site-header-nav-cell">
             <SiteNavLinks />
           </div>
         </div>

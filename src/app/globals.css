@@ -318,60 +318,108 @@ html::-webkit-scrollbar-thumb:hover,
   filter: grayscale(100%);
 }
 
-/* Gallery index: .layout-grid 2/4/8. Each still keeps its aspect-ratio. */
+/* Gallery: locked barreled infinite canvas. */
+html:has([data-gallery-canvas]) {
+  height: 100dvh;
+}
+
+html:has([data-gallery-canvas]) body {
+  overflow: hidden;
+  height: 100dvh;
+}
+
 .gallery-page-shell {
-  display: flex;
-  flex-direction: column;
-  min-height: 100dvh;
+  position: fixed;
+  inset: 0;
+  top: var(--site-mobile-nav-shift);
+  height: 100dvh;
   background: var(--color-black);
 }
 
-.gallery-page-content {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
+.gallery-barrel {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
+  perspective-origin: 50% 50%;
 }
 
-.gallery-index.layout-grid {
-  align-items: start;
-  column-gap: 80px;
-  row-gap: 80px;
+.gallery-barrel:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.35);
+  outline-offset: -12px;
 }
 
-.gallery-index-tile {
-  position: relative;
-  width: 100%;
-  height: auto;
-  min-width: 0;
-  /* The index packs 64–96 tiles. Skip rendering the ones off-screen; `auto`
-     reuses each tile's last measured height so the scrollbar stays steady. */
-  content-visibility: auto;
-  contain-intrinsic-size: auto 320px;
+.gallery-barrel[data-dragging="true"] {
+  cursor: grabbing;
 }
 
-.gallery-index-link {
+.gallery-barrel-space {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  opacity: 0;
+  transition: opacity 0.8s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.gallery-barrel-space[data-ready="true"] {
+  opacity: 1;
+}
+
+.gallery-barrel-tile {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  contain: layout paint;
+  transform-origin: center center;
+  backface-visibility: hidden;
+}
+
+.gallery-barrel-link {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   color: inherit;
   text-decoration: none;
 }
 
-.gallery-index-media {
+.gallery-barrel-link:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 2px;
+}
+
+.gallery-barrel-media {
   position: relative;
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   overflow: hidden;
+  border-radius: inherit;
   outline: 1px solid rgba(255, 255, 255, 0.1);
   outline-offset: -1px;
-  transition-property: opacity, filter;
-  transition-duration: 0.32s;
+  transition-property: opacity;
+  transition-duration: 0.9s;
   transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
 }
 
-.gallery-index-media[data-dimmed="true"] {
+.gallery-barrel-media img,
+.gallery-barrel-media video {
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.gallery-barrel-media video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gallery-barrel-tile[data-dimmed="true"] .gallery-barrel-media {
   opacity: 0.18;
 }
 
@@ -1336,6 +1384,29 @@ html:has([data-home-hero]) body {
   overflow: visible;
 }
 
+/* Exclusion on the fixed strip itself — same as Menu — so the name and
+   desktop nav invert over photography. Blend on the inner links is isolated
+   by this stacking context and never reaches the page. */
+.site-brand-strip.blend-overlay {
+  mix-blend-mode: exclusion;
+  color: #ffffff;
+}
+
+.site-brand-strip.blend-overlay .site-header-brand,
+.site-brand-strip.blend-overlay .site-header-nav-cell {
+  color: #ffffff;
+}
+
+.site-brand-strip.blend-overlay .site-header-nav-link {
+  color: #808080;
+}
+
+.site-brand-strip.blend-overlay .site-header-nav-link:hover,
+.site-brand-strip.blend-overlay .site-header-nav-link:focus-visible,
+.site-brand-strip.blend-overlay .site-header-nav-link[data-current="true"] {
+  color: #ffffff;
+}
+
 .site-brand-strip-bar {
   align-items: start;
 }
@@ -1601,6 +1672,7 @@ html:not(:has([data-work-surface])):not(:has([data-home-hero]))
 }
 
 /* Open sheet is flat white — drop exclusion so Daniel Derro and Close stay black. */
+html[data-mobile-menu-open] .site-brand-strip,
 html[data-mobile-menu-open] .site-header-brand,
 html[data-mobile-menu-open] .site-header-notch-cell {
   color: #000000;
@@ -1626,7 +1698,8 @@ html[data-mobile-menu-open] .site-header-notch-cell {
 }
 
 /* Home: once the hero photo has scrolled away, drop exclusion and keep light type. */
-html[data-hero-bg-visible="false"] .blend-overlay {
+html[data-hero-bg-visible="false"] .blend-overlay,
+html[data-hero-bg-visible="false"] .site-brand-strip.blend-overlay {
   mix-blend-mode: normal;
   --color-black: #000000;
   --color-white: #ffffff;

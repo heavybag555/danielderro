@@ -16,6 +16,7 @@
 
 # next.js
 /.next/
+/.next.nosync/
 /out/
 
 # production
@@ -41,3 +42,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Flock
+.flock-agents/
+flock.local.jsonc
+flock.schema.json

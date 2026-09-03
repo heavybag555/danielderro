@@ -110,6 +110,7 @@ export const workPageProjectsQuery = groq`
     "galleryThumbs": gallery[]{
       "image": coalesce(image, thumbnail)
     },
+    "coverVideoUrl": gallery[_type == "videoAsset" && defined(videoFile.asset)][0].videoFile.asset->url,
   }
 `;
 

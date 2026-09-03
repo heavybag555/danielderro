@@ -166,6 +166,8 @@ export type WorkProject = {
   date?: string;
   coverImage?: SanityImageField;
   galleryThumbs?: { image?: SanityImageField }[];
+  /** Direct CDN URL for the project's first uploaded video file, if any. */
+  coverVideoUrl?: string | null;
   /** Vimeo / remote stills for No School catalog rows (no Sanity asset). */
   externalCover?: ExternalCover;
 };

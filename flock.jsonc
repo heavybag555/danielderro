@@ -1,0 +1,26 @@
+{
+  "$schema": "./flock.schema.json",
+  "agents": [
+    {
+      "name": "claude",
+      "provider": "claude"
+    },
+    {
+      "name": "codex",
+      "provider": "codex"
+    }
+  ],
+  "services": [
+    {
+      "name": "web",
+      "label": "Site",
+      "cmd": "npm run dev",
+      "basePort": 3000,
+      "autoStart": true
+    }
+  ],
+  "tasks": [
+    { "name": "lint", "cmd": "npm run lint", "group": "web" },
+    { "name": "build", "cmd": "npm run build", "group": "web" }
+  ]
+}

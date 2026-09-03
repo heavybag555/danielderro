@@ -17,7 +17,7 @@ export default function GalleryLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div data-work-surface className="min-h-dvh bg-black">
+    <div data-work-surface className="h-dvh overflow-hidden bg-black">
       {children}
     </div>
   );

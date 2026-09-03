@@ -5,10 +5,12 @@ import { MotionConfig } from "framer-motion";
 import SiteBrandStrip from "@/components/SiteBrandStrip";
 
 function useHeaderBlend(pathname: string): boolean {
-  // Home, info, radio, and project detail use exclusion blend over photography / video.
+  // Surfaces with photography / video under the brand: exclusion so the name
+  // and desktop nav invert like the mobile Menu word.
   if (pathname === "/") return true;
   if (pathname === "/info") return true;
   if (pathname === "/radio") return true;
+  if (pathname === "/gallery") return true;
   if (pathname.startsWith("/work/") && pathname.length > "/work/".length) return true;
   return false;
 }

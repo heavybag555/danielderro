@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Keep the cache off iCloud File Provider (this repo lives on Desktop).
+  distDir: ".next.nosync",
   turbopack: {
     root: __dirname,
   },

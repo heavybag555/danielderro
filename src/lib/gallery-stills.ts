@@ -11,6 +11,8 @@ export type GalleryStill = {
   src: string;
   aspect: number;
   remote: boolean;
+  /** Direct CDN URL of a muted looping video for this tile; `src` is its poster. */
+  videoSrc?: string;
 };
 
 const TAG_LABELS: Record<string, string> = {
@@ -42,9 +44,9 @@ function tagsLabel(project: WorkProject): string {
 }
 
 const THUMB_MAX = 24;
-/** Enough stills to pack an 8-col grid through the first viewport and beyond. */
-const MIN_TILES = 64;
-const MAX_TILES = 96;
+/** Enough stills so the toroidal canvas repeats without feeling sparse. */
+const MIN_TILES = 96;
+const MAX_TILES = 160;
 
 function projectStills(project: WorkProject): GalleryStill[] {
   const slug = project.slug?.current;
@@ -67,6 +69,30 @@ function projectStills(project: WorkProject): GalleryStill[] {
       remote,
     });
   };
+
+  // Video tile: first uploaded video file, postered by the cover (or first
+  // thumb). Marking the poster as seen makes the video replace its still.
+  if (project.coverVideoUrl) {
+    const poster =
+      project.coverImage?.asset?._ref
+        ? project.coverImage
+        : (project.galleryThumbs ?? []).find((t) => t?.image?.asset?._ref)?.image;
+    if (poster) {
+      const posterSrc = sanityImageUrl(poster);
+      seen.add(posterSrc);
+      stills.push({
+        key: `${project._id}__video`,
+        slug,
+        title: project.title,
+        client: clientLabel(project),
+        tags: tagsLabel(project),
+        src: posterSrc,
+        aspect: getThumbAspect(poster),
+        remote: false,
+        videoSrc: project.coverVideoUrl,
+      });
+    }
+  }
 
   const external = project.externalCover;
   if (external?.src) {
