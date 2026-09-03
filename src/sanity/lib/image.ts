@@ -48,6 +48,17 @@ export const sanityLoader: ImageLoader = ({ src, width, quality }) => {
   return url.toString();
 };
 
+/** Work index strip thumbs are ≤160px tall; request 2× height, cap width. */
+export const WORK_THUMB_MAX_WIDTH = 800;
+
+export function workThumbImageUrl(src: string, aspect: number): string {
+  const width = Math.min(
+    WORK_THUMB_MAX_WIDTH,
+    Math.max(1, Math.round(320 * (aspect > 0 ? aspect : 1))),
+  );
+  return sanityLoader({ src, width, quality: 90 });
+}
+
 /** Direct CDN URL for a gallery tile at its laid-out CSS width (2×, q90). */
 export function galleryTileImageUrl(src: string, cssWidth: number): string {
   const width = Math.min(

@@ -106,9 +106,15 @@ export const workPageProjectsQuery = groq`
     projectType,
     tags,
     date,
-    coverImage,
+    coverImage {
+      ...,
+      "lqip": asset->metadata.lqip,
+    },
     "galleryThumbs": gallery[]{
-      "image": coalesce(image, thumbnail)
+      "image": coalesce(image, thumbnail) {
+        ...,
+        "lqip": asset->metadata.lqip,
+      }
     },
     "coverVideoUrl": gallery[_type == "videoAsset" && defined(videoFile.asset)][0].videoFile.asset->url,
   }

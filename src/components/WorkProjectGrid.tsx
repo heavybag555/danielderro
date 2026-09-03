@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AnimatePresence,
@@ -9,7 +8,11 @@ import {
   useReducedMotion,
   type Variants,
 } from "framer-motion";
-import { sanityImageUrl, sanityLoader } from "@/sanity/lib/image";
+import {
+  sanityImageBlurUrl,
+  sanityImageUrl,
+  workThumbImageUrl,
+} from "@/sanity/lib/image";
 import SitePageFooter from "@/components/SitePageFooter";
 import { mediaEnterTransition, MOTION } from "@/lib/motion";
 import { useDismissOnScroll } from "@/lib/use-dismiss-on-scroll";
@@ -234,7 +237,19 @@ type StripThumb = {
   src: string;
   aspect: number;
   remote: boolean;
+  blurSrc?: string;
 };
+
+function blurSrcFor(image: SanityImageField): string | undefined {
+  if (image.lqip) return image.lqip;
+  if (image.asset?._ref) return sanityImageBlurUrl(image);
+  return undefined;
+}
+
+function thumbFullSrc(thumb: StripThumb): string {
+  if (thumb.remote) return thumb.src;
+  return workThumbImageUrl(thumb.src, thumb.aspect);
+}
 
 function getStripThumbs(project: WorkProject): StripThumb[] {
   const cover = project.externalCover;
@@ -257,14 +272,149 @@ function getStripThumbs(project: WorkProject): StripThumb[] {
     src: sanityImageUrl(image),
     aspect: getThumbAspect(image),
     remote: false,
+    blurSrc: blurSrcFor(image),
   }));
 }
 
-function ThumbnailStrip({ thumbs }: { thumbs: StripThumb[] }) {
+/** Phones / tablets: keep the page as the only vertical scroller. */
+const MOBILE_STRIP_PAN = "(hover: none), (max-width: 767px)";
+
+/** Drive strip.scrollLeft from touch so overflow-x can stay hidden on mobile. */
+function bindMobileStripPan(el: HTMLElement): () => void {
+  const syncOverflow = () => {
+    el.dataset.overflow = el.scrollWidth > el.clientWidth + 1 ? "x" : "none";
+  };
+  syncOverflow();
+  const ro = new ResizeObserver(syncOverflow);
+  ro.observe(el);
+
+  let startX = 0;
+  let startY = 0;
+  let startScroll = 0;
+  let axis: "x" | "y" | null = null;
+
+  const onStart = (event: TouchEvent) => {
+    if (el.dataset.overflow !== "x") return;
+    startX = event.touches[0].clientX;
+    startY = event.touches[0].clientY;
+    startScroll = el.scrollLeft;
+    axis = null;
+  };
+
+  const onMove = (event: TouchEvent) => {
+    if (el.dataset.overflow !== "x" || event.touches.length !== 1) return;
+    const dx = event.touches[0].clientX - startX;
+    const dy = event.touches[0].clientY - startY;
+    if (!axis) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+    }
+    if (axis !== "x") return;
+    el.scrollLeft = startScroll - dx;
+  };
+
+  const onEnd = () => {
+    axis = null;
+  };
+
+  el.addEventListener("touchstart", onStart, { passive: true });
+  el.addEventListener("touchmove", onMove, { passive: true });
+  el.addEventListener("touchend", onEnd, { passive: true });
+  el.addEventListener("touchcancel", onEnd, { passive: true });
+
+  return () => {
+    ro.disconnect();
+    el.removeEventListener("touchstart", onStart);
+    el.removeEventListener("touchmove", onMove);
+    el.removeEventListener("touchend", onEnd);
+    el.removeEventListener("touchcancel", onEnd);
+    delete el.dataset.overflow;
+  };
+}
+
+function armWorkThumb(el: HTMLElement, blurSrc?: string) {
+  if (el.dataset.armed === "true") return;
+  el.dataset.armed = "true";
+
+  const media = el.querySelector<HTMLElement>(".work-thumb-media");
+  if (media && blurSrc) {
+    media.style.setProperty("--work-blur", `url("${blurSrc}")`);
+  }
+
+  const img = el.querySelector<HTMLImageElement>("img.work-thumb-full");
+  if (!img?.dataset.src) return;
+
+  const reveal = () => {
+    el.dataset.loaded = "true";
+  };
+  img.addEventListener("load", reveal, { once: true });
+  img.addEventListener("error", reveal, { once: true });
+  img.src = img.dataset.src;
+  if (img.complete && img.naturalWidth > 0) reveal();
+}
+
+function ThumbnailStrip({
+  thumbs,
+  eager,
+}: {
+  thumbs: StripThumb[];
+  eager?: boolean;
+}) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const nodes = [
+      ...root.querySelectorAll<HTMLElement>(".work-row-strip-thumb"),
+    ];
+    if (eager) {
+      nodes.forEach((node, i) => armWorkThumb(node, thumbs[i]?.blurSrc));
+      return;
+    }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const node = entry.target as HTMLElement;
+          const i = nodes.indexOf(node);
+          armWorkThumb(node, thumbs[i]?.blurSrc);
+          io.unobserve(node);
+        }
+      },
+      { rootMargin: "400px 160px", threshold: 0.01 },
+    );
+    nodes.forEach((node) => io.observe(node));
+    return () => io.disconnect();
+  }, [thumbs, eager]);
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+
+    const mq = window.matchMedia(MOBILE_STRIP_PAN);
+    let unbind: (() => void) | undefined;
+
+    const apply = () => {
+      unbind?.();
+      unbind = undefined;
+      if (mq.matches) unbind = bindMobileStripPan(el);
+      else delete el.dataset.overflow;
+    };
+
+    apply();
+    mq.addEventListener("change", apply);
+    return () => {
+      mq.removeEventListener("change", apply);
+      unbind?.();
+    };
+  }, [thumbs]);
+
   if (thumbs.length === 0) return null;
 
   return (
-    <div className="work-row-strip">
+    <div ref={rootRef} className="work-row-strip">
       <div className="work-row-strip-inner">
         {thumbs.map((thumb) => (
           <div
@@ -272,15 +422,16 @@ function ThumbnailStrip({ thumbs }: { thumbs: StripThumb[] }) {
             className="work-row-strip-thumb"
             style={{ aspectRatio: thumb.aspect }}
           >
-            <Image
-              {...(thumb.remote ? {} : { loader: sanityLoader })}
-              src={thumb.src}
-              alt=""
-              fill
-              sizes={`${Math.round(160 * thumb.aspect)}px`}
-              quality={90}
-              style={{ objectFit: "cover" }}
-            />
+            <span className="work-thumb-media">
+              {/* eslint-disable-next-line @next/next/no-img-element -- src is armed when the thumb nears the viewport */}
+              <img
+                className="work-thumb-full"
+                alt=""
+                data-src={thumbFullSrc(thumb)}
+                decoding="async"
+                draggable={false}
+              />
+            </span>
           </div>
         ))}
       </div>
@@ -327,7 +478,7 @@ function ProjectRow({
   variants?: Variants;
   index: number;
 }) {
-  const thumbs = getStripThumbs(project);
+  const thumbs = useMemo(() => getStripThumbs(project), [project]);
 
   return (
     <motion.li
@@ -347,7 +498,7 @@ function ProjectRow({
         onFocus={() => onFocusHover(project._id)}
         onBlur={() => onFocusHover(null)}
       >
-        <ThumbnailStrip thumbs={thumbs} />
+        <ThumbnailStrip thumbs={thumbs} eager={index < 2} />
 
         <div className="work-row-caption layout-grid text-caption">
           <span className="work-row-caption-client work-row-caption-muted">
