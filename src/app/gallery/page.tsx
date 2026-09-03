@@ -1,5 +1,5 @@
 import { sanityFetchOrDefault } from "@/sanity/lib/fetch-safe";
-import { workPageProjectsQuery } from "@/sanity/lib/queries";
+import { galleryPageProjectsQuery } from "@/sanity/lib/queries";
 import GalleryIndex from "@/components/GalleryIndex";
 import { buildGalleryStills } from "@/lib/gallery-stills";
 import type { WorkProject } from "@/components/WorkProjectGrid";
@@ -17,7 +17,7 @@ function byUploadedAt(a: WorkProject, b: WorkProject): number {
 
 export default async function GalleryPage() {
   const projects = await sanityFetchOrDefault<WorkProject[]>(
-    workPageProjectsQuery,
+    galleryPageProjectsQuery,
     [],
   );
 

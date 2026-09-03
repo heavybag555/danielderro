@@ -146,6 +146,7 @@ const ROW_VARIANTS: Variants = {
 type SanityImageField = {
   asset: { _ref: string };
   hotspot?: { x: number; y: number };
+  lqip?: string;
 };
 
 type ExternalCover = {

@@ -33,6 +33,9 @@ export const PROJECT_SLIDE_MAX_WIDTH = 2560;
 /** Project slides are the portfolio artwork, so they carry the site's highest quality. */
 export const PROJECT_SLIDE_QUALITY = 90;
 
+/** Gallery index tiles are ~300px (132px on mobile); 2× that, never the slide cap. */
+export const GALLERY_TILE_MAX_WIDTH = 800;
+
 /**
  * Custom loader for next/image — lets Sanity CDN handle all image
  * processing in a single pass, eliminating double compression from
@@ -44,6 +47,15 @@ export const sanityLoader: ImageLoader = ({ src, width, quality }) => {
   url.searchParams.set("q", (quality ?? 90).toString());
   return url.toString();
 };
+
+/** Direct CDN URL for a gallery tile at its laid-out CSS width (2×, q90). */
+export function galleryTileImageUrl(src: string, cssWidth: number): string {
+  const width = Math.min(
+    Math.max(1, Math.round(cssWidth * 2)),
+    GALLERY_TILE_MAX_WIDTH,
+  );
+  return sanityLoader({ src, width, quality: 90 });
+}
 
 /** Project slide loader — caps width/quality so srcset never over-fetches. */
 export const projectSlideLoader: ImageLoader = ({ src, width, quality }) => {

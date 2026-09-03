@@ -114,6 +114,31 @@ export const workPageProjectsQuery = groq`
   }
 `;
 
+/** Same as the work index, plus LQIP so gallery tiles can blur-up without extra fetches. */
+export const galleryPageProjectsQuery = groq`
+  *[_type == "project"] | order(_createdAt desc) {
+    _id,
+    _createdAt,
+    title,
+    slug,
+    client,
+    projectType,
+    tags,
+    date,
+    coverImage {
+      ...,
+      "lqip": asset->metadata.lqip,
+    },
+    "galleryThumbs": gallery[]{
+      "image": coalesce(image, thumbnail) {
+        ...,
+        "lqip": asset->metadata.lqip,
+      }
+    },
+    "coverVideoUrl": gallery[_type == "videoAsset" && defined(videoFile.asset)][0].videoFile.asset->url,
+  }
+`;
+
 /** Slugs and modified stamps for the sitemap. */
 export const sitemapProjectsQuery = groq`
   *[_type == "project" && defined(slug.current)] | order(_updatedAt desc) {

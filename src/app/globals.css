@@ -360,12 +360,33 @@ html:has([data-gallery-canvas]) body {
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-  opacity: 0;
-  transition: opacity 0.8s cubic-bezier(0.76, 0, 0.24, 1);
+  opacity: 1;
 }
 
-.gallery-barrel-space[data-ready="true"] {
+/* Fade a veil, not the 3D scene — opacity on a preserve-3d ancestor flattens
+   the dome until the fade finishes, which is the late "shader pop". */
+.gallery-barrel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: var(--color-black);
+  pointer-events: auto;
   opacity: 1;
+  transition-property: opacity;
+  transition-duration: 0.8s;
+  transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.gallery-barrel[data-ready="true"]::after {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-barrel::after {
+    transition: none;
+  }
 }
 
 .gallery-barrel-tile {
@@ -398,25 +419,65 @@ html:has([data-gallery-canvas]) body {
   height: 100%;
   overflow: hidden;
   border-radius: inherit;
-  outline: 1px solid rgba(255, 255, 255, 0.1);
-  outline-offset: -1px;
   transition-property: opacity;
   transition-duration: 0.9s;
   transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
 }
 
-.gallery-barrel-media img,
-.gallery-barrel-media video {
-  -webkit-user-drag: none;
+.gallery-barrel-media::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--gallery-blur);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  transform: scale(1.1);
+  filter: blur(12px);
   pointer-events: none;
+  opacity: 1;
+  transition-property: opacity;
+  transition-duration: 0.6s;
+  transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
 }
 
+.gallery-barrel-full,
 .gallery-barrel-media video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  opacity: 0;
+  -webkit-user-drag: none;
+  pointer-events: none;
+  transition-property: opacity;
+  transition-duration: 0.6s;
+  transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.gallery-barrel-full {
+  object-fit: contain;
+}
+
+.gallery-barrel-media video {
   object-fit: cover;
+}
+
+.gallery-barrel-tile[data-loaded="true"] .gallery-barrel-full,
+.gallery-barrel-tile[data-loaded="true"] .gallery-barrel-media video {
+  opacity: 1;
+}
+
+.gallery-barrel-tile[data-loaded="true"] .gallery-barrel-media::before {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-barrel-full,
+  .gallery-barrel-media video,
+  .gallery-barrel-media::before {
+    transition: none;
+  }
 }
 
 .gallery-barrel-tile[data-dimmed="true"] .gallery-barrel-media {

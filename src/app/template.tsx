@@ -8,7 +8,9 @@ export default function Template({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const reduceMotion = useReducedMotion();
 
-  if (pathname.startsWith("/studio")) {
+  // Gallery's dome is a preserve-3d scene. An ancestor opacity fade flattens
+  // that context, so the bulge would pop in only after the page transition.
+  if (pathname.startsWith("/studio") || pathname === "/gallery") {
     return <>{children}</>;
   }
 

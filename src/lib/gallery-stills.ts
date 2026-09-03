@@ -1,4 +1,4 @@
-import { sanityImageUrl } from "@/sanity/lib/image";
+import { sanityImageBlurUrl, sanityImageUrl } from "@/sanity/lib/image";
 import { getThumbAspect, THUMB_FALLBACK_ASPECT } from "@/lib/work-strip-fit";
 import type { WorkProject } from "@/components/WorkProjectGrid";
 
@@ -11,9 +11,22 @@ export type GalleryStill = {
   src: string;
   aspect: number;
   remote: boolean;
+  /** Sanity LQIP data URI, or a tiny blurred CDN URL. */
+  blurSrc?: string;
   /** Direct CDN URL of a muted looping video for this tile; `src` is its poster. */
   videoSrc?: string;
 };
+
+type StillImage = {
+  asset: { _ref: string };
+  lqip?: string;
+};
+
+function blurSrcFor(image?: StillImage): string | undefined {
+  if (image?.lqip) return image.lqip;
+  if (image?.asset?._ref) return sanityImageBlurUrl(image);
+  return undefined;
+}
 
 const TAG_LABELS: Record<string, string> = {
   editorial: "Editorial",
@@ -55,7 +68,13 @@ function projectStills(project: WorkProject): GalleryStill[] {
   const stills: GalleryStill[] = [];
   const seen = new Set<string>();
 
-  const push = (src: string, remote: boolean, id: string, aspect: number) => {
+  const push = (
+    src: string,
+    remote: boolean,
+    id: string,
+    aspect: number,
+    blurSrc?: string,
+  ) => {
     if (!src || seen.has(src)) return;
     seen.add(src);
     stills.push({
@@ -67,6 +86,7 @@ function projectStills(project: WorkProject): GalleryStill[] {
       src,
       aspect,
       remote,
+      blurSrc,
     });
   };
 
@@ -89,6 +109,7 @@ function projectStills(project: WorkProject): GalleryStill[] {
         src: posterSrc,
         aspect: getThumbAspect(poster),
         remote: false,
+        blurSrc: blurSrcFor(poster),
         videoSrc: project.coverVideoUrl,
       });
     }
@@ -114,7 +135,13 @@ function projectStills(project: WorkProject): GalleryStill[] {
   for (const image of images) {
     const ref = image?.asset?._ref;
     if (!ref) continue;
-    push(sanityImageUrl(image), false, ref, getThumbAspect(image));
+    push(
+      sanityImageUrl(image),
+      false,
+      ref,
+      getThumbAspect(image),
+      blurSrcFor(image),
+    );
     if (stills.length >= THUMB_MAX) break;
   }
 

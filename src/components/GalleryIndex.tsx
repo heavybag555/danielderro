@@ -9,12 +9,11 @@ import {
   useRef,
   useState,
 } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { DialRoot, useDialKit } from "dialkit";
 import "dialkit/styles.css";
 import { motion, useReducedMotion } from "framer-motion";
-import { sanityLoader } from "@/sanity/lib/image";
+import { galleryTileImageUrl } from "@/sanity/lib/image";
 import { MOTION } from "@/lib/motion";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { markUnmutedAutoplay } from "@/lib/autoplay-sound";
@@ -33,21 +32,58 @@ const DRAG_CLICK_PX = 6;
 /** Extra px around the viewport before a pooled tile is hidden. */
 const CULL_MARGIN = 320;
 const SHOW_DIALS = process.env.NODE_ENV !== "production";
+/** px/frame below this stays sharp; above it maps into the blur range. */
+const MOTION_BLUR_DEADZONE = 10;
+const MOTION_BLUR_GAIN = 0.12;
+const MOTION_BLUR_MAX = 6;
+
+function motionBlurPx(speed: number): number {
+  if (speed < MOTION_BLUR_DEADZONE) return 0;
+  return Math.min(MOTION_BLUR_MAX, (speed - MOTION_BLUR_DEADZONE) * MOTION_BLUR_GAIN);
+}
 
 type TileNode = {
   el: HTMLDivElement;
+  media: HTMLElement | null;
   video: HTMLVideoElement | null;
   item: BarrelLayoutItem;
   cj: number;
   ck: number;
 };
 
-function posterUrl(still: GalleryStill): string {
+function tileFullSrc(still: GalleryStill, cssWidth: number): string {
   if (still.remote) return still.src;
-  const url = new URL(still.src);
-  url.searchParams.set("w", "800");
-  url.searchParams.set("q", "80");
-  return url.toString();
+  return galleryTileImageUrl(still.src, cssWidth);
+}
+
+/** Start the full image/video only once a tile is on screen. Blur is a CSS var. */
+function armTile(el: HTMLDivElement, video: HTMLVideoElement | null, blurSrc?: string) {
+  if (el.dataset.armed === "true") return;
+  el.dataset.armed = "true";
+
+  if (blurSrc) {
+    const media = el.querySelector<HTMLElement>(".gallery-barrel-media");
+    media?.style.setProperty("--gallery-blur", `url("${blurSrc}")`);
+  }
+
+  const reveal = () => {
+    el.dataset.loaded = "true";
+  };
+
+  const full = el.querySelector<HTMLImageElement>("img.gallery-barrel-full");
+  if (full?.dataset.src) {
+    full.addEventListener("load", reveal, { once: true });
+    full.addEventListener("error", reveal, { once: true });
+    full.src = full.dataset.src;
+    if (full.complete && full.naturalWidth > 0) reveal();
+  }
+
+  if (video?.dataset.src) {
+    video.addEventListener("loadeddata", reveal, { once: true });
+    video.addEventListener("error", reveal, { once: true });
+    video.src = video.dataset.src;
+    if (video.readyState >= 2) reveal();
+  }
 }
 
 /**
@@ -59,7 +95,6 @@ const TilePool = memo(function TilePool({
   world,
   copiesX,
   copiesY,
-  sizes,
   bind,
   onHover,
   onLeave,
@@ -68,7 +103,6 @@ const TilePool = memo(function TilePool({
   world: BarrelWorld;
   copiesX: number;
   copiesY: number;
-  sizes: string;
   bind: (
     key: string,
     item: BarrelLayoutItem,
@@ -81,6 +115,7 @@ const TilePool = memo(function TilePool({
 }) {
   const tiles: React.ReactNode[] = [];
   for (const item of world.items) {
+    const fullSrc = tileFullSrc(item.still, item.w);
     for (let cj = 0; cj < copiesX; cj += 1) {
       for (let ck = 0; ck < copiesY; ck += 1) {
         const key = `${item.key}@${cj}:${ck}`;
@@ -108,22 +143,20 @@ const TilePool = memo(function TilePool({
               <span className="gallery-barrel-media">
                 {item.still.videoSrc ? (
                   <video
-                    src={item.still.videoSrc}
-                    poster={posterUrl(item.still)}
+                    data-src={item.still.videoSrc}
                     muted
                     loop
                     playsInline
                     preload="none"
                   />
                 ) : (
-                  <Image
-                    {...(item.still.remote ? {} : { loader: sanityLoader })}
-                    src={item.still.src}
+                  // eslint-disable-next-line @next/next/no-img-element -- src is armed in the paint loop
+                  <img
+                    className="gallery-barrel-full"
                     alt=""
-                    fill
-                    sizes={sizes}
-                    quality={90}
-                    style={{ objectFit: "contain" }}
+                    data-src={fullSrc}
+                    decoding="async"
+                    draggable={false}
                   />
                 )}
               </span>
@@ -157,7 +190,7 @@ export default function GalleryIndex({
       round: [0, 0, 64, 1],
       inertia: [0.82, 0.82, 0.985, 0.001],
     },
-    { id: "gallery-dome-v2", persist: true },
+    { id: "gallery-dome-v2", persist: SHOW_DIALS },
   );
 
   const columns = isMobile ? Math.min(params.columns, 4) : params.columns;
@@ -172,6 +205,8 @@ export default function GalleryIndex({
   const spaceRef = useRef<HTMLDivElement>(null);
   const nodes = useRef(new Map<string, TileNode>());
   const pan = useRef({ x: 0, y: 0, vx: 0, vy: 0 });
+  const lastPan = useRef({ x: 0, y: 0 });
+  const speedRef = useRef(0);
   const dragging = useRef(false);
   const dragMoved = useRef(false);
   const pointer = useRef({ id: -1, x: 0, y: 0 });
@@ -195,7 +230,11 @@ export default function GalleryIndex({
   }, [hoveredStill]);
 
   const [dialsReady, setDialsReady] = useState(false);
-  useEffect(() => setDialsReady(true), []);
+  const [clientReady, setClientReady] = useState(false);
+  useEffect(() => {
+    setDialsReady(true);
+    setClientReady(true);
+  }, []);
 
   const clearHoverTimer = useCallback(() => {
     if (hoverTimer.current !== null) {
@@ -245,6 +284,7 @@ export default function GalleryIndex({
         if (el) {
           nodes.current.set(key, {
             el,
+            media: el.querySelector(".gallery-barrel-media"),
             video: el.querySelector("video"),
             item,
             cj,
@@ -286,8 +326,10 @@ export default function GalleryIndex({
     const W = worldNow.width;
     const panX = pan.current.x;
     const panY = pan.current.y;
+    const blur = flat ? 0 : motionBlurPx(speedRef.current);
+    const filter = blur > 0.35 ? `blur(${blur.toFixed(1)}px)` : "";
 
-    nodes.current.forEach(({ el, video, item, cj, ck }) => {
+    nodes.current.forEach(({ el, media, video, item, cj, ck }) => {
       const P = item.periodY;
       const sx0 = W > 0 ? wrapCoord(item.x - panX, W) : item.x - panX;
       const sy0 = P > 0 ? wrapCoord(item.y - panY, P) : item.y - panY;
@@ -302,15 +344,19 @@ export default function GalleryIndex({
       ) {
         if (el.style.visibility !== "hidden") {
           el.style.visibility = "hidden";
+          if (media && media.style.filter) media.style.filter = "";
           if (video && !video.paused) video.pause();
         }
         return;
       }
 
+      armTile(el, video, item.still.blurSrc);
+
       const t = projectDomeTile(sx, sy, item.w, item.h, vw, vh, optics, flat);
       el.style.visibility = "visible";
       el.style.transform = `translate3d(${t.x}px, ${t.y}px, ${t.z}px) rotateX(${t.rotateX}deg) rotateY(${t.rotateY}deg)`;
       el.style.borderRadius = `${t.radius}px`;
+      if (media && media.style.filter !== filter) media.style.filter = filter;
 
       if (video) {
         // Decorative loops stop under prefers-reduced-motion.
@@ -321,11 +367,6 @@ export default function GalleryIndex({
         }
       }
     });
-
-    const space = spaceRef.current;
-    if (space && space.dataset.ready !== "true") {
-      space.dataset.ready = "true";
-    }
   }, []);
 
   const wrapPan = useCallback(() => {
@@ -337,7 +378,6 @@ export default function GalleryIndex({
 
   const tick = useCallback(() => {
     raf.current = 0;
-    wrapPan();
 
     if (!dragging.current) {
       pan.current.x += pan.current.vx;
@@ -349,11 +389,26 @@ export default function GalleryIndex({
       if (Math.abs(pan.current.vy) < 0.04) pan.current.vy = 0;
     }
 
+    // Measure before wrap — wrapping X by a world period would look like a
+    // huge jump and spike the blur.
+    const instant = Math.hypot(
+      pan.current.x - lastPan.current.x,
+      pan.current.y - lastPan.current.y,
+    );
+    wrapPan();
+    lastPan.current.x = pan.current.x;
+    lastPan.current.y = pan.current.y;
+
+    speedRef.current = flattenRef.current
+      ? 0
+      : speedRef.current * 0.72 + instant * 0.28;
+    if (speedRef.current < 0.15) speedRef.current = 0;
+
     paint();
 
     const coasting =
       !dragging.current && (pan.current.vx !== 0 || pan.current.vy !== 0);
-    if (dragging.current || coasting) {
+    if (dragging.current || coasting || speedRef.current > 0) {
       raf.current = window.requestAnimationFrame(tick);
     }
   }, [paint, wrapPan]);
@@ -364,11 +419,27 @@ export default function GalleryIndex({
   }, [tick]);
 
   // Re-measure, size the pool, and repaint whenever layout inputs change.
+  // Reveal only after the client breakpoint and copy pool have settled, with
+  // the dome already written — the veil then fades over a live 3D scene.
   useLayoutEffect(() => {
     measure();
-    syncCopies();
+    const next = poolCopies(worldRef.current, view.current.w, view.current.h);
+    if (copies.x !== next.x || copies.y !== next.y) {
+      setCopies(next);
+      paint();
+      return;
+    }
     paint();
-  }, [measure, syncCopies, paint, world, copies, params, flatten]);
+    const stage = stageRef.current;
+    if (
+      clientReady &&
+      stage &&
+      view.current.w > 0 &&
+      view.current.h > 0
+    ) {
+      stage.dataset.ready = "true";
+    }
+  }, [measure, paint, world, copies, params, flatten, clientReady]);
 
   useEffect(() => {
     const node = stageRef.current;
@@ -446,10 +517,12 @@ export default function GalleryIndex({
       pan.current.vx = 0;
       pan.current.vy = 0;
     }
-    if (pan.current.vx !== 0 || pan.current.vy !== 0) {
+    if (pan.current.vx !== 0 || pan.current.vy !== 0 || speedRef.current > 0) {
       startLoop();
     } else {
       wrapPan();
+      lastPan.current.x = pan.current.x;
+      lastPan.current.y = pan.current.y;
       paint();
     }
   };
@@ -466,8 +539,6 @@ export default function GalleryIndex({
     pan.current.vy = 0;
     startLoop();
   };
-
-  const sizes = `${Math.ceil(tileWidth * 1.5)}px`;
 
   return (
     <main id="main-content" className="gallery-page-shell" data-gallery-canvas>
@@ -493,7 +564,6 @@ export default function GalleryIndex({
             world={world}
             copiesX={copies.x}
             copiesY={copies.y}
-            sizes={sizes}
             bind={bindTile}
             onHover={onTileHover}
             onLeave={onTileLeave}
