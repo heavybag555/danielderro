@@ -33,13 +33,18 @@ const DRAG_CLICK_PX = 6;
 const CULL_MARGIN = 320;
 const SHOW_DIALS = process.env.NODE_ENV !== "production";
 /** px/frame below this stays sharp; above it maps into the blur range. */
-const MOTION_BLUR_DEADZONE = 10;
+const MOTION_BLUR_DEADZONE = 8;
 const MOTION_BLUR_GAIN = 0.12;
 const MOTION_BLUR_MAX = 6;
 
 function motionBlurPx(speed: number): number {
   if (speed < MOTION_BLUR_DEADZONE) return 0;
   return Math.min(MOTION_BLUR_MAX, (speed - MOTION_BLUR_DEADZONE) * MOTION_BLUR_GAIN);
+}
+
+function motionBlurFilter(loaded: boolean, blurPx: number): string {
+  if (!loaded || blurPx < 0.35) return "none";
+  return `blur(${blurPx.toFixed(1)}px)`;
 }
 
 type TileNode = {
@@ -58,10 +63,8 @@ function tileFullSrc(still: GalleryStill, cssWidth: number): string {
 
 /** Start the full image/video only once a tile is on screen. Blur is a CSS var. */
 function armTile(el: HTMLDivElement, video: HTMLVideoElement | null, blurSrc?: string) {
-  if (el.dataset.armed === "true") return;
-  el.dataset.armed = "true";
-
-  if (blurSrc) {
+  if (blurSrc && el.dataset.blurSet !== "true") {
+    el.dataset.blurSet = "true";
     const media = el.querySelector<HTMLElement>(".gallery-barrel-media");
     media?.style.setProperty("--gallery-blur", `url("${blurSrc}")`);
   }
@@ -71,17 +74,34 @@ function armTile(el: HTMLDivElement, video: HTMLVideoElement | null, blurSrc?: s
   };
 
   const full = el.querySelector<HTMLImageElement>("img.gallery-barrel-full");
-  if (full?.dataset.src) {
-    full.addEventListener("load", reveal, { once: true });
-    full.addEventListener("error", reveal, { once: true });
-    full.src = full.dataset.src;
-    if (full.complete && full.naturalWidth > 0) reveal();
+  const nextImg = full?.dataset.src;
+  if (full && nextImg && full.dataset.assignedSrc !== nextImg) {
+    const hadSrc = Boolean(full.getAttribute("src"));
+    full.dataset.assignedSrc = nextImg;
+    if (!hadSrc) {
+      full.addEventListener("load", reveal, { once: true });
+      full.addEventListener("error", reveal, { once: true });
+      full.src = nextImg;
+      if (full.complete && full.naturalWidth > 0) reveal();
+    } else {
+      // Keep the current pixels up while a sharper src decodes — swapping
+      // immediately would flash the placeholder on a tile that's already loaded.
+      const probe = new Image();
+      probe.onload = () => {
+        full.src = nextImg;
+        reveal();
+      };
+      probe.onerror = reveal;
+      probe.src = nextImg;
+    }
   }
 
-  if (video?.dataset.src) {
+  const nextVideo = video?.dataset.src;
+  if (video && nextVideo && video.dataset.assignedSrc !== nextVideo) {
+    video.dataset.assignedSrc = nextVideo;
     video.addEventListener("loadeddata", reveal, { once: true });
     video.addEventListener("error", reveal, { once: true });
-    video.src = video.dataset.src;
+    video.src = nextVideo;
     if (video.readyState >= 2) reveal();
   }
 }
@@ -326,8 +346,7 @@ export default function GalleryIndex({
     const W = worldNow.width;
     const panX = pan.current.x;
     const panY = pan.current.y;
-    const blur = flat ? 0 : motionBlurPx(speedRef.current);
-    const filter = blur > 0.35 ? `blur(${blur.toFixed(1)}px)` : "";
+    const blurPx = flat ? 0 : motionBlurPx(speedRef.current);
 
     nodes.current.forEach(({ el, media, video, item, cj, ck }) => {
       const P = item.periodY;
@@ -344,7 +363,7 @@ export default function GalleryIndex({
       ) {
         if (el.style.visibility !== "hidden") {
           el.style.visibility = "hidden";
-          if (media && media.style.filter) media.style.filter = "";
+          if (media && media.style.filter !== "none") media.style.filter = "none";
           if (video && !video.paused) video.pause();
         }
         return;
@@ -356,6 +375,7 @@ export default function GalleryIndex({
       el.style.visibility = "visible";
       el.style.transform = `translate3d(${t.x}px, ${t.y}px, ${t.z}px) rotateX(${t.rotateX}deg) rotateY(${t.rotateY}deg)`;
       el.style.borderRadius = `${t.radius}px`;
+      const filter = motionBlurFilter(el.dataset.loaded === "true", blurPx);
       if (media && media.style.filter !== filter) media.style.filter = filter;
 
       if (video) {

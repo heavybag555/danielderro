@@ -393,10 +393,7 @@ html:has([data-gallery-canvas]) body {
   position: absolute;
   top: 0;
   left: 0;
-  overflow: hidden;
-  contain: layout paint;
   transform-origin: center center;
-  backface-visibility: hidden;
 }
 
 .gallery-barrel-link {
@@ -433,7 +430,6 @@ html:has([data-gallery-canvas]) body {
   background-position: center;
   background-size: cover;
   transform: scale(1.1);
-  filter: blur(12px);
   pointer-events: none;
   opacity: 1;
   transition-property: opacity;
