@@ -5,10 +5,31 @@ import { animate, type AnimationPlaybackControls } from "framer-motion";
 import { MOTION } from "@/lib/motion";
 import { wheelDeltaPx } from "@/lib/smooth-scroll";
 
-/** Wheel travel that counts as a deliberate gesture (one mouse tick is ~100px). */
-const GESTURE_THRESHOLD_PX = 24;
-/** Silence between wheel events that separates one gesture from the next. */
-const GESTURE_QUIET_MS = 90;
+/** Wheel travel that counts as a swipe (one mouse tick is ~100px). */
+const SWIPE_THRESHOLD_PX = 16;
+/**
+ * Deltas below this are surface jitter (a finger resting on a Magic Mouse,
+ * the last crumbs of a momentum tail). They never extend or start a gesture.
+ */
+const NOISE_PX = 4;
+/**
+ * Telling a new swipe from the tail of the last one. Inertia only ever decays
+ * and never pauses or flips, so any of these is the hand, not the tail:
+ * a gap in the stream, a direction flip, one big jump (3x), or two rises in a
+ * row. A single 2x spike alone is not enough; a stalled frame coalesces two
+ * tail events into one and would look exactly like that.
+ */
+const FRESH_MIN_PX = 12;
+const FRESH_GAP_MS = 120;
+const FRESH_JUMP_GAIN = 3;
+const FRESH_RISE_GAIN = 1.3;
+/**
+ * A swipe's own ramp accelerates for its first ~100ms; do not read that as a
+ * second swipe. Humans cannot repeat a swipe faster than this anyway.
+ */
+const REFRACTORY_MS = 150;
+/** Silence after the slide lands that ends the gesture, swallowing inertia. */
+const GESTURE_QUIET_MS = 120;
 /** Debounce before an external move (scrollbar drag) settles onto a slide. */
 const SETTLE_MS = 140;
 
@@ -16,10 +37,12 @@ const INTERACTIVE_SELECTOR =
   "input, textarea, select, button, a, [contenteditable], .project-video-frame";
 
 /**
- * Desktop project deck: replaces CSS scroll-snap with one slide per wheel
- * gesture (or key press), travelling on the site's heavy curve. Trackpad
- * inertia after a swipe is swallowed until the gesture goes quiet, so a flick
- * never skips slides. Disabled → the native snap deck is untouched.
+ * Desktop project deck: one slide per gesture, no dead time. A swipe or key
+ * press glides to the next slide and locks against the momentum tail that
+ * follows, so a Magic Mouse or trackpad flick can never skip a slide. A fresh
+ * swipe (see FRESH_*) is honoured immediately, even mid-travel, retargeting
+ * from wherever the deck is. Touch and reduced motion keep the native CSS
+ * snap deck.
  */
 export function useSlideDeck(ref: RefObject<HTMLElement | null>, enabled: boolean) {
   useEffect(() => {
@@ -29,82 +52,125 @@ export function useSlideDeck(ref: RefObject<HTMLElement | null>, enabled: boolea
     el.dataset.slideEngine = "true";
 
     let controls: AnimationPlaybackControls | null = null;
-    let animating = false;
     let locked = false;
     let accumulated = 0;
-    let lastWheelAt = 0;
+    /** Shape of the wheel stream, for tail-vs-swipe checks. */
+    let lastAbsDy = 0;
+    let lastSign = 0;
+    let lastRising = false;
+    let lastEventAt = 0;
+    let lastTriggerAt = 0;
+    let index = 0;
+    let unlockTimer = 0;
     let settleTimer = 0;
+    /** Slide tops, measured per layout so the wheel handler touches no DOM. */
+    let offsets: number[] = [];
 
-    const slides = () =>
-      Array.from(el.querySelectorAll<HTMLElement>("[data-slide-index]"));
+    const measure = () => {
+      offsets = Array.from(
+        el.querySelectorAll<HTMLElement>("[data-slide-index]"),
+        (slide) => slide.offsetTop,
+      );
+      index = Math.max(0, Math.min(index, offsets.length - 1));
+    };
 
     const nearestIndex = () => {
-      const y = el.scrollTop;
       let best = 0;
       let bestDistance = Number.POSITIVE_INFINITY;
-      slides().forEach((slide, i) => {
-        const distance = Math.abs(slide.offsetTop - y);
+      for (let i = 0; i < offsets.length; i += 1) {
+        const distance = Math.abs(offsets[i] - el.scrollTop);
         if (distance < bestDistance) {
           bestDistance = distance;
           best = i;
         }
-      });
+      }
       return best;
     };
 
-    let index = nearestIndex();
+    /** Release the lock once travel is done and the gesture has gone quiet. */
+    const endGesture = () => {
+      window.clearTimeout(unlockTimer);
+      if (controls) return;
+      unlockTimer = window.setTimeout(() => {
+        locked = false;
+        accumulated = 0;
+      }, GESTURE_QUIET_MS);
+    };
 
     const goTo = (next: number) => {
-      const list = slides();
-      if (list.length === 0) return;
-      index = Math.min(list.length - 1, Math.max(0, next));
-      const to = list[index].offsetTop;
+      if (offsets.length === 0) return;
+      index = Math.max(0, Math.min(offsets.length - 1, next));
+      const to = offsets[index];
       const from = el.scrollTop;
       controls?.stop();
+      controls = null;
       if (Math.abs(to - from) < 1) {
         el.scrollTop = to;
+        endGesture();
         return;
       }
-      animating = true;
+      // Ease-out: motion starts the instant you swipe, then settles.
       controls = animate(from, to, {
-        duration: MOTION.duration.slow,
-        ease: MOTION.ease.heavy,
+        duration: MOTION.duration.slideDeck,
+        ease: MOTION.ease.out,
         onUpdate: (value) => {
           el.scrollTop = value;
         },
         onComplete: () => {
-          animating = false;
           controls = null;
+          endGesture();
         },
       });
+    };
+
+    const step = (direction: number) => {
+      window.clearTimeout(unlockTimer);
+      locked = true;
+      accumulated = 0;
+      lastTriggerAt = performance.now();
+      goTo(index + direction);
     };
 
     const onWheel = (event: WheelEvent) => {
       if (event.ctrlKey) return;
       const { dx, dy } = wheelDeltaPx(event);
-      if (dy === 0 || Math.abs(dx) > Math.abs(dy)) return;
+      if (dy === 0 || Math.abs(dx) > Math.abs(dy) * 2) return;
+      // The deck owns the vertical axis; native scroll would fight the glide.
       event.preventDefault();
 
+      const absDy = Math.abs(dy);
+      // Jitter never counts: not as inertia, not as intent.
+      if (absDy < NOISE_PX) return;
+
       const now = performance.now();
-      const quiet = now - lastWheelAt > GESTURE_QUIET_MS;
-      lastWheelAt = now;
+      const sign = dy > 0 ? 1 : -1;
+      const rising = absDy > lastAbsDy * FRESH_RISE_GAIN;
+      const fresh =
+        absDy >= FRESH_MIN_PX &&
+        (now - lastEventAt > FRESH_GAP_MS ||
+          sign !== lastSign ||
+          absDy > lastAbsDy * FRESH_JUMP_GAIN ||
+          (rising && lastRising));
+      lastAbsDy = absDy;
+      lastSign = sign;
+      lastRising = rising;
+      lastEventAt = now;
 
       if (locked) {
-        // Still the same gesture (inertia) or still travelling: swallow.
-        if (!quiet || animating) return;
-        locked = false;
-        accumulated = 0;
-      } else if (quiet) {
-        accumulated = 0;
+        if (fresh && now - lastTriggerAt > REFRACTORY_MS) {
+          // The hand again: go now, from wherever the deck is.
+          step(sign);
+          return;
+        }
+        // Still the old tail: once landed, keep the lock alive until it decays.
+        if (!controls) endGesture();
+        return;
       }
 
+      if (sign !== Math.sign(accumulated)) accumulated = 0;
       accumulated += dy;
-      if (Math.abs(accumulated) < GESTURE_THRESHOLD_PX) return;
-
-      const direction = accumulated > 0 ? 1 : -1;
-      accumulated = 0;
-      locked = true;
-      goTo(index + direction);
+      if (Math.abs(accumulated) < SWIPE_THRESHOLD_PX) return;
+      step(sign);
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -131,28 +197,30 @@ export function useSlideDeck(ref: RefObject<HTMLElement | null>, enabled: boolea
           break;
         case "Home":
           event.preventDefault();
-          goTo(0);
+          step(-index);
           return;
         case "End":
           event.preventDefault();
-          goTo(Number.POSITIVE_INFINITY);
+          step(offsets.length - 1 - index);
           return;
         default:
           return;
       }
       event.preventDefault();
-      goTo(index + direction);
+      // Key repeat is rate-limited to one slide per refractory window; a
+      // deliberate second press mid-travel retargets at once.
+      if (performance.now() - lastTriggerAt < REFRACTORY_MS) return;
+      step(direction);
     };
 
     // Scrollbar drag or any move we did not animate: rest on the closest slide.
     const onScroll = () => {
-      if (animating) return;
+      if (controls || locked) return;
       window.clearTimeout(settleTimer);
       settleTimer = window.setTimeout(() => {
         const nearest = nearestIndex();
-        const list = slides();
         index = nearest;
-        if (list[nearest] && Math.abs(list[nearest].offsetTop - el.scrollTop) >= 1) {
+        if (offsets[nearest] !== undefined) {
           goTo(nearest);
         }
       }, SETTLE_MS);
@@ -160,21 +228,26 @@ export function useSlideDeck(ref: RefObject<HTMLElement | null>, enabled: boolea
 
     // Slides are viewport-tall; keep the current one flush when the window resizes.
     const observer = new ResizeObserver(() => {
-      if (animating) return;
-      const slide = slides()[index];
-      if (slide) el.scrollTop = slide.offsetTop;
+      measure();
+      if (controls) return;
+      if (offsets[index] !== undefined) el.scrollTop = offsets[index];
     });
     observer.observe(el);
 
-    el.addEventListener("wheel", onWheel, { passive: false });
+    measure();
+    index = nearestIndex();
+
+    // Capture on the window so a swipe over the brand strip or footer still pages.
+    window.addEventListener("wheel", onWheel, { capture: true, passive: false });
     el.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("keydown", onKeyDown);
 
     return () => {
       controls?.stop();
+      window.clearTimeout(unlockTimer);
       window.clearTimeout(settleTimer);
       observer.disconnect();
-      el.removeEventListener("wheel", onWheel);
+      window.removeEventListener("wheel", onWheel, { capture: true });
       el.removeEventListener("scroll", onScroll);
       window.removeEventListener("keydown", onKeyDown);
       delete el.dataset.slideEngine;

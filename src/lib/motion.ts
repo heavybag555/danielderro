@@ -5,6 +5,8 @@ export const MOTION = {
     fade: 0.5,
     /** Project gallery image crossfade (fast advance). */
     gallerySlide: 0.12,
+    /** Project deck travel between two slides: a glide, not a journey. */
+    slideDeck: 0.7,
     slow: 1.2,
   },
   ease: {

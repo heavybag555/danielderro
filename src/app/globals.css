@@ -745,8 +745,8 @@ html:has([data-gallery-canvas]) body {
   overscroll-behavior: contain;
 }
 
-/* Desktop: the slide-deck engine (use-slide-deck.ts) animates scrollTop on the
-   site's heavy curve; native snapping would fight every intermediate frame. */
+/* Desktop: the slide-deck engine (use-slide-deck.ts) animates scrollTop one
+   slide per gesture; native snapping would fight every intermediate frame. */
 .project-scroll[data-slide-engine="true"] {
   scroll-snap-type: none;
 }

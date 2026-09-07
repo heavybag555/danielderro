@@ -91,7 +91,7 @@ export default function ProjectPage({
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  // Desktop: eased one-slide-per-gesture deck; touch keeps native CSS snap.
+  // Desktop: one-slide-per-gesture deck; touch keeps native CSS snap.
   useSlideDeck(scrollRef, useSmoothScrollEnabled());
   const mediaItems: ProjectMediaItem[] = projectMediaItems(project).map((item) => {
     if (item.kind !== "video") return item;
