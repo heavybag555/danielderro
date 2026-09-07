@@ -16,6 +16,12 @@ import { motion, useReducedMotion } from "framer-motion";
 import { galleryTileImageUrl } from "@/sanity/lib/image";
 import { MOTION } from "@/lib/motion";
 import { useMediaQuery } from "@/lib/use-media-query";
+import { useSmoothScrollEnabled } from "@/lib/use-smooth-scroll";
+import {
+  dampingAlpha,
+  SMOOTH_SCROLL_LERP,
+  wheelDeltaPx,
+} from "@/lib/smooth-scroll";
 import { markUnmutedAutoplay } from "@/lib/autoplay-sound";
 import type { GalleryStill } from "@/lib/gallery-stills";
 import {
@@ -196,21 +202,22 @@ export default function GalleryIndex({
 }) {
   const reduceMotion = useReducedMotion();
   const isMobile = useMediaQuery("(max-width: 767px)");
+  const smoothWheel = useSmoothScrollEnabled();
   const flatten = Boolean(reduceMotion);
   const params = useDialKit(
     "Gallery dome",
     {
-      columns: [6, 3, 14, 1],
-      tileWidth: [300, 96, 480, 1],
-      gap: [24, 8, 80, 1],
-      perspective: [1580, 500, 3600, 10],
-      bulge: [240, 0, 900, 2],
+      columns: [8, 3, 14, 1],
+      tileWidth: [180, 96, 480, 1],
+      gap: [40, 8, 80, 1],
+      perspective: [2500, 500, 3600, 10],
+      bulge: [690, 0, 900, 2],
       spread: [1, 0.15, 1, 0.01],
-      curve: [1.84, 0, 2.5, 0.01],
+      curve: [0.23, 0, 2.5, 0.01],
       round: [0, 0, 64, 1],
-      inertia: [0.82, 0.82, 0.985, 0.001],
+      inertia: [0.9, 0.82, 0.985, 0.001],
     },
-    { id: "gallery-dome-v2", persist: SHOW_DIALS },
+    { id: "gallery-dome-v3", persist: SHOW_DIALS },
   );
 
   const columns = isMobile ? Math.min(params.columns, 4) : params.columns;
@@ -225,6 +232,9 @@ export default function GalleryIndex({
   const spaceRef = useRef<HTMLDivElement>(null);
   const nodes = useRef(new Map<string, TileNode>());
   const pan = useRef({ x: 0, y: 0, vx: 0, vy: 0 });
+  /** Desktop wheel/keys steer this; the pan glides toward it each frame. */
+  const wheelTarget = useRef({ x: 0, y: 0, active: false });
+  const lastTick = useRef(0);
   const lastPan = useRef({ x: 0, y: 0 });
   const speedRef = useRef(0);
   const dragging = useRef(false);
@@ -235,9 +245,11 @@ export default function GalleryIndex({
   const paramsRef = useRef(params);
   const worldRef = useRef(world);
   const flattenRef = useRef(flatten);
+  const smoothWheelRef = useRef(smoothWheel);
   paramsRef.current = params;
   worldRef.current = world;
   flattenRef.current = flatten;
+  smoothWheelRef.current = smoothWheel;
 
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const hoverTimer = useRef<number | null>(null);
@@ -393,20 +405,62 @@ export default function GalleryIndex({
     // X wraps at the shared period; Y wraps per column inside paint, so panY
     // stays unbounded (pixel floats are exact far beyond any session's travel).
     const worldNow = worldRef.current;
-    if (worldNow.width > 0) pan.current.x = wrapCoord(pan.current.x, worldNow.width);
+    if (worldNow.width > 0) {
+      const wrapped = wrapCoord(pan.current.x, worldNow.width);
+      // Shift the wheel target by the same period so the glide is unaffected.
+      wheelTarget.current.x += wrapped - pan.current.x;
+      pan.current.x = wrapped;
+    }
   }, []);
 
-  const tick = useCallback(() => {
+  /** Steer the dome from wheel / keys: damped on desktop, direct otherwise. */
+  const nudge = useCallback((dx: number, dy: number) => {
+    pan.current.vx = 0;
+    pan.current.vy = 0;
+    if (!smoothWheelRef.current || flattenRef.current) {
+      wheelTarget.current.active = false;
+      pan.current.x += dx;
+      pan.current.y += dy;
+      return;
+    }
+    const target = wheelTarget.current;
+    if (!target.active) {
+      target.x = pan.current.x;
+      target.y = pan.current.y;
+      target.active = true;
+    }
+    target.x += dx;
+    target.y += dy;
+  }, []);
+
+  const tick = useCallback((now: number) => {
     raf.current = 0;
+    const dt = Math.min((now - lastTick.current) / 1000, 0.1);
+    lastTick.current = now;
 
     if (!dragging.current) {
-      pan.current.x += pan.current.vx;
-      pan.current.y += pan.current.vy;
-      const damp = paramsRef.current.inertia;
-      pan.current.vx *= damp;
-      pan.current.vy *= damp;
-      if (Math.abs(pan.current.vx) < 0.04) pan.current.vx = 0;
-      if (Math.abs(pan.current.vy) < 0.04) pan.current.vy = 0;
+      const target = wheelTarget.current;
+      if (target.active) {
+        const alpha = dampingAlpha(SMOOTH_SCROLL_LERP, dt);
+        const remainingX = target.x - pan.current.x;
+        const remainingY = target.y - pan.current.y;
+        if (Math.hypot(remainingX, remainingY) < 0.3) {
+          pan.current.x = target.x;
+          pan.current.y = target.y;
+          target.active = false;
+        } else {
+          pan.current.x += remainingX * alpha;
+          pan.current.y += remainingY * alpha;
+        }
+      } else {
+        pan.current.x += pan.current.vx;
+        pan.current.y += pan.current.vy;
+        const damp = paramsRef.current.inertia;
+        pan.current.vx *= damp;
+        pan.current.vy *= damp;
+        if (Math.abs(pan.current.vx) < 0.04) pan.current.vx = 0;
+        if (Math.abs(pan.current.vy) < 0.04) pan.current.vy = 0;
+      }
     }
 
     // Measure before wrap — wrapping X by a world period would look like a
@@ -427,7 +481,10 @@ export default function GalleryIndex({
     paint();
 
     const coasting =
-      !dragging.current && (pan.current.vx !== 0 || pan.current.vy !== 0);
+      !dragging.current &&
+      (pan.current.vx !== 0 ||
+        pan.current.vy !== 0 ||
+        wheelTarget.current.active);
     if (dragging.current || coasting || speedRef.current > 0) {
       raf.current = window.requestAnimationFrame(tick);
     }
@@ -435,6 +492,7 @@ export default function GalleryIndex({
 
   const startLoop = useCallback(() => {
     if (raf.current) return;
+    lastTick.current = performance.now();
     raf.current = window.requestAnimationFrame(tick);
   }, [tick]);
 
@@ -472,11 +530,10 @@ export default function GalleryIndex({
     observer.observe(node);
 
     const onWheel = (event: WheelEvent) => {
+      if (event.ctrlKey) return;
       event.preventDefault();
-      pan.current.x += event.deltaX;
-      pan.current.y += event.deltaY;
-      pan.current.vx = 0;
-      pan.current.vy = 0;
+      const { dx, dy } = wheelDeltaPx(event);
+      nudge(dx, dy);
       startLoop();
     };
     node.addEventListener("wheel", onWheel, { passive: false });
@@ -484,7 +541,7 @@ export default function GalleryIndex({
       observer.disconnect();
       node.removeEventListener("wheel", onWheel);
     };
-  }, [measure, syncCopies, paint, startLoop]);
+  }, [measure, syncCopies, paint, startLoop, nudge]);
 
   useEffect(
     () => () => {
@@ -500,6 +557,8 @@ export default function GalleryIndex({
     pointer.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
     pan.current.vx = 0;
     pan.current.vy = 0;
+    // The hand takes over from any wheel glide still in flight.
+    wheelTarget.current.active = false;
   };
 
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -549,14 +608,12 @@ export default function GalleryIndex({
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const step = 72;
-    if (event.key === "ArrowLeft") pan.current.x -= step;
-    else if (event.key === "ArrowRight") pan.current.x += step;
-    else if (event.key === "ArrowUp") pan.current.y -= step;
-    else if (event.key === "ArrowDown") pan.current.y += step;
+    if (event.key === "ArrowLeft") nudge(-step, 0);
+    else if (event.key === "ArrowRight") nudge(step, 0);
+    else if (event.key === "ArrowUp") nudge(0, -step);
+    else if (event.key === "ArrowDown") nudge(0, step);
     else return;
     event.preventDefault();
-    pan.current.vx = 0;
-    pan.current.vy = 0;
     startLoop();
   };
 

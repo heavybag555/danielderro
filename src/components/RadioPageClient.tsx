@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer-motion";
@@ -9,6 +9,10 @@ import RadioTracklistDropdown from "@/components/RadioTracklistDropdown";
 import { MOTION } from "@/lib/motion";
 import { RADIO_INTRO_IMAGES, type RadioEpisode } from "@/lib/site-content";
 import { useMediaQuery } from "@/lib/use-media-query";
+import {
+  useSmoothScrollElement,
+  useSmoothScrollEnabled,
+} from "@/lib/use-smooth-scroll";
 
 export type RadioEpisodeWithStream = RadioEpisode & {
   streamSrc?: string;
@@ -94,6 +98,12 @@ export default function RadioPageClient({ episodes }: RadioPageClientProps) {
   const reduceMotion = useReducedMotion();
   const stagger = !reduceMotion;
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  // Both columns are nested scrollers; give them the page's damped wheel glide.
+  const smoothScroll = useSmoothScrollEnabled();
+  const episodeListRef = useRef<HTMLOListElement>(null);
+  const tracklistRef = useRef<HTMLDivElement>(null);
+  useSmoothScrollElement(episodeListRef, smoothScroll);
+  useSmoothScrollElement(tracklistRef, smoothScroll);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -158,7 +168,11 @@ export default function RadioPageClient({ episodes }: RadioPageClientProps) {
                 className="radio-intro-image"
               />
             </motion.div>
-            <motion.ol className="radio-gallery" aria-label="Episodes">
+            <motion.ol
+              ref={episodeListRef}
+              className="radio-gallery"
+              aria-label="Episodes"
+            >
               {ordered.map((episode) => (
                 <EpisodeCell
                   key={episode.id}
@@ -181,6 +195,7 @@ export default function RadioPageClient({ episodes }: RadioPageClientProps) {
             animate={stagger ? "show" : undefined}
           >
             <motion.div
+              ref={tracklistRef}
               className="radio-featured-tracklist"
               variants={stagger ? CELL_VARIANTS : undefined}
             >

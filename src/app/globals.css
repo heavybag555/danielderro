@@ -745,6 +745,12 @@ html:has([data-gallery-canvas]) body {
   overscroll-behavior: contain;
 }
 
+/* Desktop: the slide-deck engine (use-slide-deck.ts) animates scrollTop on the
+   site's heavy curve; native snapping would fight every intermediate frame. */
+.project-scroll[data-slide-engine="true"] {
+  scroll-snap-type: none;
+}
+
 .project-scroll-slide {
   scroll-snap-align: start;
   scroll-snap-stop: always;
