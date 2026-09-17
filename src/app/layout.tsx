@@ -1,3 +1,5 @@
+import { Analytics } from "@vercel/analytics/next";
+
 import SiteChrome from "@/components/SiteChrome";
 import { rootSiteMetadata, rootSiteViewport } from "@/lib/site-metadata";
 import "./globals.css";
@@ -35,6 +37,7 @@ export default function RootLayout({
           Skip to content
         </a>
         <SiteChrome>{children}</SiteChrome>
+        <Analytics />
       </body>
     </html>
   );
