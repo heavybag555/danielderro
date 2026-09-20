@@ -13,7 +13,7 @@ const PRODUCT_FIELDS = /* GraphQL */ `
       width
       height
     }
-    images(first: 1) {
+    images(first: 2) {
       nodes {
         url
         altText

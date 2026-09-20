@@ -7,6 +7,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import SitePageFooter from "@/components/SitePageFooter";
 import { mediaEnterTransition } from "@/lib/motion";
 import { formatPriceRange } from "@/lib/shopify/money";
+import { secondProductImage } from "@/lib/shopify/images";
 import type { ShopifyProduct } from "@/lib/shopify";
 import { useDismissOnScroll } from "@/lib/use-dismiss-on-scroll";
 import { useMediaQuery } from "@/lib/use-media-query";
@@ -64,6 +65,7 @@ export default function ShopIndex({
           {products.map((product, index) => {
             const dimmed = hoveredId !== null && hoveredId !== product.id;
             const image = product.featuredImage;
+            const hoverImage = secondProductImage(product);
 
             return (
               <li key={product.id} className="shop-tile">
@@ -90,6 +92,16 @@ export default function ShopIndex({
                           quality={90}
                           sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
                           className="shop-tile-image object-cover"
+                        />
+                      ) : null}
+                      {hoverImage ? (
+                        <Image
+                          src={hoverImage.url}
+                          alt=""
+                          fill
+                          quality={90}
+                          sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
+                          className="shop-tile-image shop-tile-image-hover object-cover"
                         />
                       ) : null}
                     </div>

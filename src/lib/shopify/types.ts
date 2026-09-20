@@ -32,6 +32,7 @@ export type ShopifyProduct = {
   description: string;
   availableForSale: boolean;
   featuredImage: ShopifyImage | null;
+  images: ShopifyImage[];
   priceRange: ShopifyPriceRange;
   variants: ShopifyVariant[];
 };
@@ -47,7 +48,7 @@ export type StorefrontConnection<T> = {
   nodes: T[];
 };
 
-export type StorefrontProductNode = Omit<ShopifyProduct, "variants"> & {
+export type StorefrontProductNode = Omit<ShopifyProduct, "variants" | "images"> & {
   variants: StorefrontConnection<ShopifyVariant>;
   images?: StorefrontConnection<ShopifyImage> | null;
 };

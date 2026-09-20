@@ -48,6 +48,7 @@ function normalizeProduct(node: StorefrontProductNode): ShopifyProduct {
   return {
     ...product,
     featuredImage: featuredImage ?? images?.nodes?.[0] ?? null,
+    images: images?.nodes ?? [],
     variants: variants?.nodes ?? [],
   };
 }

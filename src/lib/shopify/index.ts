@@ -37,6 +37,7 @@ export {
 export { shopifyFetchOrDefault, loadShopCatalog, type ShopCatalog } from "./fetch-safe";
 
 export { formatMoney, formatPriceRange } from "./money";
+export { secondProductImage } from "./images";
 
 export {
   getShop,
