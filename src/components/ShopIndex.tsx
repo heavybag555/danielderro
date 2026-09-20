@@ -64,8 +64,6 @@ export default function ShopIndex({
           {products.map((product, index) => {
             const dimmed = hoveredId !== null && hoveredId !== product.id;
             const image = product.featuredImage;
-            const width = image?.width || 1200;
-            const height = image?.height || 1200;
 
             return (
               <li key={product.id} className="shop-tile">
@@ -82,16 +80,12 @@ export default function ShopIndex({
                     onFocus={() => requestHover(product.id)}
                     onBlur={() => requestHover(null)}
                   >
-                    <div
-                      className="shop-tile-media"
-                      style={{ aspectRatio: `${width} / ${height}` }}
-                    >
+                    <div className="shop-tile-media">
                       {image ? (
                         <Image
                           src={image.url}
                           alt={image.altText || product.title}
-                          width={width}
-                          height={height}
+                          fill
                           quality={90}
                           sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
                           className="shop-tile-image"
