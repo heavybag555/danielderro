@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site-metadata";
+import { getProducts, shopifyFetchOrDefault } from "@/lib/shopify";
 import { sanityFetchOrDefault } from "@/sanity/lib/fetch-safe";
 import { sitemapProjectsQuery } from "@/sanity/lib/queries";
 
@@ -19,6 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/gallery`, lastModified: now, priority: 0.8 },
     { url: `${SITE_URL}/info`, lastModified: now, priority: 0.6 },
     { url: `${SITE_URL}/radio`, lastModified: now, priority: 0.6 },
+    { url: `${SITE_URL}/shop`, lastModified: now, priority: 0.7 },
   ];
 
   // A Sanity outage should degrade the sitemap, not fail the route.
@@ -35,8 +37,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
+  const shopProducts = await shopifyFetchOrDefault(
+    () => getProducts({ first: 250, variantCount: 1 }),
+    [],
+  );
+  const shopRoutes: MetadataRoute.Sitemap = shopProducts.map((product) => ({
+    url: `${SITE_URL}/shop/${product.handle}`,
+    lastModified: now,
+    priority: 0.6,
+  }));
+
   const seen = new Set<string>();
-  return [...routes, ...projectRoutes].filter((entry) => {
+  return [...routes, ...projectRoutes, ...shopRoutes].filter((entry) => {
     if (seen.has(entry.url)) return false;
     seen.add(entry.url);
     return true;
