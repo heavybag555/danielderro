@@ -101,7 +101,7 @@ export default function ShopIndex({
                           fill
                           quality={90}
                           sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
-                          className="shop-tile-image shop-tile-image-hover object-cover"
+                          className="shop-tile-image shop-tile-image-hover object-cover transition-opacity duration-[600ms] ease-[cubic-bezier(0.76,0,0.24,1)] motion-reduce:duration-0"
                         />
                       ) : null}
                     </div>
