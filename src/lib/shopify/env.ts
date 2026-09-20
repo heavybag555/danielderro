@@ -62,6 +62,9 @@ const VERSION_KEYS = [
 
 export const DEFAULT_API_VERSION = "2025-01";
 
+/** Public Shopify.shop hostname for No School Studios. Not a secret. */
+export const DEFAULT_STORE_DOMAIN = "chd1f1-b9.myshopify.com";
+
 export type ShopifyEnv = {
   storeDomain: string;
   storefrontToken: string;
@@ -80,11 +83,11 @@ export function readShopifyEnv(): ShopifyEnv {
   const version = firstEnv(VERSION_KEYS);
 
   return {
-    storeDomain: normalizeDomain(domain.value),
+    storeDomain: normalizeDomain(domain.value) || DEFAULT_STORE_DOMAIN,
     storefrontToken: token.value,
     privateToken: privateToken.value,
     apiVersion: version.value || DEFAULT_API_VERSION,
-    domainKey: domain.key,
+    domainKey: domain.value ? domain.key : "default",
     tokenKey: token.key,
     privateTokenKey: privateToken.key,
   };

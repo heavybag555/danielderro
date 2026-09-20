@@ -21,6 +21,7 @@ export {
   hasShopifyToken,
   readShopifyEnv,
   DEFAULT_API_VERSION,
+  DEFAULT_STORE_DOMAIN,
   type ShopifyConfig,
   type ShopifyEnv,
 } from "./env";
