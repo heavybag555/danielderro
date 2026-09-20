@@ -1,13 +1,10 @@
 import ShopIndex from "@/components/ShopIndex";
-import { getProducts, shopifyFetchOrDefault } from "@/lib/shopify";
+import { loadShopCatalog } from "@/lib/shopify";
 
 export const dynamic = "force-dynamic";
 
 export default async function ShopPage() {
-  const products = await shopifyFetchOrDefault(
-    () => getProducts({ first: 48 }),
-    [],
-  );
+  const { products, notice } = await loadShopCatalog(48);
 
-  return <ShopIndex products={products} />;
+  return <ShopIndex products={products} notice={notice} />;
 }

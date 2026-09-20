@@ -3,7 +3,7 @@ import {
   getProducts,
   getShop,
   isShopifyConfigured,
-  shopifyApiVersion,
+  readShopifyEnv,
   shopifyConfigIssues,
   ShopifyStorefrontError,
 } from "@/lib/shopify";
@@ -22,7 +22,7 @@ export async function GET() {
         ok: false,
         configured: false,
         error: issues[0] ??
-          "Set NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN and NEXT_PUBLIC_SHOPIFY_STOREFRONT_API_TOKEN in .env.local.",
+          "Set SHOPIFY_STORE_DOMAIN and SHOPIFY_STOREFRONT_API_TOKEN in .env.local.",
         issues,
       },
       { status: 503 },
@@ -38,9 +38,14 @@ export async function GET() {
     return NextResponse.json({
       ok: true,
       configured: true,
-      apiVersion: shopifyApiVersion,
+      apiVersion: readShopifyEnv().apiVersion,
       shop: shop.name,
       productCount: products.length,
+      ...(products.length === 0
+        ? {
+            hint: "Credentials work, but no products are published to this storefront. Publish them to the Headless sales channel.",
+          }
+        : {}),
     });
   } catch (err) {
     console.error("[shopify] health check failed:", err);

@@ -13,7 +13,13 @@ import { useMediaQuery } from "@/lib/use-media-query";
 
 const HOVER_HOLD_MS = 450;
 
-export default function ShopIndex({ products }: { products: ShopifyProduct[] }) {
+export default function ShopIndex({
+  products,
+  notice,
+}: {
+  products: ShopifyProduct[];
+  notice?: string | null;
+}) {
   const reduceMotion = useReducedMotion();
   const isCoarse = useMediaQuery("(hover: none), (pointer: coarse)");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -50,7 +56,9 @@ export default function ShopIndex({ products }: { products: ShopifyProduct[] }) 
       <h1 className="visually-hidden">Shop</h1>
 
       {products.length === 0 ? (
-        <p className="shop-empty content-compact text-caption">No products yet.</p>
+        <p className="shop-empty content-compact text-caption">
+          {notice ?? "No products yet."}
+        </p>
       ) : (
         <ul className="shop-grid layout-grid">
           {products.map((product, index) => {

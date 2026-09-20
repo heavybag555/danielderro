@@ -61,7 +61,12 @@ export async function storefrontFetch<TData, TVariables = Record<string, unknown
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        "X-Shopify-Storefront-Access-Token": config.storefrontToken,
+        ...(config.storefrontToken
+          ? { "X-Shopify-Storefront-Access-Token": config.storefrontToken }
+          : {}),
+        ...(config.privateToken
+          ? { "Shopify-Storefront-Private-Token": config.privateToken }
+          : {}),
       },
       body: JSON.stringify({ query, variables: variables ?? {} }),
       signal,
@@ -77,8 +82,11 @@ export async function storefrontFetch<TData, TVariables = Record<string, unknown
   }
 
   if (!response.ok) {
+    const rejected = response.status === 401 || response.status === 403;
     throw new ShopifyStorefrontError(
-      `Storefront request to ${config.storeDomain} returned ${response.status} ${response.statusText}`,
+      rejected
+        ? `Shopify rejected the Storefront token for ${config.storeDomain} (${response.status}). Use the Headless channel's Storefront API public access token, not an Admin shpat_ key or the custom-app API key.`
+        : `Storefront request to ${config.storeDomain} returned ${response.status} ${response.statusText}`,
       { status: response.status },
     );
   }

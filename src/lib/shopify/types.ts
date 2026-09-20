@@ -49,6 +49,13 @@ export type StorefrontConnection<T> = {
 
 export type StorefrontProductNode = Omit<ShopifyProduct, "variants"> & {
   variants: StorefrontConnection<ShopifyVariant>;
+  images?: StorefrontConnection<ShopifyImage> | null;
+};
+
+export type StorefrontCollectionsQuery = {
+  collections: StorefrontConnection<{
+    products: StorefrontConnection<StorefrontProductNode>;
+  }>;
 };
 
 export type StorefrontShopQuery = {

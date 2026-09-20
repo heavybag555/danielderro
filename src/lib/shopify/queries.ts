@@ -13,6 +13,14 @@ const PRODUCT_FIELDS = /* GraphQL */ `
       width
       height
     }
+    images(first: 1) {
+      nodes {
+        url
+        altText
+        width
+        height
+      }
+    }
     priceRange {
       minVariantPrice {
         amount
@@ -64,6 +72,22 @@ export const productByHandleQuery = /* GraphQL */ `
   query ProductByHandle($handle: String!, $variantCount: Int!) {
     product(handle: $handle) {
       ...ProductFields
+    }
+  }
+  ${PRODUCT_FIELDS}
+`;
+
+/** Fallback when `products` is empty but a published collection still has tiles. */
+export const collectionProductsQuery = /* GraphQL */ `
+  query CollectionProducts($first: Int!, $variantCount: Int!) {
+    collections(first: 20) {
+      nodes {
+        products(first: $first) {
+          nodes {
+            ...ProductFields
+          }
+        }
+      }
     }
   }
   ${PRODUCT_FIELDS}

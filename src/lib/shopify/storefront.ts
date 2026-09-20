@@ -1,5 +1,6 @@
-import { storefrontFetch } from "./client";
+import { ShopifyStorefrontError, storefrontFetch } from "./client";
 import {
+  collectionProductsQuery,
   productByHandleQuery,
   productsQuery,
   shopQuery,
@@ -7,6 +8,7 @@ import {
 import type {
   ShopifyProduct,
   ShopifyShop,
+  StorefrontCollectionsQuery,
   StorefrontProductByHandleQuery,
   StorefrontProductNode,
   StorefrontProductsQuery,
@@ -41,8 +43,21 @@ function clampPageSize(first: number | undefined, fallback: number): number {
 }
 
 function normalizeProduct(node: StorefrontProductNode): ShopifyProduct {
-  const { variants, ...product } = node;
-  return { ...product, variants: variants?.nodes ?? [] };
+  const { variants, images, featuredImage, ...product } = node;
+  return {
+    ...product,
+    featuredImage: featuredImage ?? images?.nodes?.[0] ?? null,
+    variants: variants?.nodes ?? [],
+  };
+}
+
+function uniqueProducts(products: ShopifyProduct[]): ShopifyProduct[] {
+  const seen = new Set<string>();
+  return products.filter((product) => {
+    if (seen.has(product.id)) return false;
+    seen.add(product.id);
+    return true;
+  });
 }
 
 /** Shop name, description, and primary domain — the cheapest way to verify credentials. */
@@ -74,7 +89,27 @@ export async function getProducts({
     ...options,
   });
 
-  return (data.products.nodes ?? []).map(normalizeProduct);
+  const products = (data.products.nodes ?? []).map(normalizeProduct);
+  if (products.length > 0) return products;
+
+  try {
+    const collections = await storefrontFetch<StorefrontCollectionsQuery>({
+      query: collectionProductsQuery,
+      variables: {
+        first: clampPageSize(first, DEFAULT_PAGE_SIZE),
+        variantCount: clampPageSize(variantCount, DEFAULT_VARIANT_COUNT),
+      },
+      ...options,
+    });
+    return uniqueProducts(
+      (collections.collections.nodes ?? []).flatMap((collection) =>
+        (collection.products.nodes ?? []).map(normalizeProduct),
+      ),
+    );
+  } catch (err) {
+    if (err instanceof ShopifyStorefrontError) return products;
+    throw err;
+  }
 }
 
 /** A single product by its Shopify handle (the URL slug), or `null` when unpublished/missing. */

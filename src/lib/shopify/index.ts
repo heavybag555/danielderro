@@ -8,17 +8,18 @@
  *   const products = await getProducts({ first: 12 });
  *   const tee = await getProductByHandle("no-school-tee");
  *
- * Credentials come from NEXT_PUBLIC_SHOPIFY_* (see .env.example); calls throw a
- * named error when they are missing rather than failing the build.
+ * Credentials come from SHOPIFY_* / NEXT_PUBLIC_SHOPIFY_* (see .env.example);
+ * calls throw a named error when they are missing rather than failing the build.
  */
 
 export {
   isShopifyConfigured,
   requireShopifyConfig,
   shopifyConfigIssues,
-  storeDomain as shopifyStoreDomain,
-  apiVersion as shopifyApiVersion,
+  readShopifyEnv,
+  DEFAULT_API_VERSION,
   type ShopifyConfig,
+  type ShopifyEnv,
 } from "./env";
 
 export {
@@ -28,7 +29,7 @@ export {
   type StorefrontFetchOptions,
 } from "./client";
 
-export { shopifyFetchOrDefault } from "./fetch-safe";
+export { shopifyFetchOrDefault, loadShopCatalog, type ShopCatalog } from "./fetch-safe";
 
 export { formatMoney, formatPriceRange } from "./money";
 
