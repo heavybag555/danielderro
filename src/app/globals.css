@@ -736,6 +736,7 @@ html:has([data-gallery-canvas]) body {
 
 .shop-tile-media {
   position: relative;
+  isolation: isolate;
   aspect-ratio: 1 / 1;
   overflow: hidden;
 }

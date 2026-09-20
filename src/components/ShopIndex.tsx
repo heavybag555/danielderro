@@ -80,7 +80,7 @@ export default function ShopIndex({
                     onFocus={() => requestHover(product.id)}
                     onBlur={() => requestHover(null)}
                   >
-                    <div className="shop-tile-media">
+                    <div className="shop-tile-media relative">
                       {image ? (
                         <Image
                           src={image.url}
@@ -88,7 +88,7 @@ export default function ShopIndex({
                           fill
                           quality={90}
                           sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
-                          className="shop-tile-image"
+                          className="shop-tile-image object-cover"
                         />
                       ) : null}
                     </div>
