@@ -46,7 +46,10 @@ type TileNode = {
   item: BarrelLayoutItem;
   cj: number;
   ck: number;
+  /** The src this copy should carry, read once when the ref attaches. */
+  wantedSrc: string;
   /** Last values written by the paint loop, so identical frames write nothing. */
+  armedSrc: string;
   visible: boolean;
   transform: string;
   radius: number;
@@ -58,28 +61,30 @@ function tileFullSrc(still: GalleryStill, cssWidth: number): string {
   return galleryTileImageUrl(still.src, cssWidth);
 }
 
-/** Start the full image only once a tile is on screen. Blur is a CSS var. */
+/**
+ * Start the full image once a tile is on screen. Called for every visible tile
+ * on every frame, so the early-out compares cached strings and touches no DOM.
+ */
 function armTile(node: TileNode) {
-  const { el, media, img, item } = node;
+  const { el, media, img, item, wantedSrc } = node;
+  if (!img || !wantedSrc || node.armedSrc === wantedSrc) return;
+
   const blurSrc = item.still.blurSrc;
   if (blurSrc && !node.blurSet) {
     node.blurSet = true;
     media?.style.setProperty("--gallery-blur", `url("${blurSrc}")`);
   }
 
-  const nextImg = img?.dataset.src;
-  if (!img || !nextImg || img.dataset.assignedSrc === nextImg) return;
-
   const reveal = () => {
     el.dataset.loaded = "true";
   };
 
-  const hadSrc = Boolean(img.getAttribute("src"));
-  img.dataset.assignedSrc = nextImg;
+  const hadSrc = Boolean(node.armedSrc);
+  node.armedSrc = wantedSrc;
   if (!hadSrc) {
     img.addEventListener("load", reveal, { once: true });
     img.addEventListener("error", reveal, { once: true });
-    img.src = nextImg;
+    img.src = wantedSrc;
     if (img.complete && img.naturalWidth > 0) reveal();
     return;
   }
@@ -88,11 +93,11 @@ function armTile(node: TileNode) {
   // immediately would flash the placeholder on a tile that's already loaded.
   const probe = new Image();
   probe.onload = () => {
-    img.src = nextImg;
+    img.src = wantedSrc;
     reveal();
   };
   probe.onerror = reveal;
-  probe.src = nextImg;
+  probe.src = wantedSrc;
 }
 
 /**
@@ -273,17 +278,22 @@ export default function GalleryIndex({
           nodes.current.delete(key);
           return;
         }
+        // Resolved once here: the paint loop must not query or read the DOM.
+        // React re-attaches the ref whenever the pool re-renders, which is
+        // also the only time data-src changes, so these stay in step.
+        const img = el.querySelector<HTMLImageElement>("img.gallery-barrel-full");
         nodes.current.set(key, {
           el,
-          // Resolved once at mount: the paint loop must not query the DOM.
           media: el.querySelector(".gallery-barrel-media"),
-          img: el.querySelector("img.gallery-barrel-full"),
+          img,
           item,
           cj,
           ck,
-          visible: false,
-          transform: "",
-          radius: 0,
+          wantedSrc: img?.dataset.src ?? "",
+          armedSrc: img?.getAttribute("src") ?? "",
+          visible: el.style.visibility === "visible",
+          transform: el.style.transform,
+          radius: parseFloat(el.style.borderRadius) || 0,
           blurSet: false,
         });
       },
