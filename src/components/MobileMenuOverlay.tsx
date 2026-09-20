@@ -8,9 +8,9 @@ import { useMediaQuery } from "@/lib/use-media-query";
 const NAV_ITEMS = [
   { label: "Work", href: "/work" },
   { label: "Gallery", href: "/gallery" },
-  { label: "Shop", href: "/shop" },
   { label: "Info", href: "/info" },
   { label: "Radio", href: "/radio" },
+  { label: "Shop", href: "/shop" },
 ] as const;
 
 function isCurrent(pathname: string, href: string): boolean {

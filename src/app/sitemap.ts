@@ -18,9 +18,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/`, lastModified: now, priority: 1 },
     { url: `${SITE_URL}/work`, lastModified: now, priority: 0.9 },
     { url: `${SITE_URL}/gallery`, lastModified: now, priority: 0.8 },
-    { url: `${SITE_URL}/shop`, lastModified: now, priority: 0.7 },
     { url: `${SITE_URL}/info`, lastModified: now, priority: 0.6 },
     { url: `${SITE_URL}/radio`, lastModified: now, priority: 0.6 },
+    { url: `${SITE_URL}/shop`, lastModified: now, priority: 0.7 },
   ];
 
   // A Sanity outage should degrade the sitemap, not fail the route.
