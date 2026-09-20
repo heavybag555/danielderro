@@ -10,7 +10,8 @@
  *
  * Credentials come from SHOPIFY_* / NEXT_PUBLIC_SHOPIFY_* (see .env.example).
  * A store domain is enough for tokenless product reads when the Online Store
- * is public. Calls throw a named error when the domain is missing.
+ * is public. The live No School hostname is used when SHOPIFY_STORE_DOMAIN
+ * is unset.
  */
 
 export {
