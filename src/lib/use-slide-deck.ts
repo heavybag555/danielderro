@@ -3,7 +3,20 @@
 import { useEffect, type RefObject } from "react";
 import { animate, type AnimationPlaybackControls } from "framer-motion";
 import { MOTION } from "@/lib/motion";
-import { wheelDeltaPx } from "@/lib/smooth-scroll";
+import { useMediaQuery } from "@/lib/use-media-query";
+import { wheelDeltaPx } from "@/lib/wheel";
+
+/**
+ * The deck is a desktop pointer affordance: one slide per wheel gesture. Touch
+ * keeps the native CSS snap deck, and reduced motion keeps plain scrolling.
+ */
+const SLIDE_DECK_QUERY =
+  "(min-width: 768px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)";
+
+/** False until mounted, so SSR and the first client render agree. */
+export function useSlideDeckEnabled(): boolean {
+  return useMediaQuery(SLIDE_DECK_QUERY);
+}
 
 /** Wheel travel that counts as a swipe (one mouse tick is ~100px). */
 const SWIPE_THRESHOLD_PX = 16;

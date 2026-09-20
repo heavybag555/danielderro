@@ -11,8 +11,7 @@ import { projectSlideImageUrl } from "@/sanity/lib/image";
 import SiteFooter from "@/components/SiteFooter";
 import ProjectSlideImage from "@/components/ProjectSlideImage";
 import SimpleVideoPlayer from "@/components/SimpleVideoPlayer";
-import { useSlideDeck } from "@/lib/use-slide-deck";
-import { useSmoothScrollEnabled } from "@/lib/use-smooth-scroll";
+import { useSlideDeck, useSlideDeckEnabled } from "@/lib/use-slide-deck";
 
 type SanityImageField = ProjectSlideImageSource;
 
@@ -92,7 +91,7 @@ export default function ProjectPage({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   // Desktop: one-slide-per-gesture deck; touch keeps native CSS snap.
-  useSlideDeck(scrollRef, useSmoothScrollEnabled());
+  useSlideDeck(scrollRef, useSlideDeckEnabled());
   const mediaItems: ProjectMediaItem[] = projectMediaItems(project).map((item) => {
     if (item.kind !== "video") return item;
     const resolved = resolvedVideoSrcByKey[item._key];
