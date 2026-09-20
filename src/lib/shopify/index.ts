@@ -28,6 +28,10 @@ export {
   type StorefrontFetchOptions,
 } from "./client";
 
+export { shopifyFetchOrDefault } from "./fetch-safe";
+
+export { formatMoney, formatPriceRange } from "./money";
+
 export {
   getShop,
   getProducts,
