@@ -28,13 +28,29 @@ export type ShopCatalog = {
 };
 
 const UNPUBLISHED_NOTICE =
-  "No products are published to this storefront. In Shopify, publish them to the Headless sales channel.";
+  "Publish products to the Headless sales channel to show them here.";
+
+function publicNotice(issues: string[], error?: ShopifyStorefrontError): string {
+  const text = [...issues, error?.message ?? ""].join(" ");
+  if (/empty/i.test(text)) {
+    return "Add the Headless Storefront token to load products.";
+  }
+  if (/Admin|shpat_|rejected/i.test(text)) {
+    return "Use the Headless public Storefront token, not an Admin key.";
+  }
+  if (/hex string|hostname/i.test(text)) {
+    return "Store domain and Storefront token look swapped.";
+  }
+  if (error) return UNPUBLISHED_NOTICE;
+  if (issues.length) return "Add the Headless Storefront token to load products.";
+  return UNPUBLISHED_NOTICE;
+}
 
 /** Load the shop grid and keep a one-line reason when it is empty. */
 export async function loadShopCatalog(first = 48): Promise<ShopCatalog> {
   const issues = shopifyConfigIssues();
   if (issues.length > 0) {
-    return { products: [], notice: issues[0] };
+    return { products: [], notice: publicNotice(issues) };
   }
 
   try {
@@ -45,10 +61,12 @@ export async function loadShopCatalog(first = 48): Promise<ShopCatalog> {
     return { products, notice: null };
   } catch (err) {
     console.error("[shopify] catalog failed:", err);
-    const notice =
-      err instanceof ShopifyStorefrontError
-        ? err.message
-        : UNPUBLISHED_NOTICE;
-    return { products: [], notice };
+    return {
+      products: [],
+      notice: publicNotice(
+        [],
+        err instanceof ShopifyStorefrontError ? err : undefined,
+      ),
+    };
   }
 }
