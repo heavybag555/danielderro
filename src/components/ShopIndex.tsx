@@ -86,6 +86,7 @@ export default function ShopIndex({
                           src={image.url}
                           alt={image.altText || product.title}
                           fill
+                          priority={index === 0}
                           quality={90}
                           sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
                           className="shop-tile-image object-cover"
