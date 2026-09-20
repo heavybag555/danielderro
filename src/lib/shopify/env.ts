@@ -9,7 +9,11 @@
  *   SHOPIFY_STOREFRONT_PRIVATE_TOKEN   (Headless private token, optional)
  *
  * NEXT_PUBLIC_SHOPIFY_* and Hydrogen PUBLIC_* / PRIVATE_* aliases are accepted.
- * The Admin API is never used — shpat_ / shpca_ values are rejected.
+ * The Admin API is never used — shpat_ / shpca_ values are ignored.
+ *
+ * A public or private Storefront token is optional. Shopify allows tokenless
+ * reads of products when the Online Store is public. Password-locked shops
+ * still need the Headless public token (and products published to Headless).
  */
 
 /** Strip protocol and trailing slash so `https://shop.myshopify.com/` still works. */
@@ -112,8 +116,12 @@ function tokenIssues(value: string, key: string): string[] {
   return [];
 }
 
-/** Why the current env cannot be used. Empty when domain + a Storefront token look valid. */
-export function shopifyConfigIssues(): string[] {
+function usableToken(value: string, key: string): string {
+  return tokenIssues(value, key).length > 0 ? "" : value;
+}
+
+/** Why the store domain cannot be used. Empty when the hostname looks valid. */
+export function shopifyDomainIssues(): string[] {
   const env = readShopifyEnv();
   const issues: string[] = [];
 
@@ -129,40 +137,51 @@ export function shopifyConfigIssues(): string[] {
     );
   }
 
-  issues.push(...tokenIssues(env.storefrontToken, env.tokenKey));
-  issues.push(...tokenIssues(env.privateToken, env.privateTokenKey));
-
-  if (!env.storefrontToken && !env.privateToken) {
-    issues.push(
-      "SHOPIFY_STOREFRONT_API_TOKEN is empty. Paste the Headless Storefront API public access token (not an Admin shpat_ key).",
-    );
-  }
-
   return issues;
 }
 
-/** True when the store domain and at least one Storefront token look usable. */
+/** Domain problems plus unused/swapped token warnings. Tokenless shops can still query. */
+export function shopifyConfigIssues(): string[] {
+  const env = readShopifyEnv();
+  return [
+    ...shopifyDomainIssues(),
+    ...tokenIssues(env.storefrontToken, env.tokenKey),
+    ...tokenIssues(env.privateToken, env.privateTokenKey),
+  ];
+}
+
+/** True when the store hostname looks usable. A Storefront token is optional. */
 export function isShopifyConfigured(): boolean {
-  return shopifyConfigIssues().length === 0;
+  return shopifyDomainIssues().length === 0;
+}
+
+/** True when a non-Admin Storefront public or private token is present. */
+export function hasShopifyToken(): boolean {
+  const env = readShopifyEnv();
+  return Boolean(
+    usableToken(env.storefrontToken, env.tokenKey) ||
+      usableToken(env.privateToken, env.privateTokenKey),
+  );
 }
 
 /**
- * Resolve the config, throwing a message that names the missing or swapped variables.
+ * Resolve the config, throwing a message that names the missing or swapped domain.
+ * Admin / swapped tokens are dropped so the request can fall back to tokenless.
  * Called per request rather than at import time so a site without a shop still builds.
  */
 export function requireShopifyConfig(): ShopifyConfig {
-  const issues = shopifyConfigIssues();
+  const issues = shopifyDomainIssues();
   if (issues.length > 0) {
     throw new Error(
-      `[shopify] ${issues.join(" ")} Set in .env.local or Vercel (see .env.example) — values come from Sales channels → Headless.`,
+      `[shopify] ${issues.join(" ")} Set SHOPIFY_STORE_DOMAIN in .env.local or Vercel (see .env.example).`,
     );
   }
 
   const env = readShopifyEnv();
   return {
     storeDomain: env.storeDomain,
-    storefrontToken: env.storefrontToken,
-    privateToken: env.privateToken,
+    storefrontToken: usableToken(env.storefrontToken, env.tokenKey),
+    privateToken: usableToken(env.privateToken, env.privateTokenKey),
     apiVersion: env.apiVersion,
     endpoint: `https://${env.storeDomain}/api/${env.apiVersion}/graphql.json`,
   };

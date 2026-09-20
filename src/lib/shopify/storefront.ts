@@ -1,4 +1,5 @@
 import { ShopifyStorefrontError, storefrontFetch } from "./client";
+import { hasShopifyToken } from "./env";
 import {
   collectionProductsQuery,
   productByHandleQuery,
@@ -91,6 +92,10 @@ export async function getProducts({
 
   const products = (data.products.nodes ?? []).map(normalizeProduct);
   if (products.length > 0) return products;
+
+  // Collection fan-out is too expensive for tokenless (complexity cap 1000)
+  // and is only useful when a Headless token can see unpublished-to-OS goods.
+  if (!hasShopifyToken()) return products;
 
   try {
     const collections = await storefrontFetch<StorefrontCollectionsQuery>({

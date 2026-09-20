@@ -8,14 +8,17 @@
  *   const products = await getProducts({ first: 12 });
  *   const tee = await getProductByHandle("no-school-tee");
  *
- * Credentials come from SHOPIFY_* / NEXT_PUBLIC_SHOPIFY_* (see .env.example);
- * calls throw a named error when they are missing rather than failing the build.
+ * Credentials come from SHOPIFY_* / NEXT_PUBLIC_SHOPIFY_* (see .env.example).
+ * A store domain is enough for tokenless product reads when the Online Store
+ * is public. Calls throw a named error when the domain is missing.
  */
 
 export {
   isShopifyConfigured,
   requireShopifyConfig,
   shopifyConfigIssues,
+  shopifyDomainIssues,
+  hasShopifyToken,
   readShopifyEnv,
   DEFAULT_API_VERSION,
   type ShopifyConfig,
