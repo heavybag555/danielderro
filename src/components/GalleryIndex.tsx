@@ -10,18 +10,13 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
-import { DialRoot, useDialKit } from "dialkit";
-import "dialkit/styles.css";
+import dynamic from "next/dynamic";
 import { motion, useReducedMotion } from "framer-motion";
 import { galleryTileImageUrl } from "@/sanity/lib/image";
 import { MOTION } from "@/lib/motion";
+import { GALLERY_DOME_PARAMS, type DomeParams } from "@/lib/gallery-dome";
 import { useMediaQuery } from "@/lib/use-media-query";
-import { useSmoothScrollEnabled } from "@/lib/use-smooth-scroll";
-import {
-  dampingAlpha,
-  SMOOTH_SCROLL_LERP,
-  wheelDeltaPx,
-} from "@/lib/smooth-scroll";
+import { wheelDeltaPx } from "@/lib/wheel";
 import { markUnmutedAutoplay } from "@/lib/autoplay-sound";
 import type { GalleryStill } from "@/lib/gallery-stills";
 import {
@@ -38,28 +33,24 @@ const DRAG_CLICK_PX = 6;
 /** Extra px around the viewport before a pooled tile is hidden. */
 const CULL_MARGIN = 320;
 const SHOW_DIALS = process.env.NODE_ENV !== "production";
-/** px/frame below this stays sharp; above it maps into the blur range. */
-const MOTION_BLUR_DEADZONE = 8;
-const MOTION_BLUR_GAIN = 0.12;
-const MOTION_BLUR_MAX = 6;
 
-function motionBlurPx(speed: number): number {
-  if (speed < MOTION_BLUR_DEADZONE) return 0;
-  return Math.min(MOTION_BLUR_MAX, (speed - MOTION_BLUR_DEADZONE) * MOTION_BLUR_GAIN);
-}
-
-function motionBlurFilter(loaded: boolean, blurPx: number): string {
-  if (!loaded || blurPx < 0.35) return "none";
-  return `blur(${blurPx.toFixed(1)}px)`;
-}
+const GalleryDomeDials = dynamic(
+  () => import("@/components/GalleryDomeDials"),
+  { ssr: false },
+);
 
 type TileNode = {
   el: HTMLDivElement;
   media: HTMLElement | null;
-  video: HTMLVideoElement | null;
+  img: HTMLImageElement | null;
   item: BarrelLayoutItem;
   cj: number;
   ck: number;
+  /** Last values written by the paint loop, so identical frames write nothing. */
+  visible: boolean;
+  transform: string;
+  radius: number;
+  blurSet: boolean;
 };
 
 function tileFullSrc(still: GalleryStill, cssWidth: number): string {
@@ -67,49 +58,41 @@ function tileFullSrc(still: GalleryStill, cssWidth: number): string {
   return galleryTileImageUrl(still.src, cssWidth);
 }
 
-/** Start the full image/video only once a tile is on screen. Blur is a CSS var. */
-function armTile(el: HTMLDivElement, video: HTMLVideoElement | null, blurSrc?: string) {
-  if (blurSrc && el.dataset.blurSet !== "true") {
-    el.dataset.blurSet = "true";
-    const media = el.querySelector<HTMLElement>(".gallery-barrel-media");
+/** Start the full image only once a tile is on screen. Blur is a CSS var. */
+function armTile(node: TileNode) {
+  const { el, media, img, item } = node;
+  const blurSrc = item.still.blurSrc;
+  if (blurSrc && !node.blurSet) {
+    node.blurSet = true;
     media?.style.setProperty("--gallery-blur", `url("${blurSrc}")`);
   }
+
+  const nextImg = img?.dataset.src;
+  if (!img || !nextImg || img.dataset.assignedSrc === nextImg) return;
 
   const reveal = () => {
     el.dataset.loaded = "true";
   };
 
-  const full = el.querySelector<HTMLImageElement>("img.gallery-barrel-full");
-  const nextImg = full?.dataset.src;
-  if (full && nextImg && full.dataset.assignedSrc !== nextImg) {
-    const hadSrc = Boolean(full.getAttribute("src"));
-    full.dataset.assignedSrc = nextImg;
-    if (!hadSrc) {
-      full.addEventListener("load", reveal, { once: true });
-      full.addEventListener("error", reveal, { once: true });
-      full.src = nextImg;
-      if (full.complete && full.naturalWidth > 0) reveal();
-    } else {
-      // Keep the current pixels up while a sharper src decodes — swapping
-      // immediately would flash the placeholder on a tile that's already loaded.
-      const probe = new Image();
-      probe.onload = () => {
-        full.src = nextImg;
-        reveal();
-      };
-      probe.onerror = reveal;
-      probe.src = nextImg;
-    }
+  const hadSrc = Boolean(img.getAttribute("src"));
+  img.dataset.assignedSrc = nextImg;
+  if (!hadSrc) {
+    img.addEventListener("load", reveal, { once: true });
+    img.addEventListener("error", reveal, { once: true });
+    img.src = nextImg;
+    if (img.complete && img.naturalWidth > 0) reveal();
+    return;
   }
 
-  const nextVideo = video?.dataset.src;
-  if (video && nextVideo && video.dataset.assignedSrc !== nextVideo) {
-    video.dataset.assignedSrc = nextVideo;
-    video.addEventListener("loadeddata", reveal, { once: true });
-    video.addEventListener("error", reveal, { once: true });
-    video.src = nextVideo;
-    if (video.readyState >= 2) reveal();
-  }
+  // Keep the current pixels up while a sharper src decodes — swapping
+  // immediately would flash the placeholder on a tile that's already loaded.
+  const probe = new Image();
+  probe.onload = () => {
+    img.src = nextImg;
+    reveal();
+  };
+  probe.onerror = reveal;
+  probe.src = nextImg;
 }
 
 /**
@@ -151,7 +134,12 @@ const TilePool = memo(function TilePool({
             key={key}
             ref={bind(key, item, cj, ck)}
             className="gallery-barrel-tile"
-            style={{ width: item.w, height: item.h, visibility: "hidden" }}
+            style={{
+              width: item.w,
+              height: item.h,
+              visibility: "hidden",
+              contentVisibility: "hidden",
+            }}
           >
             <Link
               href={`/work/${item.still.slug}`}
@@ -167,24 +155,14 @@ const TilePool = memo(function TilePool({
               }}
             >
               <span className="gallery-barrel-media">
-                {item.still.videoSrc ? (
-                  <video
-                    data-src={item.still.videoSrc}
-                    muted
-                    loop
-                    playsInline
-                    preload="none"
-                  />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element -- src is armed in the paint loop
-                  <img
-                    className="gallery-barrel-full"
-                    alt=""
-                    data-src={fullSrc}
-                    decoding="async"
-                    draggable={false}
-                  />
-                )}
+                {/* eslint-disable-next-line @next/next/no-img-element -- src is armed in the paint loop */}
+                <img
+                  className="gallery-barrel-full"
+                  alt=""
+                  data-src={fullSrc}
+                  decoding="async"
+                  draggable={false}
+                />
               </span>
             </Link>
           </div>,
@@ -202,23 +180,8 @@ export default function GalleryIndex({
 }) {
   const reduceMotion = useReducedMotion();
   const isMobile = useMediaQuery("(max-width: 767px)");
-  const smoothWheel = useSmoothScrollEnabled();
   const flatten = Boolean(reduceMotion);
-  const params = useDialKit(
-    "Gallery dome",
-    {
-      columns: [8, 3, 14, 1],
-      tileWidth: [180, 96, 480, 1],
-      gap: [40, 8, 80, 1],
-      perspective: [2500, 500, 3600, 10],
-      bulge: [690, 0, 900, 2],
-      spread: [1, 0.15, 1, 0.01],
-      curve: [0.23, 0, 2.5, 0.01],
-      round: [0, 0, 64, 1],
-      inertia: [0.9, 0.82, 0.985, 0.001],
-    },
-    { id: "gallery-dome-v3", persist: SHOW_DIALS },
-  );
+  const [params, setParams] = useState<DomeParams>(GALLERY_DOME_PARAMS);
 
   const columns = isMobile ? Math.min(params.columns, 4) : params.columns;
   const tileWidth = isMobile ? 132 : params.tileWidth;
@@ -232,11 +195,6 @@ export default function GalleryIndex({
   const spaceRef = useRef<HTMLDivElement>(null);
   const nodes = useRef(new Map<string, TileNode>());
   const pan = useRef({ x: 0, y: 0, vx: 0, vy: 0 });
-  /** Desktop wheel/keys steer this; the pan glides toward it each frame. */
-  const wheelTarget = useRef({ x: 0, y: 0, active: false });
-  const lastTick = useRef(0);
-  const lastPan = useRef({ x: 0, y: 0 });
-  const speedRef = useRef(0);
   const dragging = useRef(false);
   const dragMoved = useRef(false);
   const pointer = useRef({ id: -1, x: 0, y: 0 });
@@ -245,11 +203,9 @@ export default function GalleryIndex({
   const paramsRef = useRef(params);
   const worldRef = useRef(world);
   const flattenRef = useRef(flatten);
-  const smoothWheelRef = useRef(smoothWheel);
   paramsRef.current = params;
   worldRef.current = world;
   flattenRef.current = flatten;
-  smoothWheelRef.current = smoothWheel;
 
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const hoverTimer = useRef<number | null>(null);
@@ -313,18 +269,23 @@ export default function GalleryIndex({
   const bindTile = useCallback(
     (key: string, item: BarrelLayoutItem, cj: number, ck: number) =>
       (el: HTMLDivElement | null) => {
-        if (el) {
-          nodes.current.set(key, {
-            el,
-            media: el.querySelector(".gallery-barrel-media"),
-            video: el.querySelector("video"),
-            item,
-            cj,
-            ck,
-          });
-        } else {
+        if (!el) {
           nodes.current.delete(key);
+          return;
         }
+        nodes.current.set(key, {
+          el,
+          // Resolved once at mount: the paint loop must not query the DOM.
+          media: el.querySelector(".gallery-barrel-media"),
+          img: el.querySelector("img.gallery-barrel-full"),
+          item,
+          cj,
+          ck,
+          visible: false,
+          transform: "",
+          radius: 0,
+          blurSet: false,
+        });
       },
     [],
   );
@@ -358,9 +319,9 @@ export default function GalleryIndex({
     const W = worldNow.width;
     const panX = pan.current.x;
     const panY = pan.current.y;
-    const blurPx = flat ? 0 : motionBlurPx(speedRef.current);
 
-    nodes.current.forEach(({ el, media, video, item, cj, ck }) => {
+    nodes.current.forEach((node) => {
+      const { el, item, cj, ck } = node;
       const P = item.periodY;
       const sx0 = W > 0 ? wrapCoord(item.x - panX, W) : item.x - panX;
       const sy0 = P > 0 ? wrapCoord(item.y - panY, P) : item.y - panY;
@@ -373,30 +334,32 @@ export default function GalleryIndex({
         sy + item.h < -CULL_MARGIN ||
         sy > vh + CULL_MARGIN
       ) {
-        if (el.style.visibility !== "hidden") {
+        if (node.visible) {
+          node.visible = false;
+          // content-visibility takes the whole subtree out of style, layout
+          // and paint; visibility alone still leaves it in every pass.
           el.style.visibility = "hidden";
-          if (media && media.style.filter !== "none") media.style.filter = "none";
-          if (video && !video.paused) video.pause();
+          el.style.setProperty("content-visibility", "hidden");
         }
         return;
       }
 
-      armTile(el, video, item.still.blurSrc);
+      armTile(node);
 
       const t = projectDomeTile(sx, sy, item.w, item.h, vw, vh, optics, flat);
-      el.style.visibility = "visible";
-      el.style.transform = `translate3d(${t.x}px, ${t.y}px, ${t.z}px) rotateX(${t.rotateX}deg) rotateY(${t.rotateY}deg)`;
-      el.style.borderRadius = `${t.radius}px`;
-      const filter = motionBlurFilter(el.dataset.loaded === "true", blurPx);
-      if (media && media.style.filter !== filter) media.style.filter = filter;
-
-      if (video) {
-        // Decorative loops stop under prefers-reduced-motion.
-        if (flat) {
-          if (!video.paused) video.pause();
-        } else if (video.paused) {
-          video.play().catch(() => {});
-        }
+      if (!node.visible) {
+        node.visible = true;
+        el.style.visibility = "visible";
+        el.style.removeProperty("content-visibility");
+      }
+      const transform = `translate3d(${t.x}px, ${t.y}px, ${t.z}px) rotateX(${t.rotateX}deg) rotateY(${t.rotateY}deg)`;
+      if (transform !== node.transform) {
+        node.transform = transform;
+        el.style.transform = transform;
+      }
+      if (t.radius !== node.radius) {
+        node.radius = t.radius;
+        el.style.borderRadius = `${t.radius}px`;
       }
     });
   }, []);
@@ -406,93 +369,45 @@ export default function GalleryIndex({
     // stays unbounded (pixel floats are exact far beyond any session's travel).
     const worldNow = worldRef.current;
     if (worldNow.width > 0) {
-      const wrapped = wrapCoord(pan.current.x, worldNow.width);
-      // Shift the wheel target by the same period so the glide is unaffected.
-      wheelTarget.current.x += wrapped - pan.current.x;
-      pan.current.x = wrapped;
+      pan.current.x = wrapCoord(pan.current.x, worldNow.width);
     }
   }, []);
 
-  /** Steer the dome from wheel / keys: damped on desktop, direct otherwise. */
+  /** Wheel / keys move the dome by exactly the delta they carry — no easing. */
   const nudge = useCallback((dx: number, dy: number) => {
     pan.current.vx = 0;
     pan.current.vy = 0;
-    if (!smoothWheelRef.current || flattenRef.current) {
-      wheelTarget.current.active = false;
-      pan.current.x += dx;
-      pan.current.y += dy;
-      return;
-    }
-    const target = wheelTarget.current;
-    if (!target.active) {
-      target.x = pan.current.x;
-      target.y = pan.current.y;
-      target.active = true;
-    }
-    target.x += dx;
-    target.y += dy;
+    pan.current.x += dx;
+    pan.current.y += dy;
   }, []);
 
-  const tick = useCallback((now: number) => {
+  const tick = useCallback(() => {
     raf.current = 0;
-    const dt = Math.min((now - lastTick.current) / 1000, 0.1);
-    lastTick.current = now;
 
+    // Drag momentum only — a wheel notch is applied whole before the frame, so
+    // one wheel event costs exactly one paint.
     if (!dragging.current) {
-      const target = wheelTarget.current;
-      if (target.active) {
-        const alpha = dampingAlpha(SMOOTH_SCROLL_LERP, dt);
-        const remainingX = target.x - pan.current.x;
-        const remainingY = target.y - pan.current.y;
-        if (Math.hypot(remainingX, remainingY) < 0.3) {
-          pan.current.x = target.x;
-          pan.current.y = target.y;
-          target.active = false;
-        } else {
-          pan.current.x += remainingX * alpha;
-          pan.current.y += remainingY * alpha;
-        }
-      } else {
-        pan.current.x += pan.current.vx;
-        pan.current.y += pan.current.vy;
-        const damp = paramsRef.current.inertia;
-        pan.current.vx *= damp;
-        pan.current.vy *= damp;
-        if (Math.abs(pan.current.vx) < 0.04) pan.current.vx = 0;
-        if (Math.abs(pan.current.vy) < 0.04) pan.current.vy = 0;
-      }
+      pan.current.x += pan.current.vx;
+      pan.current.y += pan.current.vy;
+      const damp = paramsRef.current.inertia;
+      pan.current.vx *= damp;
+      pan.current.vy *= damp;
+      if (Math.abs(pan.current.vx) < 0.04) pan.current.vx = 0;
+      if (Math.abs(pan.current.vy) < 0.04) pan.current.vy = 0;
     }
 
-    // Measure before wrap — wrapping X by a world period would look like a
-    // huge jump and spike the blur.
-    const instant = Math.hypot(
-      pan.current.x - lastPan.current.x,
-      pan.current.y - lastPan.current.y,
-    );
     wrapPan();
-    lastPan.current.x = pan.current.x;
-    lastPan.current.y = pan.current.y;
-
-    speedRef.current = flattenRef.current
-      ? 0
-      : speedRef.current * 0.72 + instant * 0.28;
-    if (speedRef.current < 0.15) speedRef.current = 0;
-
     paint();
 
     const coasting =
-      !dragging.current &&
-      (pan.current.vx !== 0 ||
-        pan.current.vy !== 0 ||
-        wheelTarget.current.active);
-    if (dragging.current || coasting || speedRef.current > 0) {
+      !dragging.current && (pan.current.vx !== 0 || pan.current.vy !== 0);
+    if (dragging.current || coasting) {
       raf.current = window.requestAnimationFrame(tick);
     }
   }, [paint, wrapPan]);
 
   const startLoop = useCallback(() => {
     if (raf.current) return;
-    lastTick.current = performance.now();
     raf.current = window.requestAnimationFrame(tick);
   }, [tick]);
 
@@ -557,8 +472,6 @@ export default function GalleryIndex({
     pointer.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
     pan.current.vx = 0;
     pan.current.vy = 0;
-    // The hand takes over from any wheel glide still in flight.
-    wheelTarget.current.active = false;
   };
 
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -596,12 +509,10 @@ export default function GalleryIndex({
       pan.current.vx = 0;
       pan.current.vy = 0;
     }
-    if (pan.current.vx !== 0 || pan.current.vy !== 0 || speedRef.current > 0) {
+    if (pan.current.vx !== 0 || pan.current.vy !== 0) {
       startLoop();
     } else {
       wrapPan();
-      lastPan.current.x = pan.current.x;
-      lastPan.current.y = pan.current.y;
       paint();
     }
   };
@@ -620,7 +531,9 @@ export default function GalleryIndex({
   return (
     <main id="main-content" className="gallery-page-shell" data-gallery-canvas>
       <h1 className="visually-hidden">Gallery</h1>
-      {SHOW_DIALS && dialsReady ? <DialRoot /> : null}
+      {SHOW_DIALS && dialsReady ? (
+        <GalleryDomeDials onChange={setParams} />
+      ) : null}
 
       <div
         ref={stageRef}
