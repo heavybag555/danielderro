@@ -79,12 +79,14 @@ export default async function ShopProductPage({ params }: ShopProductPageProps) 
               Shop
             </Link>
           </p>
-          <h1 className="text-small">{product.title}</h1>
-          <p className="text-caption shop-tile-price">
-            {product.availableForSale
-              ? formatPriceRange(product.priceRange)
-              : "Sold out"}
-          </p>
+          <div className="shop-tile-caption">
+            <h1 className="shop-tile-title text-small">{product.title}</h1>
+            <p className="shop-tile-price text-caption">
+              {product.availableForSale
+                ? formatPriceRange(product.priceRange)
+                : "Sold out"}
+            </p>
+          </div>
           {product.description ? (
             <p className="text-small shop-product-description">{product.description}</p>
           ) : null}

@@ -748,12 +748,12 @@ html:has([data-gallery-canvas]) body {
   margin-top: var(--work-row-gap);
 }
 
-.shop-tile-title {
-  color: #ffffff;
-}
-
+.shop-tile-title,
 .shop-tile-price {
-  color: #808080;
+  display: block;
+  margin: 0;
+  padding: 0;
+  color: #ffffff;
 }
 
 .shop-empty {
@@ -793,8 +793,8 @@ html:has([data-gallery-canvas]) body {
   color: #ffffff;
 }
 
-.shop-product-copy h1 {
-  color: #ffffff;
+.shop-product-copy .shop-tile-caption {
+  margin-top: 0;
 }
 
 .shop-product-description {
