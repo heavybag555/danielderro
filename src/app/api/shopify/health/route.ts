@@ -4,6 +4,7 @@ import {
   getShop,
   isShopifyConfigured,
   shopifyApiVersion,
+  shopifyConfigIssues,
   ShopifyStorefrontError,
 } from "@/lib/shopify";
 
@@ -15,12 +16,14 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   if (!isShopifyConfigured()) {
+    const issues = shopifyConfigIssues();
     return NextResponse.json(
       {
         ok: false,
         configured: false,
-        error:
+        error: issues[0] ??
           "Set NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN and NEXT_PUBLIC_SHOPIFY_STOREFRONT_API_TOKEN in .env.local.",
+        issues,
       },
       { status: 503 },
     );

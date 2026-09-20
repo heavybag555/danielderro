@@ -15,6 +15,7 @@
 export {
   isShopifyConfigured,
   requireShopifyConfig,
+  shopifyConfigIssues,
   storeDomain as shopifyStoreDomain,
   apiVersion as shopifyApiVersion,
   type ShopifyConfig,
