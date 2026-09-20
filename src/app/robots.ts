@@ -6,8 +6,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      // The embedded CMS and the player scratchpad are not public surfaces.
-      disallow: ["/studio", "/studio/", "/radio-lab"],
+      // The embedded CMS, the player scratchpad, and API routes are not public surfaces.
+      disallow: ["/studio", "/studio/", "/radio-lab", "/api/"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
     host: SITE_URL,
