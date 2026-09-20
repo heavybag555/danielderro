@@ -87,9 +87,46 @@ export default function ShopIndex({
         ) : (
           <ul className="shop-grid layout-grid">
             {products.map((product, index) => {
-              const dimmed = hoveredId !== null && hoveredId !== product.id;
+              const soldOut = !product.availableForSale;
+              const dimmed = !soldOut && hoveredId !== null && hoveredId !== product.id;
               const image = product.featuredImage;
-              const hoverImage = secondProductImage(product);
+              const hoverImage = soldOut ? null : secondProductImage(product);
+              const tileClass = `shop-tile-link${soldOut ? " is-sold-out" : " hover-smooth"}${
+                dimmed ? " is-dimmed" : ""
+              }`;
+              const tile = (
+                <>
+                  <div className="shop-tile-media relative">
+                    {image ? (
+                      <Image
+                        src={image.url}
+                        alt={image.altText || product.title}
+                        fill
+                        priority={index === 0}
+                        quality={90}
+                        sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
+                        className="shop-tile-image object-cover"
+                      />
+                    ) : null}
+                    {hoverImage ? (
+                      <Image
+                        src={hoverImage.url}
+                        alt=""
+                        fill
+                        quality={90}
+                        sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
+                        className="shop-tile-image shop-tile-image-hover object-cover transition-opacity duration-[600ms] ease-[cubic-bezier(0.76,0,0.24,1)] motion-reduce:duration-0"
+                      />
+                    ) : null}
+                  </div>
+                  <div className="shop-tile-caption">
+                    <span className="shop-tile-title text-small">{product.title}</span>
+                    <span className="shop-tile-price text-caption">
+                      {soldOut ? "Sold out" : formatPriceRange(product.priceRange)}
+                    </span>
+                  </div>
+                </>
+              );
 
               return (
                 <li key={product.id} className="shop-tile">
@@ -98,46 +135,20 @@ export default function ShopIndex({
                     animate={{ opacity: 1 }}
                     transition={reduceMotion ? { duration: 0 } : mediaEnterTransition(index)}
                   >
-                    <Link
-                      href={`/shop/${product.handle}`}
-                      className={`shop-tile-link hover-smooth${dimmed ? " is-dimmed" : ""}`}
-                      onMouseEnter={() => requestHover(product.id)}
-                      onMouseLeave={() => requestHover(null)}
-                      onFocus={() => requestHover(product.id)}
-                      onBlur={() => requestHover(null)}
-                    >
-                      <div className="shop-tile-media relative">
-                        {image ? (
-                          <Image
-                            src={image.url}
-                            alt={image.altText || product.title}
-                            fill
-                            priority={index === 0}
-                            quality={90}
-                            sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
-                            className="shop-tile-image object-cover"
-                          />
-                        ) : null}
-                        {hoverImage ? (
-                          <Image
-                            src={hoverImage.url}
-                            alt=""
-                            fill
-                            quality={90}
-                            sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
-                            className="shop-tile-image shop-tile-image-hover object-cover transition-opacity duration-[600ms] ease-[cubic-bezier(0.76,0,0.24,1)] motion-reduce:duration-0"
-                          />
-                        ) : null}
-                      </div>
-                      <div className="shop-tile-caption">
-                        <span className="shop-tile-title text-small">{product.title}</span>
-                        <span className="shop-tile-price text-caption">
-                          {product.availableForSale
-                            ? formatPriceRange(product.priceRange)
-                            : "Sold out"}
-                        </span>
-                      </div>
-                    </Link>
+                    {soldOut ? (
+                      <div className={tileClass}>{tile}</div>
+                    ) : (
+                      <Link
+                        href={`/shop/${product.handle}`}
+                        className={tileClass}
+                        onMouseEnter={() => requestHover(product.id)}
+                        onMouseLeave={() => requestHover(null)}
+                        onFocus={() => requestHover(product.id)}
+                        onBlur={() => requestHover(null)}
+                      >
+                        {tile}
+                      </Link>
+                    )}
                   </motion.div>
                 </li>
               );

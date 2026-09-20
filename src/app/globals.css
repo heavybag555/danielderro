@@ -735,6 +735,21 @@ html:has([data-gallery-canvas]) body {
   opacity: 0.18;
 }
 
+.shop-tile-link.is-sold-out {
+  --shop-sold-out-media: 0.45;
+  cursor: default;
+}
+
+.shop-tile-link.is-sold-out .shop-tile-media {
+  opacity: var(--shop-sold-out-media);
+  filter: grayscale(1);
+}
+
+.shop-tile-link.is-sold-out .shop-tile-title,
+.shop-tile-link.is-sold-out .shop-tile-price {
+  color: #808080;
+}
+
 .shop-tile-media,
 .shop-product-media {
   width: 100%;
