@@ -699,10 +699,17 @@ html:has([data-gallery-canvas]) body {
   list-style: none;
 }
 
+.shop-page-shell > .work-page-content {
+  flex: 1 1 auto;
+}
+
 .shop-grid.layout-grid,
 .shop-product.layout-grid {
   --shop-row-gap: 80px;
   row-gap: var(--shop-row-gap);
+}
+
+.shop-product.layout-grid {
   padding-top: calc(
     var(--site-fixed-brand-strip-height) + var(--work-row-gap) +
       var(--site-mobile-nav-shift)
@@ -791,10 +798,6 @@ html:has([data-gallery-canvas]) body {
 
 .shop-empty {
   margin: 0 auto;
-  padding-top: calc(
-    var(--site-fixed-brand-strip-height) + var(--work-row-gap) +
-      var(--site-mobile-nav-shift)
-  );
   color: #808080;
   text-align: center;
 }
