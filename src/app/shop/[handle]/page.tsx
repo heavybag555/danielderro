@@ -56,7 +56,7 @@ export default async function ShopProductPage({ params }: ShopProductPageProps) 
   const variants = product.variants.filter((variant) => variant.title !== "Default Title");
 
   return (
-    <div className="shop-page-shell">
+    <div className="shop-page-shell layout-full">
       <article className="shop-product layout-grid">
         <div className="shop-product-media">
           {image ? (

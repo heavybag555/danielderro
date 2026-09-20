@@ -52,7 +52,7 @@ export default function ShopIndex({
   useEffect(() => clearHoverTimer, []);
 
   return (
-    <div className="shop-page-shell">
+    <div className="shop-page-shell layout-full">
       <h1 className="visually-hidden">Shop</h1>
 
       {products.length === 0 ? (
