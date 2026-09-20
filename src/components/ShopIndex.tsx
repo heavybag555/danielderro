@@ -94,9 +94,13 @@ export default function ShopIndex({
               const tileClass = `shop-tile-link${soldOut ? " is-sold-out" : " hover-smooth"}${
                 dimmed ? " is-dimmed" : ""
               }`;
+              const soldOutMedia = soldOut
+                ? { opacity: 0.45, filter: "grayscale(1)" }
+                : undefined;
+              const soldOutCopy = soldOut ? { color: "#808080" } : undefined;
               const tile = (
                 <>
-                  <div className="shop-tile-media relative">
+                  <div className="shop-tile-media relative" style={soldOutMedia}>
                     {image ? (
                       <Image
                         src={image.url}
@@ -120,8 +124,10 @@ export default function ShopIndex({
                     ) : null}
                   </div>
                   <div className="shop-tile-caption">
-                    <span className="shop-tile-title text-small">{product.title}</span>
-                    <span className="shop-tile-price text-caption">
+                    <span className="shop-tile-title text-small" style={soldOutCopy}>
+                      {product.title}
+                    </span>
+                    <span className="shop-tile-price text-caption" style={soldOutCopy}>
                       {soldOut ? "Sold out" : formatPriceRange(product.priceRange)}
                     </span>
                   </div>
