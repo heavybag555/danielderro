@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: ["/", "/llms.txt", "/llms-full.txt"],
+      allow: ["/", "/llms.md", "/llms-full.md"],
       // The embedded CMS and the player scratchpad are not public surfaces.
       disallow: ["/studio", "/studio/", "/radio-lab"],
     },

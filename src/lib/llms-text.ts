@@ -47,6 +47,10 @@ const PAGE_NOTES: Record<string, string> = {
   "/radio": "Identity Correction Radio — episodes and tracklists.",
 };
 
+/** Canonical paths of the two Markdown files; the `.txt` twins 308 here. */
+export const LLMS_INDEX_PATH = "/llms.md";
+export const LLMS_FULL_PATH = "/llms-full.md";
+
 export function absoluteUrl(path: string): string {
   return path === "/" ? `${SITE_URL}/` : `${SITE_URL}${path}`;
 }
@@ -118,7 +122,7 @@ function captionLine(project: LlmsProject): string {
 }
 
 /**
- * `/llms.txt` — the llmstxt.org index: name, summary, then link sections.
+ * `/llms.md` — the llmstxt.org index: name, summary, then link sections.
  */
 export function buildLlmsIndex(projects: LlmsProject[]): string {
   const lines: string[] = [
@@ -168,7 +172,7 @@ export function buildLlmsIndex(projects: LlmsProject[]): string {
     "",
     "## Full text",
     "",
-    `- [Full site text](${absoluteUrl("/llms-full.txt")}): Every page and project on this site as one Markdown document.`,
+    `- [Full site text](${absoluteUrl(LLMS_FULL_PATH)}): Every page and project on this site as one Markdown document.`,
     `- [Sitemap](${absoluteUrl("/sitemap.xml")}): Every indexable URL.`,
     "",
   );
@@ -177,7 +181,7 @@ export function buildLlmsIndex(projects: LlmsProject[]): string {
 }
 
 /**
- * `/llms-full.txt` — every page of site copy as one Markdown document.
+ * `/llms-full.md` — every page of site copy as one Markdown document.
  */
 export function buildLlmsFullText(projects: LlmsProject[]): string {
   const lines: string[] = [
