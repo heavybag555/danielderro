@@ -1,3 +1,10 @@
+/** The three lines of the home hero statement, as rendered by `HomeHero`. */
+export const HOME_HERO_LINES = [
+  "No School Studios is a visual practice.",
+  "Founded and operated by Daniel Derro.",
+  "Based in Venice.",
+] as const;
+
 export const SITE_ABOUT_COPY =
   "Daniel Derro creates visual narratives for luxury fashion and cultural brands, bringing authentic street perspective to premium campaigns. His work for Prada, Dior, and Givenchy demonstrates his ability to translate genuine cultural moments into compelling luxury brand stories.";
 
