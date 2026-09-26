@@ -36,6 +36,10 @@ export const rootSiteMetadata: Metadata = {
   description: SITE_DESCRIPTION,
   alternates: {
     canonical: "/",
+    // Agent-readable Markdown of the whole site.
+    types: {
+      "text/markdown": "/llms-full.txt",
+    },
   },
   openGraph: {
     type: "website",
