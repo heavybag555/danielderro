@@ -56,8 +56,14 @@ export const rootSiteMetadata: Metadata = {
   },
 };
 
-/** The canvas is black site-wide, so mobile browser chrome should match. */
+/**
+ * The canvas is `--color-black` site-wide, so supporting browsers tint their
+ * chrome black. `viewport-fit: cover` lets Mobile Safari draw that color into
+ * the status bar and home indicator; `SafariEdgeBackground` keeps the meta
+ * tag in sync with the visible top edge.
+ */
 export const rootSiteViewport: Viewport = {
   themeColor: "#000000",
   colorScheme: "dark",
+  viewportFit: "cover",
 };
