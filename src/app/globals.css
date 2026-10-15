@@ -178,6 +178,10 @@ html {
   --scrollbar-size: 3px;
   --scrollbar-thumb: rgba(255, 255, 255, 0.14);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.26);
+  /* Same tokens the edge strips and theme-color meta use. The client writes
+     overrides when the visible top and bottom edges differ. */
+  --edge-top-background: var(--color-black);
+  --edge-bottom-background: var(--color-black);
   background: var(--color-black);
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
@@ -196,6 +200,49 @@ body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Stacking context so the edge strips can sit above this background and
+     below page content. Isolation does not contain fixed or absolute
+     descendants, so existing positioning and exclusion blends stay put. */
+  isolation: isolate;
+}
+
+/* Mobile Safari samples these fixed strips for the status bar and the bottom
+   toolbar. They stay behind the artwork (the page background is already the
+   sampled color) and out of the hit path. A 48px edge fade would vignette
+   full-bleed video and stills, so the strips stay solid. */
+.edge-top,
+.edge-bottom {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  pointer-events: none;
+}
+
+.edge-top::after,
+.edge-bottom::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+.edge-top::after {
+  top: 0;
+  height: max(12px, env(safe-area-inset-top, 0px));
+  background: var(--edge-top-background);
+}
+
+.edge-bottom::after {
+  bottom: 0;
+  height: max(12px, env(safe-area-inset-bottom, 0px));
+  background: var(--edge-bottom-background);
 }
 
 .layout-full {
@@ -287,7 +334,9 @@ html::-webkit-scrollbar-thumb:hover,
 .site-page-footer {
   margin-top: auto;
   padding-top: var(--work-list-gap);
-  padding-bottom: 0;
+  /* 0 when there is no inset, so the desktop line stays flush. With
+     viewport-fit=cover this keeps the caption above the home indicator. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .site-page-footer-copy {
@@ -1641,7 +1690,9 @@ html:has([data-home-hero]) body {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  padding: 0 var(--spacing-margin);
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-inline: var(--spacing-margin);
   pointer-events: none;
   mix-blend-mode: exclusion;
 }
