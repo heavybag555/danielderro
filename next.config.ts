@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+import { IMAGE_DEVICE_SIZES } from "./src/lib/image-device-sizes";
+
 const nextConfig: NextConfig = {
   // Local only: keep the cache off iCloud File Provider. Vercel always expects
   // `.next/routes-manifest.json` and cannot see a custom distDir.
@@ -21,8 +23,16 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "thumbnailer.mixcloud.com",
       },
+      {
+        protocol: "https",
+        hostname: "cdn.shopify.com",
+      },
+      {
+        protocol: "https",
+        hostname: "**.myshopify.com",
+      },
     ],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 2560, 3840],
+    deviceSizes: IMAGE_DEVICE_SIZES,
     qualities: [75, 85, 90, 100],
   },
 };

@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { label: "Gallery", href: "/gallery" },
   { label: "Info", href: "/info" },
   { label: "Radio", href: "/radio" },
+  { label: "Shop", href: "/shop" },
 ] as const;
 
 function isCurrent(pathname: string, href: string): boolean {

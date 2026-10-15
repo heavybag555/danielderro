@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   projectMediaItems,
   type ProjectMediaItem,
   type ProjectSlideImageSource,
 } from "@/lib/project-media";
 import { projectClientLabel, projectTagsLabel } from "@/lib/project-meta";
-import { projectSlideImageUrl } from "@/sanity/lib/image";
+import { PROJECT_SLIDE_MAX_WIDTH, projectSlideImageUrl } from "@/sanity/lib/image";
+import { pickDeviceSize } from "@/lib/image-device-sizes";
 import SiteFooter from "@/components/SiteFooter";
 import ProjectSlideImage from "@/components/ProjectSlideImage";
 import SimpleVideoPlayer from "@/components/SimpleVideoPlayer";
-import { useSlideDeck } from "@/lib/use-slide-deck";
-import { useSmoothScrollEnabled } from "@/lib/use-smooth-scroll";
+import { useSlideDeck, useSlideDeckEnabled } from "@/lib/use-slide-deck";
 
 type SanityImageField = ProjectSlideImageSource;
 
@@ -51,10 +51,16 @@ export type Project = {
 
 const PROJECT_IMAGE_PAD_Y = 200;
 const EAGER_SLIDE_COUNT = 4;
+/** Slides warmed ahead of the active one. Paging is one slide per gesture. */
+const PREFETCH_LOOKAHEAD = 4;
 
+/**
+ * The srcset candidate the browser will settle on for a 100vw slide, so the
+ * prefetch warms that exact URL instead of fetching a second, unused size.
+ */
 function prefetchSlideWidth(): number {
-  const margin = 24;
-  return Math.min(Math.max(window.innerWidth - margin, 640), 1920);
+  const needed = window.innerWidth * (window.devicePixelRatio || 1);
+  return Math.min(pickDeviceSize(needed), PROJECT_SLIDE_MAX_WIDTH);
 }
 
 function ProjectSlideVideo({
@@ -92,12 +98,16 @@ export default function ProjectPage({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   // Desktop: one-slide-per-gesture deck; touch keeps native CSS snap.
-  useSlideDeck(scrollRef, useSmoothScrollEnabled());
-  const mediaItems: ProjectMediaItem[] = projectMediaItems(project).map((item) => {
-    if (item.kind !== "video") return item;
-    const resolved = resolvedVideoSrcByKey[item._key];
-    return resolved ? { ...item, src: resolved } : item;
-  });
+  useSlideDeck(scrollRef, useSlideDeckEnabled());
+  const mediaItems: ProjectMediaItem[] = useMemo(
+    () =>
+      projectMediaItems(project).map((item) => {
+        if (item.kind !== "video") return item;
+        const resolved = resolvedVideoSrcByKey[item._key];
+        return resolved ? { ...item, src: resolved } : item;
+      }),
+    [project, resolvedVideoSrcByKey],
+  );
   const total = mediaItems.length;
 
   useEffect(() => {
@@ -121,25 +131,45 @@ export default function ProjectPage({
     return () => observer.disconnect();
   }, [total]);
 
-  // After first paint, prefetch remaining image slides at capped width without blocking eager slides.
+  /** URLs already warmed, so re-running the effect never refetches a slide. */
+  const prefetched = useRef(new Set<string>());
+
+  // Warm a bounded run of slides ahead of the one being viewed. Prefetching
+  // the whole deck costs several MB on a long project and most visitors never
+  // reach the end; the window keeps paging instant without that bill.
   useEffect(() => {
-    if (total <= EAGER_SLIDE_COUNT) return;
+    const last = Math.min(
+      total - 1,
+      Math.max(activeIndex + PREFETCH_LOOKAHEAD, EAGER_SLIDE_COUNT - 1),
+    );
+    if (last < EAGER_SLIDE_COUNT) return;
 
     const width = prefetchSlideWidth();
-    let index = EAGER_SLIDE_COUNT;
+    const queue: string[] = [];
+    for (let i = EAGER_SLIDE_COUNT; i <= last; i += 1) {
+      const item = mediaItems[i];
+      const source =
+        item?.kind === "image"
+          ? item.image
+          : item?.kind === "video"
+            ? item.poster
+            : undefined;
+      if (!source) continue;
+      const url = projectSlideImageUrl(source, width);
+      if (prefetched.current.has(url)) continue;
+      prefetched.current.add(url);
+      queue.push(url);
+    }
+    if (queue.length === 0) return;
+
+    let cancelled = false;
+    let cursor = 0;
 
     const prefetchOne = () => {
-      if (index >= total) return;
-      const item = mediaItems[index];
-      if (item?.kind === "image") {
-        const img = new window.Image();
-        img.src = projectSlideImageUrl(item.image, width);
-      } else if (item?.kind === "video" && item.poster) {
-        const img = new window.Image();
-        img.src = projectSlideImageUrl(item.poster, width);
-      }
-      index += 1;
-      if (index < total) scheduleNext();
+      if (cancelled || cursor >= queue.length) return;
+      new window.Image().src = queue[cursor];
+      cursor += 1;
+      if (cursor < queue.length) scheduleNext();
     };
 
     const scheduleNext = () => {
@@ -151,7 +181,10 @@ export default function ProjectPage({
     };
 
     scheduleNext();
-  }, [mediaItems, total]);
+    return () => {
+      cancelled = true;
+    };
+  }, [mediaItems, total, activeIndex]);
 
   return (
     <main

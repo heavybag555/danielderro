@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import { MotionConfig } from "framer-motion";
 import SiteBrandStrip from "@/components/SiteBrandStrip";
-import SiteSmoothScroll from "@/components/SiteSmoothScroll";
 
 function useHeaderBlend(pathname: string): boolean {
   // Surfaces with photography / video under the brand: exclusion so the name
@@ -25,7 +24,6 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
     // setting, instead of each one wiring up useReducedMotion by hand.
     <MotionConfig reducedMotion="user">
       {showBrandStrip ? <SiteBrandStrip blendOverlay={blendOverlay} /> : null}
-      <SiteSmoothScroll />
       {children}
     </MotionConfig>
   );

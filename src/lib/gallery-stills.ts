@@ -13,8 +13,6 @@ export type GalleryStill = {
   remote: boolean;
   /** Sanity LQIP data URI, or a tiny blurred CDN URL. */
   blurSrc?: string;
-  /** Direct CDN URL of a muted looping video for this tile; `src` is its poster. */
-  videoSrc?: string;
 };
 
 type StillImage = {
@@ -90,8 +88,10 @@ function projectStills(project: WorkProject): GalleryStill[] {
     });
   };
 
-  // Video tile: first uploaded video file, postered by the cover (or first
-  // thumb). Marking the poster as seen makes the video replace its still.
+  // Motion projects contribute their poster frame, not the video itself: the
+  // uploaded files are the original masters (80–120 MB each) and a 180px dome
+  // tile cannot justify that transfer. Restore the loop here once the CMS
+  // carries web-sized derivatives.
   if (project.coverVideoUrl) {
     const poster =
       project.coverImage?.asset?._ref
@@ -110,7 +110,6 @@ function projectStills(project: WorkProject): GalleryStill[] {
         aspect: getThumbAspect(poster),
         remote: false,
         blurSrc: blurSrcFor(poster),
-        videoSrc: project.coverVideoUrl,
       });
     }
   }
