@@ -1,6 +1,5 @@
 import { Analytics } from "@vercel/analytics/next";
 
-import SafariEdgeBackground from "@/components/SafariEdgeBackground";
 import SiteChrome from "@/components/SiteChrome";
 import { rootSiteMetadata, rootSiteViewport } from "@/lib/site-metadata";
 import "./globals.css";
@@ -33,9 +32,6 @@ export default function RootLayout({
         />
       </head>
       <body>
-        {/* Outside SiteChrome and the page-transition wrapper, which would
-            make these fixed strips position against a transformed ancestor. */}
-        <SafariEdgeBackground />
         <div hidden dangerouslySetInnerHTML={{ __html: SITE_CREDIT_COMMENT }} />
         <a href="#main-content" className="visually-hidden skip-link text-small">
           Skip to content
