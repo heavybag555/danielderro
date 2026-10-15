@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import ProjectPage, { type Project } from "@/components/ProjectPage";
 import { projectMediaItems } from "@/lib/project-media";
 import { resolveVimeoStreamUrl } from "@/lib/vimeo-stream";
-import { projectOgImageUrl, projectSlideImageUrl } from "@/sanity/lib/image";
+import { projectOgImageUrl } from "@/sanity/lib/image";
 import { sanityFetchOrDefault } from "@/sanity/lib/fetch-safe";
 import { projectBySlugQuery } from "@/sanity/lib/queries";
 import { SITE_NAME } from "@/lib/site-metadata";
@@ -79,24 +79,16 @@ export default async function WorkProjectPage({ params }: Props) {
       }),
     );
 
-    const preloadUrls = mediaItems
-      .slice(0, 3)
-      .flatMap((item) => {
-        if (item.kind === "image") return [projectSlideImageUrl(item.image)];
-        if (item.poster) return [projectSlideImageUrl(item.poster)];
-        return [];
-      });
-
+    // No manual <link rel="preload"> for the opening slides: a bare href has
+    // no srcset, so it pinned every viewport to PROJECT_SLIDE_MAX_WIDTH while
+    // the <img> resolved its own candidate (750w on a phone, 1920w on a
+    // 1440 desktop) and fetched that too. The first slide carries `priority`,
+    // which emits a preload that respects the same sizes as the image.
     return (
-      <>
-        {preloadUrls.map((href) => (
-          <link key={href} rel="preload" as="image" href={href} />
-        ))}
-        <ProjectPage
-          project={project}
-          resolvedVideoSrcByKey={resolvedVideoSrcByKey}
-        />
-      </>
+      <ProjectPage
+        project={project}
+        resolvedVideoSrcByKey={resolvedVideoSrcByKey}
+      />
     );
   }
 
