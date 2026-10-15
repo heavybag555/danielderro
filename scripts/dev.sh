@@ -1,5 +1,5 @@
 #!/bin/sh
-# Canonical dev-server launcher — always localhost:3000.
+# Canonical dev-server launcher — always localhost:3104.
 #
 # Usage:
 #   sh scripts/dev.sh          Start dev server (Turbopack)
@@ -7,7 +7,7 @@
 
 set -e
 
-PORT=3000
+PORT=3104
 export PORT
 
 LSOF="/usr/sbin/lsof"
@@ -15,9 +15,9 @@ if [ ! -x "$LSOF" ]; then
   LSOF="$(command -v lsof || true)"
 fi
 
-# Stop whatever owns :3000 (next-server plus parent `next dev` / npm).
+# Stop whatever owns :3104 (next-server plus parent `next dev` / npm).
 # Killing only the LISTEN child leaves the parent alive; Next then fails
-# to bind 3000 or silently moves to another port.
+# to bind 3104 or silently moves to another port.
 free_port() {
   [ -n "$LSOF" ] || return 0
   for pid in $("$LSOF" -tiTCP:${PORT} -sTCP:LISTEN 2>/dev/null || true); do
