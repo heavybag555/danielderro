@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { LLMS_FULL_PATH, LLMS_INDEX_PATH } from "@/lib/llms-text";
 import { SITE_URL } from "@/lib/site-metadata";
 import { sanityFetchOrDefault } from "@/sanity/lib/fetch-safe";
 import { sitemapProjectsQuery } from "@/sanity/lib/queries";
@@ -19,6 +20,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/gallery`, lastModified: now, priority: 0.8 },
     { url: `${SITE_URL}/info`, lastModified: now, priority: 0.6 },
     { url: `${SITE_URL}/radio`, lastModified: now, priority: 0.6 },
+    { url: `${SITE_URL}${LLMS_INDEX_PATH}`, lastModified: now, priority: 0.3 },
+    { url: `${SITE_URL}${LLMS_FULL_PATH}`, lastModified: now, priority: 0.3 },
   ];
 
   // A Sanity outage should degrade the sitemap, not fail the route.

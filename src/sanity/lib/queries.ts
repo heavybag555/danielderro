@@ -153,6 +153,34 @@ export const sitemapProjectsQuery = groq`
   }
 `;
 
+/**
+ * Everything the agent-readable text routes print: the work index in the same
+ * newest-uploaded order as `/work`, plus descriptions and media alt text.
+ */
+export const llmsProjectsQuery = groq`
+  *[_type == "project" && defined(slug.current)] | order(_createdAt desc) {
+    _id,
+    "slug": slug.current,
+    title,
+    client,
+    projectType,
+    tags,
+    date,
+    description,
+    "media": gallery[] {
+      _type,
+      _type == "imageAsset" => {
+        alt,
+        caption,
+      },
+      _type == "videoAsset" => {
+        title,
+        caption,
+      },
+    },
+  }
+`;
+
 export const noSchoolStudioQuery = groq`
   *[_type == "project" && "no-school-studio" in tags] | order(order asc, date desc) {
     _id,

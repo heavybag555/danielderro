@@ -4,13 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMediaQuery } from "@/lib/use-media-query";
-
-const NAV_ITEMS = [
-  { label: "Work", href: "/work" },
-  { label: "Gallery", href: "/gallery" },
-  { label: "Info", href: "/info" },
-  { label: "Radio", href: "/radio" },
-] as const;
+import { SITE_NAV_ITEMS as NAV_ITEMS } from "@/lib/site-nav";
 
 function isCurrent(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";

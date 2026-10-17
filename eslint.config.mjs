@@ -15,6 +15,8 @@ const eslintConfig = [
     ignores: [
       "node_modules/**",
       ".next/**",
+      // Local builds write here (see `distDir` in next.config.ts).
+      ".next.nosync/**",
       "out/**",
       "build/**",
       "next-env.d.ts",
